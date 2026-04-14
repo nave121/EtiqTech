@@ -140,6 +140,18 @@ PYTHONPATH=. python scripts/batch_process.py examples/known-good/ --fail-on-erro
 
 ---
 
+## Roadmap
+
+Short-term next steps for the public release:
+
+- `TODO` Multi-provider LLM support: add pluggable providers beyond Ollama, including OpenAI, Claude, Gemini, and OpenRouter, with a unified config surface and provider-specific safety fallbacks.
+- `TODO` Committee feedback loop: refine lint rules, prompts, scoring, and UX based on real review feedback from the committee so the tool becomes more precise and less noisy over time.
+- `TODO` Authentication layer: add a proper auth boundary before any broader deployment, likely via reverse proxy or app-level login, with session protection and audit-friendly access control.
+
+The aim is to keep the deterministic linter as the backbone, while making the LLM layer more portable, the review output more committee-aligned, and the deployment story safer.
+
+---
+
 ## Security
 
 EtiqTech runs **locally** with no authentication. Do not expose to the public
