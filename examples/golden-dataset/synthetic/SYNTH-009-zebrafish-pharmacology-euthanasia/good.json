@@ -1,0 +1,79 @@
+{
+  "header": {"protocol_id": "SYNTH-009-G", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "פרמקולוגיה בדגי זברה עם שיטת המתה מתאימה",
+    "title_en": "Zebrafish pharmacology study with compliant euthanasia method",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 2,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000014",
+    "last_name_he": "ברק",
+    "first_name_he": "אורי",
+    "last_name_en": "Barak",
+    "first_name_en": "Ori",
+    "email": "synthetic14@test.il",
+    "phone_primary": "SYNTH-1000014",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-14",
+    "faculty": "Pharmacology",
+    "department": "Aquatic Models",
+    "training": [{"cert_no": "T14", "issuer": "TAMIR", "animal_scope": "fish", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Adult zebrafish receive a sedative lead compound before terminal tissue collection.",
+    "lay_he_≤150w": "בדיקת תרופה בדגי זברה בוגרים."
+  },
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["adult zebrafish sedative pharmacology tissue collection"],
+    "conclusion": "No validated in vitro system reproduces whole-animal sedative uptake and recovery."
+  },
+  "animals_total": [{
+    "species": "zebrafish",
+    "strain": "AB",
+    "sex": "both",
+    "genetic_status": "WT",
+    "source": "vendor",
+    "n_total": 40
+  }],
+  "n_justification": {
+    "method": "power",
+    "details": "Power analysis supports 20 fish per arm for locomotor recovery endpoints.",
+    "attachments": []
+  },
+  "experiments": [{
+    "label": "Sedative pharmacology",
+    "question": "Assess locomotor recovery after exposure to a candidate sedative compound.",
+    "animals": {
+      "species": "zebrafish",
+      "strain": "AB",
+      "sex": "both",
+      "genetic_status": "WT",
+      "n": 40
+    },
+    "housing": {"group_housed": true},
+    "procedure_timeline": [
+      {"step": "Adult zebrafish receive compound exposure followed by behavioral scoring and terminal tissue collection."}
+    ],
+    "analgesia": [],
+    "anesthesia": [],
+    "severity_level_1_to_5": 2,
+    "monitoring": {"plan": "Observe swimming behavior after exposure.", "parameters": ["Daily tank welfare check."]},
+    "humane_endpoints": {"general": ["Loss of equilibrium or persistent recumbency."], "specific": []},
+    "euthanasia": {
+      "primary": "MS-222 overdose",
+      "parameters": "Buffered tricaine overdose",
+      "confirmation": "No opercular movement confirmed."
+    },
+    "fate": "euthanized"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

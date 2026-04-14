@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "cases": [
+    "examples/head-to-head/1/case.json",
+    "examples/head-to-head/2/case.json",
+    "examples/head-to-head/3/case.json",
+    "examples/head-to-head/IL-001-01-2000, 90001/case.json",
+    "examples/head-to-head/IL-003-01-2000, 90003/case.json",
+    "examples/head-to-head/IL-005-03-2000, 90005/case.json",
+    "examples/head-to-head/IL-013-05-2000, 90013/case.json",
+    "examples/head-to-head/IL-015-06-2000, 90015/case.json",
+    "examples/head-to-head/IL-026-08-2000, 90026/case.json",
+    "examples/head-to-head/IL-030-09-2000, 90030/case.json",
+    "examples/head-to-head/IL-034-12-2000, 90034/case.json",
+    "examples/golden-dataset/synthetic/SYNTH-001-no-alts-cosmetics/case.json",
+    "examples/golden-dataset/synthetic/SYNTH-002-neonatal-euthanasia/case.json",
+    "examples/golden-dataset/synthetic/SYNTH-003-category-e-death-endpoint/case.json",
+    "examples/golden-dataset/synthetic/SYNTH-004-missing-endpoints/case.json",
+    "examples/golden-dataset/synthetic/SYNTH-005-multiple-survival/case.json",
+    "examples/golden-dataset/synthetic/SYNTH-006-paralytic-underclassification/case.json",
+    "examples/golden-dataset/synthetic/SYNTH-007-severe-suffering/case.json",
+    "examples/golden-dataset/synthetic/SYNTH-008-rabbit-behavioral-euthanasia/case.json",
+    "examples/golden-dataset/synthetic/SYNTH-009-zebrafish-pharmacology-euthanasia/case.json",
+    "examples/golden-dataset/adversarial/ADV-001-obvious-zebrafish-co2/case.json",
+    "examples/golden-dataset/adversarial/ADV-002-obvious-death-endpoint/case.json",
+    "examples/golden-dataset/adversarial/ADV-003-moderate-category-mismatch/case.json",
+    "examples/golden-dataset/adversarial/ADV-004-moderate-high-severity-endpoints/case.json",
+    "examples/golden-dataset/adversarial/ADV-005-subtle-weak-power-analysis/case.json",
+    "examples/golden-dataset/adversarial/ADV-006-subtle-thin-alternatives/case.json",
+    "examples/golden-dataset/adversarial/ADV-007-hidden-buried-immobilizer/case.json",
+    "examples/golden-dataset/adversarial/ADV-008-hidden-buried-severe-suffering/case.json"
+  ],
+  "excluded": [
+    {
+      "label": "IL-009-04-2000",
+      "reason": "No canonical HTML bad/good pair in repo yet."
+    },
+    {
+      "label": "IL-021-07-2000",
+      "reason": "Only canonical good HTML is present; bad HTML pair is missing."
+    },
+    {
+      "label": "fwai",
+      "reason": "No canonical HTML pair or case report metadata yet."
+    },
+    {
+      "label": "fwai-2",
+      "reason": "No canonical HTML pair or case report metadata yet."
+    }
+  ]
+}

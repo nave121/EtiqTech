@@ -1,0 +1,57 @@
+{
+  "case_id": "REAL-036",
+  "case_type": "real_pair",
+  "review_status": "reviewer_ready",
+  "source_origin": "real_redacted",
+  "species": "mouse",
+  "pain_category": "D",
+  "procedure_types": [
+    "oncology",
+    "stereotaxic",
+    "immunotherapy"
+  ],
+  "primary_risks": [
+    "post_op_monitoring",
+    "oncology_endpoints",
+    "sex_justification"
+  ],
+  "files": {
+    "bad_html": "examples/head-to-head/IL-005-03-2000, 90005/bad_IL-005-03-2000_alt1.html",
+    "good_html": "examples/head-to-head/IL-005-03-2000, 90005/good_IL-005-03-2000.html",
+    "case_report": "examples/head-to-head/IL-005-03-2000, 90005/CASE_REPORT.md"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": [
+      "euthanasia:displacement-rate",
+      "euthanasia:secondary-method",
+      "postop:monitoring",
+      "special:oncology",
+      "special:stereotaxic",
+      "vet:consultation"
+    ],
+    "good_expected_l1_refs": [
+      "euthanasia:displacement-rate",
+      "euthanasia:secondary-method",
+      "postop:monitoring",
+      "special:oncology",
+      "special:stereotaxic",
+      "vet:consultation"
+    ],
+    "target_l2_themes": [
+      "severity_monitoring_analgesia",
+      "euthanasia_and_endpoints",
+      "sex_and_reuse"
+    ],
+    "target_l3_sections": [
+      "animal_numbers",
+      "monitoring_and_endpoints",
+      "analgesia_and_anesthesia"
+    ],
+    "must_not_miss_tags": [],
+    "notes_for_reviewers": "Useful oncology pair for endpoint review; deterministic delta is currently absent."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

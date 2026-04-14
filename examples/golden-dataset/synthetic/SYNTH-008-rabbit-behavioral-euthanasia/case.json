@@ -1,0 +1,27 @@
+{
+  "case_id": "SYNTH-008",
+  "case_type": "synthetic_pair",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "rabbit",
+  "pain_category": "C",
+  "procedure_types": ["behavioral", "euthanasia"],
+  "primary_risks": ["species_specific_euthanasia", "avma_conditions"],
+  "files": {
+    "bad_json": "examples/golden-dataset/synthetic/SYNTH-008-rabbit-behavioral-euthanasia/bad.json",
+    "good_json": "examples/golden-dataset/synthetic/SYNTH-008-rabbit-behavioral-euthanasia/good.json",
+    "case_report": "examples/golden-dataset/synthetic/SYNTH-008-rabbit-behavioral-euthanasia/CASE_REPORT.md"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["euthanasia:cervical-weight", "euthanasia:conditions-missing"],
+    "good_expected_l1_refs": [],
+    "target_l2_themes": ["euthanasia_and_endpoints", "harm_benefit_analysis"],
+    "target_l3_sections": ["euthanasia", "monitoring_and_endpoints"],
+    "must_not_miss_tags": ["unacceptable_euthanasia_for_species"],
+    "notes_for_reviewers": "Synthetic rabbit pair that isolates a species-specific euthanasia condition failure in an otherwise low-burden behavioral study."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "case_id": "SYNTH-006",
+  "case_type": "adversarial",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "mouse",
+  "pain_category": "C",
+  "procedure_types": ["neuromuscular_blockade", "hidden_violation"],
+  "primary_risks": ["paralytic_agent", "underclassified_pain"],
+  "files": {
+    "bad_json": "examples/golden-dataset/synthetic/SYNTH-006-paralytic-underclassification/bad.json",
+    "good_json": "examples/golden-dataset/synthetic/SYNTH-006-paralytic-underclassification/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["euthanasia:conditions-missing", "paralytic:without-anesthesia"],
+    "good_expected_l1_refs": [],
+    "target_l2_themes": ["severity_monitoring_analgesia", "scientific_coherence", "personnel_and_training"],
+    "target_l3_sections": ["severity_classification", "analgesia_and_anesthesia", "personnel"],
+    "must_not_miss_tags": ["paralytic_without_anesthesia", "pain_underclassification"],
+    "notes_for_reviewers": "Adversarial hidden-violation case where neuromuscular blockade is buried in free text and the pain category is undercalled."
+  },
+  "dependencies": {
+    "blocked_by_rules": ["P2-epic-tier3-linter-rules", "P2-epic-anchoring-bias-dual-pass"],
+    "current_expected_status": "future_capability"
+  }
+}

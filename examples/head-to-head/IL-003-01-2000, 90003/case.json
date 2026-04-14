@@ -1,0 +1,51 @@
+{
+  "case_id": "REAL-013",
+  "case_type": "real_pair",
+  "review_status": "reviewer_ready",
+  "source_origin": "real_redacted",
+  "species": "mouse",
+  "pain_category": "D",
+  "procedure_types": [
+    "stroke_model",
+    "imaging",
+    "ocular_procedures"
+  ],
+  "primary_risks": [
+    "euthanasia_consistency",
+    "ocular_welfare",
+    "vet_consultation"
+  ],
+  "files": {
+    "bad_html": "examples/head-to-head/IL-003-01-2000, 90003/bad_IL-003-01-2000_alt1.html",
+    "good_html": "examples/head-to-head/IL-003-01-2000, 90003/good_IL-003-01-2000.html",
+    "case_report": "examples/head-to-head/IL-003-01-2000, 90003/CASE_REPORT.md"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": [
+      "special:biosafety",
+      "special:ocular",
+      "vet:consultation"
+    ],
+    "good_expected_l1_refs": [
+      "special:biosafety",
+      "special:ocular",
+      "vet:consultation"
+    ],
+    "target_l2_themes": [
+      "severity_monitoring_analgesia",
+      "euthanasia_and_endpoints",
+      "scientific_coherence"
+    ],
+    "target_l3_sections": [
+      "monitoring_and_endpoints",
+      "analgesia_and_anesthesia",
+      "euthanasia"
+    ],
+    "must_not_miss_tags": [],
+    "notes_for_reviewers": "Committee concern is mainly cross-field euthanasia consistency; current linter still sees identical base refs in both variants."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

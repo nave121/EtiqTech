@@ -1,0 +1,11 @@
+# Ollama Cloud API key secret
+# Create with:
+#   kubectl create secret generic ollama-cloud \
+#     --from-literal=api-key=<your-ollama-api-key>
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ollama-cloud
+type: Opaque
+stringData:
+  api-key: REPLACE_ME

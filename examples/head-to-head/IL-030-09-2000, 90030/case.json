@@ -1,0 +1,43 @@
+{
+  "case_id": "REAL-121",
+  "case_type": "real_pair",
+  "review_status": "reviewer_ready",
+  "source_origin": "real_redacted",
+  "species": "rat",
+  "pain_category": "C",
+  "procedure_types": [
+    "wound_healing",
+    "biomaterial",
+    "survival_surgery"
+  ],
+  "primary_risks": [
+    "analgesia",
+    "reserve_animals",
+    "wound_care"
+  ],
+  "files": {
+    "bad_html": "examples/head-to-head/IL-030-09-2000, 90030/bad_IL-030-09-2000.html",
+    "good_html": "examples/head-to-head/IL-030-09-2000, 90030/good_IL-030-09-2000.html",
+    "case_report": "examples/head-to-head/IL-030-09-2000, 90030/CASE_REPORT.md"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": [],
+    "good_expected_l1_refs": [],
+    "target_l2_themes": [
+      "N_and_justification",
+      "severity_monitoring_analgesia",
+      "harm_benefit_analysis"
+    ],
+    "target_l3_sections": [
+      "animal_numbers",
+      "analgesia_and_anesthesia",
+      "housing"
+    ],
+    "must_not_miss_tags": [],
+    "notes_for_reviewers": "Pair primarily supports animal-number and wound-care review; current linter output is unchanged across variants."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

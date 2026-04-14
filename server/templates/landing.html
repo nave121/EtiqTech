@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EthicTech - AI-Powered Ethics Review for Animal Research</title>
+    <script src="/static/js/tailwind.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/landing.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['SF Mono', 'Monaco', 'Cascadia Code', 'Consolas', 'monospace'],
+                    },
+                    colors: {
+                        'ec': {
+                            'bg': '#0a0a0a',
+                            'surface': '#111111',
+                            'surface2': '#1a1a1a',
+                            'border': '#1f1f1f',
+                            'border2': '#2a2a2a',
+                            'glow': '#22c55e',
+                            'glow-dim': '#166534',
+                            'accent': '#3b82f6',
+                            'text': '#e5e5e5',
+                            'dim': '#a3a3a3',
+                            'muted': '#737373',
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="bg-ec-bg font-sans text-ec-text antialiased">
+
+    <!-- Smoke particle layer -->
+    <div id="smoke-layer" aria-hidden="true"></div>
+
+    <!-- ========== NAVIGATION ========== -->
+    <nav class="fixed top-0 w-full z-50 bg-ec-bg/80 backdrop-blur-xl border-b border-ec-border">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-ec-glow to-ec-accent
+                            flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.2)]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                        <path d="M9 12l2 2 4-4"/>
+                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <span class="text-lg font-semibold text-white tracking-tight">EthicTech</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <button id="lang-toggle"
+                        class="px-3 py-1.5 text-xs font-medium text-ec-muted border border-ec-border2
+                               rounded-full hover:border-ec-glow/40 hover:text-ec-glow transition-all duration-300">
+                    EN / HE
+                </button>
+                <a href="/app"
+                   class="px-5 py-2 bg-ec-glow text-black font-semibold text-sm rounded-lg
+                          hover:bg-ec-glow/90 transition-all duration-300
+                          shadow-[0_0_20px_rgba(34,197,94,0.25)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)]">
+                    <span data-en="Open Analyzer" data-he="פתח בודק">Open Analyzer</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ========== HERO SECTION ========== -->
+    <section class="relative min-h-screen flex flex-col items-center justify-center pt-16 overflow-hidden">
+        <!-- Background effects -->
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(34,197,94,0.06),transparent_60%)]"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,rgba(59,130,246,0.04),transparent_50%)]"></div>
+        <div class="absolute inset-0 dot-grid"></div>
+
+        <div class="relative z-10 max-w-4xl mx-auto px-6 text-center pb-8">
+            <!-- Badge -->
+            <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-ec-border2
+                        text-xs text-ec-muted mb-8 backdrop-blur-sm" data-animate="fade-up">
+                <span class="w-2 h-2 rounded-full bg-ec-glow animate-pulse"></span>
+                <span data-en="AI-Powered IACUC Review Tool" data-he="כלי AI לבדיקת בקשות IACUC">AI-Powered IACUC Review Tool</span>
+            </div>
+
+            <!-- Headline -->
+            <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.08] mb-6"
+                data-animate="fade-up" data-delay="100">
+                <span class="text-white block" data-en="Ethics Review" data-he="בדיקת אתיקה">Ethics Review</span>
+                <span class="bg-gradient-to-r from-ec-glow via-emerald-400 to-ec-accent bg-clip-text text-transparent block"
+                      data-en="for Animal Research" data-he="למחקר בבעלי חיים">for Animal Research</span>
+            </h1>
+
+            <!-- Subtitle -->
+            <p class="text-lg md:text-xl text-ec-dim max-w-2xl mx-auto mb-10 leading-relaxed"
+               data-animate="fade-up" data-delay="200"
+               data-en="Three layers of automated review: deterministic law checks, AI theme analysis across 11 ethical dimensions, and holistic expert review. All aligned with Israeli animal welfare law."
+               data-he="שלוש שכבות ביקורת אוטומטית: בדיקות חוק דטרמיניסטיות, ניתוח AI של 11 ממדים אתיים, וביקורת מומחה הוליסטית. הכל בהתאמה לחוק צער בעלי חיים הישראלי.">
+                Three layers of automated review: deterministic law checks, AI theme analysis across 11 ethical dimensions, and holistic expert review. All aligned with Israeli animal welfare law.
+            </p>
+
+            <!-- CTAs -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4"
+                 data-animate="fade-up" data-delay="300">
+                <a href="/app"
+                   class="glow-pulse px-8 py-3.5 bg-ec-glow text-black font-semibold rounded-xl
+                          text-base hover:bg-ec-glow/90 transition-all duration-300
+                          shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+                    <span data-en="Start Reviewing" data-he="התחל בדיקה">Start Reviewing</span>
+                </a>
+                <a href="#how-it-works"
+                   class="px-8 py-3.5 border border-ec-border2 text-ec-text font-medium rounded-xl
+                          text-base hover:border-ec-glow/40 hover:text-ec-glow transition-all duration-300">
+                    <span data-en="Learn More" data-he="למידע נוסף">Learn More</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Terminal Preview -->
+        <div class="relative z-10 w-full max-w-3xl mx-auto px-6 mt-4"
+             data-animate="fade-up" data-delay="500">
+            <div class="absolute inset-0 -z-10 scale-95 rounded-[32px] bg-gradient-to-b from-ec-glow/10 via-ec-accent/5 to-transparent blur-3xl"></div>
+            <div class="rounded-2xl border border-ec-border2 bg-ec-surface overflow-hidden shadow-2xl">
+                <!-- Terminal chrome -->
+                <div class="flex items-center gap-2 px-4 py-3 bg-ec-surface2 border-b border-ec-border">
+                    <div class="w-3 h-3 rounded-full bg-[#ff5f57]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#febc2e]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#28c840]"></div>
+                    <span class="ml-3 text-xs text-ec-muted font-mono">ethictech analyze protocol.html</span>
+                </div>
+                <!-- Animated terminal content -->
+                <div class="p-5 font-mono text-sm leading-relaxed h-52 overflow-hidden" id="terminal-animation">
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10" data-animate="fade-up" data-delay="800">
+            <div class="w-6 h-10 rounded-full border-2 border-ec-border2 flex items-start justify-center pt-2">
+                <div class="w-1 h-2.5 rounded-full bg-ec-muted animate-bounce"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== HOW IT WORKS ========== -->
+    <section id="how-it-works" class="py-28 px-6 relative">
+        <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-ec-glow/20 to-transparent"></div>
+
+        <div class="max-w-6xl mx-auto">
+            <p class="text-sm font-medium tracking-[0.18em] text-ec-glow uppercase text-center mb-4"
+               data-animate="fade-up"
+               data-en="Workflow" data-he="תהליך עבודה">Workflow</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-4"
+                data-animate="fade-up" data-delay="50">
+                <span data-en="How It Works" data-he="איך זה עובד">How It Works</span>
+            </h2>
+            <p class="text-ec-dim text-center max-w-xl mx-auto mb-20"
+               data-animate="fade-up" data-delay="100"
+               data-en="Five steps from upload to comprehensive ethics report"
+               data-he="חמישה צעדים מהעלאה ועד דוח אתיקה מקיף">
+                Five steps from upload to comprehensive ethics report
+            </p>
+
+            <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-5">
+                <!-- Step 1 -->
+                <div class="group relative p-6 rounded-[24px] bg-ec-surface/60 border border-ec-border
+                            hover:border-ec-glow/25 transition-all duration-500 backdrop-blur-sm"
+                     data-animate="fade-up" data-delay="0">
+                    <div class="absolute inset-0 rounded-[24px] bg-gradient-to-b from-ec-glow/[0.03] to-transparent
+                                opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div class="relative z-10">
+                        <div class="w-10 h-10 rounded-lg bg-ec-glow/10 text-ec-glow flex items-center justify-center mb-4">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                        </div>
+                        <div class="text-xs text-ec-glow font-mono mb-2">01</div>
+                        <h3 class="text-white font-semibold mb-2 text-sm"
+                            data-en="Upload Protocol" data-he="העלאת פרוטוקול">Upload Protocol</h3>
+                        <p class="text-xs text-ec-dim leading-relaxed"
+                           data-en="Drag and drop an HTML export from the national Council system"
+                           data-he="גררו קובץ HTML מיצוא מערכת המועצה הארצית">
+                            Drag and drop an HTML export from the national Council system
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="group relative p-6 rounded-[24px] bg-ec-surface/60 border border-ec-border
+                            hover:border-ec-glow/25 transition-all duration-500 backdrop-blur-sm"
+                     data-animate="fade-up" data-delay="80">
+                    <div class="absolute inset-0 rounded-[24px] bg-gradient-to-b from-ec-glow/[0.03] to-transparent
+                                opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div class="relative z-10">
+                        <div class="w-10 h-10 rounded-lg bg-ec-glow/10 text-ec-glow flex items-center justify-center mb-4">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 12l2 2 4-4"/>
+                                <rect x="3" y="3" width="18" height="18" rx="3"/>
+                            </svg>
+                        </div>
+                        <div class="text-xs text-ec-glow font-mono mb-2">02</div>
+                        <h3 class="text-white font-semibold mb-2 text-sm"
+                            data-en="Law Compliance" data-he="תאימות חוק">Law Compliance</h3>
+                        <p class="text-xs text-ec-dim leading-relaxed"
+                           data-en="40+ deterministic rules check against Israeli animal welfare law"
+                           data-he="40+ כללים דטרמיניסטיים בודקים מול חוק צער בעלי חיים">
+                            40+ deterministic rules check against Israeli animal welfare law
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="group relative p-6 rounded-[24px] bg-ec-surface/60 border border-ec-border
+                            hover:border-ec-glow/25 transition-all duration-500 backdrop-blur-sm"
+                     data-animate="fade-up" data-delay="160">
+                    <div class="absolute inset-0 rounded-[24px] bg-gradient-to-b from-ec-glow/[0.03] to-transparent
+                                opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div class="relative z-10">
+                        <div class="w-10 h-10 rounded-lg bg-ec-accent/10 text-ec-accent flex items-center justify-center mb-4">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 2a10 10 0 0 1 10 10"/>
+                                <path d="M12 2v10h10"/>
+                            </svg>
+                        </div>
+                        <div class="text-xs text-ec-accent font-mono mb-2">03</div>
+                        <h3 class="text-white font-semibold mb-2 text-sm"
+                            data-en="AI Theme Analysis" data-he="ניתוח נושאי AI">AI Theme Analysis</h3>
+                        <p class="text-xs text-ec-dim leading-relaxed"
+                           data-en="LLM reviews 11 ethical themes: 3Rs, euthanasia, severity, harm-benefit, and more"
+                           data-he="LLM בודק 11 נושאים אתיים: 3Rs, המתה, חומרה, נזק-תועלת ועוד">
+                            LLM reviews 11 ethical themes: 3Rs, euthanasia, severity, harm-benefit, and more
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="group relative p-6 rounded-[24px] bg-ec-surface/60 border border-ec-border
+                            hover:border-ec-glow/25 transition-all duration-500 backdrop-blur-sm"
+                     data-animate="fade-up" data-delay="240">
+                    <div class="absolute inset-0 rounded-[24px] bg-gradient-to-b from-ec-glow/[0.03] to-transparent
+                                opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div class="relative z-10">
+                        <div class="w-10 h-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center mb-4">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/>
+                            </svg>
+                        </div>
+                        <div class="text-xs text-purple-400 font-mono mb-2">04</div>
+                        <h3 class="text-white font-semibold mb-2 text-sm"
+                            data-en="Human Eye Review" data-he="ביקורת עין אנושית">Human Eye Review</h3>
+                        <p class="text-xs text-ec-dim leading-relaxed"
+                           data-en="Optional holistic 2-pass deep review for cross-reference consistency"
+                           data-he="ביקורת הוליסטית אופציונלית דו-שלבית לעקביות הפניות צולבות">
+                            Optional holistic 2-pass deep review for cross-reference consistency
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="group relative p-6 rounded-[24px] bg-ec-surface/60 border border-ec-border
+                            hover:border-ec-glow/25 transition-all duration-500 backdrop-blur-sm"
+                     data-animate="fade-up" data-delay="320">
+                    <div class="absolute inset-0 rounded-[24px] bg-gradient-to-b from-ec-glow/[0.03] to-transparent
+                                opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div class="relative z-10">
+                        <div class="w-10 h-10 rounded-lg bg-ec-glow/10 text-ec-glow flex items-center justify-center mb-4">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                        </div>
+                        <div class="text-xs text-ec-glow font-mono mb-2">05</div>
+                        <h3 class="text-white font-semibold mb-2 text-sm"
+                            data-en="Export Report" data-he="ייצוא דוח">Export Report</h3>
+                        <p class="text-xs text-ec-dim leading-relaxed"
+                           data-en="Download a comprehensive PDF with all findings, scores, and recommendations"
+                           data-he="הורידו PDF מקיף עם כל הממצאים, הציונים וההמלצות">
+                            Download a comprehensive PDF with all findings, scores, and recommendations
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== THREE LAYERS FEATURE SHOWCASE ========== -->
+    <section class="py-28 px-6 relative">
+        <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-ec-border2 to-transparent"></div>
+
+        <div class="max-w-5xl mx-auto">
+            <p class="text-sm font-medium tracking-[0.18em] text-ec-glow uppercase text-center mb-4"
+               data-animate="fade-up"
+               data-en="Architecture" data-he="ארכיטקטורה">Architecture</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-20"
+                data-animate="fade-up" data-delay="50">
+                <span data-en="Three Layers of Review" data-he="שלוש שכבות ביקורת">Three Layers of Review</span>
+            </h2>
+
+            <div class="space-y-28">
+                <!-- Layer 1: Deterministic Linting -->
+                <div class="grid md:grid-cols-2 items-center gap-12" data-animate="fade-up">
+                    <div>
+                        <span class="text-xs font-mono text-ec-glow tracking-widest uppercase mb-3 block">
+                            <span data-en="Layer 1" data-he="שכבה 1">Layer 1</span>
+                        </span>
+                        <h3 class="text-2xl md:text-3xl font-bold text-white mb-4"
+                            data-en="Deterministic Law Checks" data-he="בדיקות חוק דטרמיניסטיות">
+                            Deterministic Law Checks
+                        </h3>
+                        <p class="text-ec-dim leading-relaxed"
+                           data-en="40+ rules aligned with Israeli Prevention of Cruelty to Animals Law (5754-1994). Instant, reproducible results catching missing fields, invalid euthanasia methods, and structural errors."
+                           data-he="40+ כללים המותאמים לחוק צער בעלי חיים (תשנ&quot;ד-1994). תוצאות מיידיות וניתנות לשחזור הלוכדות שדות חסרים, שיטות המתה לא תקינות ושגיאות מבניות.">
+                            40+ rules aligned with Israeli Prevention of Cruelty to Animals Law (5754-1994). Instant, reproducible results catching missing fields, invalid euthanasia methods, and structural errors.
+                        </p>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-0 -z-10 rounded-[28px] bg-gradient-to-br from-ec-glow/8 via-ec-accent/4 to-transparent blur-2xl"></div>
+                        <div class="rounded-2xl bg-ec-surface border border-ec-border p-5 font-mono text-sm shadow-xl">
+                            <div class="text-ec-glow mb-3">$ ethictech lint protocol.json</div>
+                            <div class="space-y-2 text-ec-dim">
+                                <div><span class="text-red-400">ERROR</span> <span class="text-ec-muted">euthanasia:method</span> &mdash; CO2 not compliant for species</div>
+                                <div><span class="text-red-400">ERROR</span> <span class="text-ec-muted">severity:analgesia</span> &mdash; Missing pain management plan</div>
+                                <div><span class="text-yellow-400">WARN&nbsp;</span> <span class="text-ec-muted">alts:queries</span> &mdash; No search terms provided</div>
+                                <div><span class="text-yellow-400">WARN&nbsp;</span> <span class="text-ec-muted">N:power-analysis</span> &mdash; Sample size not justified</div>
+                                <div><span class="text-ec-glow">PASS&nbsp;</span> <span class="text-ec-muted">severity:classification</span> &mdash; Matches procedures</div>
+                                <div><span class="text-ec-glow">PASS&nbsp;</span> <span class="text-ec-muted">pi:training</span> &mdash; Valid certification</div>
+                            </div>
+                            <div class="mt-3 pt-3 border-t border-ec-border text-ec-muted text-xs">
+                                42 rules checked &middot; 2 errors &middot; 2 warnings &middot; 0.12s
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layer 2: AI Theme Analysis -->
+                <div class="grid md:grid-cols-2 items-center gap-12" data-animate="fade-up">
+                    <div class="order-2 md:order-1 relative">
+                        <div class="absolute inset-0 -z-10 rounded-[28px] bg-gradient-to-tl from-ec-accent/8 via-ec-glow/4 to-transparent blur-2xl"></div>
+                        <div class="rounded-2xl bg-ec-surface border border-ec-border p-5 shadow-xl">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-sm font-medium text-white">Theme Scores</span>
+                                <span class="text-xs text-ec-muted font-mono">12 themes</span>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between p-3 rounded-xl bg-ec-bg/50">
+                                    <span class="text-sm text-ec-text">3Rs & Alternatives</span>
+                                    <span class="px-2.5 py-1 rounded-lg bg-ec-glow/15 text-ec-glow text-xs font-semibold">3/3 Adequate</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 rounded-xl bg-ec-bg/50">
+                                    <span class="text-sm text-ec-text">Euthanasia & Endpoints</span>
+                                    <span class="px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 text-xs font-semibold">1/3 Inadequate</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 rounded-xl bg-ec-bg/50">
+                                    <span class="text-sm text-ec-text">Severity & Monitoring</span>
+                                    <span class="px-2.5 py-1 rounded-lg bg-yellow-500/15 text-yellow-400 text-xs font-semibold">2/3 Partial</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 rounded-xl bg-ec-bg/50">
+                                    <span class="text-sm text-ec-text">Harm-Benefit Analysis</span>
+                                    <span class="px-2.5 py-1 rounded-lg bg-ec-glow/15 text-ec-glow text-xs font-semibold">3/3 Adequate</span>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-3 border-t border-ec-border text-ec-muted text-xs">
+                                Average: 2.3/3 &middot; 8/12 themes scored 2+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="order-1 md:order-2">
+                        <span class="text-xs font-mono text-ec-accent tracking-widest uppercase mb-3 block">
+                            <span data-en="Layer 2" data-he="שכבה 2">Layer 2</span>
+                        </span>
+                        <h3 class="text-2xl md:text-3xl font-bold text-white mb-4"
+                            data-en="AI Theme Analysis" data-he="ניתוח נושאי AI">
+                            AI Theme Analysis
+                        </h3>
+                        <p class="text-ec-dim leading-relaxed"
+                           data-en="An LLM reviews your protocol across 11 ethical dimensions, scoring each 0-3 with detailed rationale. Themes include alternatives search, euthanasia methods, severity classification, personnel training, and more."
+                           data-he="LLM בודק את הפרוטוקול שלך על פני 11 ממדים אתיים, עם ציון 0-3 ונימוק מפורט לכל אחד. הנושאים כוללים חיפוש חלופות, שיטות המתה, סיווג חומרה, הכשרת צוות ועוד.">
+                            An LLM reviews your protocol across 11 ethical dimensions, scoring each 0-3 with detailed rationale. Themes include alternatives search, euthanasia methods, severity classification, personnel training, and more.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Layer 3: Human Eye -->
+                <div class="grid md:grid-cols-2 items-center gap-12" data-animate="fade-up">
+                    <div>
+                        <span class="text-xs font-mono text-purple-400 tracking-widest uppercase mb-3 block">
+                            <span data-en="Layer 3" data-he="שכבה 3">Layer 3</span>
+                        </span>
+                        <h3 class="text-2xl md:text-3xl font-bold text-white mb-4"
+                            data-en="Human Eye Review" data-he="ביקורת עין אנושית">
+                            Human Eye Review
+                        </h3>
+                        <p class="text-ec-dim leading-relaxed"
+                           data-en="A holistic 2-pass review using an adversarial expert persona. Pass 1 evaluates each section against a rubric. Pass 2 checks cross-reference consistency. Catches issues that rule-based and theme-based checks miss."
+                           data-he="ביקורת הוליסטית דו-שלבית באמצעות פרסונת מומחה אדברסריאלית. שלב 1 מעריך כל סעיף מול רובריקה. שלב 2 בודק עקביות הפניות צולבות. לוכדת בעיות שבדיקות מבוססות כללים ונושאים מחמיצות.">
+                            A holistic 2-pass review using an adversarial expert persona. Pass 1 evaluates each section against a rubric. Pass 2 checks cross-reference consistency. Catches issues that rule-based and theme-based checks miss.
+                        </p>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-0 -z-10 rounded-[28px] bg-gradient-to-br from-purple-500/8 via-ec-accent/4 to-transparent blur-2xl"></div>
+                        <div class="rounded-2xl bg-ec-surface border border-ec-border p-5 shadow-xl">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="flex items-center gap-2">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"/>
+                                        <path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/>
+                                    </svg>
+                                    <span class="text-sm font-medium text-white">Human Eye Result</span>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-lg bg-yellow-500/15 text-yellow-400 text-xs font-semibold">NEEDS REVIEW</span>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="p-3 rounded-xl bg-ec-bg/50">
+                                    <div class="text-xs text-ec-muted uppercase tracking-wide mb-1">Risk Profile</div>
+                                    <div class="text-sm text-ec-text">Moderate — euthanasia method inconsistency</div>
+                                </div>
+                                <div class="p-3 rounded-xl bg-ec-bg/50">
+                                    <div class="text-xs text-ec-muted uppercase tracking-wide mb-1">Cross-Reference Issues</div>
+                                    <div class="text-sm text-yellow-400">Severity in Exp. 2 contradicts monitoring plan</div>
+                                </div>
+                                <div class="p-3 rounded-xl bg-ec-bg/50">
+                                    <div class="text-xs text-ec-muted uppercase tracking-wide mb-1">Summary</div>
+                                    <div class="text-sm text-ec-dim">Protocol requires revision of euthanasia section before committee submission</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== TRUST INDICATORS ========== -->
+    <section class="py-20 px-6 relative">
+        <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-ec-border2 to-transparent"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.03),transparent_60%)]"></div>
+
+        <div class="max-w-5xl mx-auto relative z-10">
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div class="text-center p-6 rounded-2xl border border-ec-border bg-ec-surface/40 backdrop-blur-sm"
+                     data-animate="fade-up" data-delay="0">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-ec-glow/10 text-ec-glow flex items-center justify-center mb-4">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-sm font-semibold text-white mb-1"
+                        data-en="Israeli Law Aligned" data-he="מותאם לחוק הישראלי">Israeli Law Aligned</h3>
+                    <p class="text-xs text-ec-dim"
+                       data-en="Prevention of Cruelty to Animals Law, 5754-1994"
+                       data-he="חוק צער בעלי חיים, תשנ&quot;ד-1994">
+                        Prevention of Cruelty to Animals Law, 5754-1994
+                    </p>
+                </div>
+
+                <div class="text-center p-6 rounded-2xl border border-ec-border bg-ec-surface/40 backdrop-blur-sm"
+                     data-animate="fade-up" data-delay="80">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-ec-accent/10 text-ec-accent flex items-center justify-center mb-4">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 2a10 10 0 0 1 10 10"/>
+                            <path d="M12 2v10h10"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-sm font-semibold text-white mb-1"
+                        data-en="11 AI Review Themes" data-he="11 נושאי ביקורת AI">11 AI Review Themes</h3>
+                    <p class="text-xs text-ec-dim"
+                       data-en="From 3Rs to surgical standards, comprehensive coverage"
+                       data-he="מ-3Rs ועד סטנדרטים כירורגיים, כיסוי מקיף">
+                        From 3Rs to surgical standards, comprehensive coverage
+                    </p>
+                </div>
+
+                <div class="text-center p-6 rounded-2xl border border-ec-border bg-ec-surface/40 backdrop-blur-sm"
+                     data-animate="fade-up" data-delay="160">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-4">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="11" width="18" height="11" rx="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-sm font-semibold text-white mb-1"
+                        data-en="Privacy-First" data-he="פרטיות קודמת">Privacy-First</h3>
+                    <p class="text-xs text-ec-dim"
+                       data-en="Runs locally with Ollama. Your protocols never leave your machine"
+                       data-he="רץ מקומית עם Ollama. הפרוטוקולים שלכם לא עוזבים את המחשב">
+                        Runs locally with Ollama. Your protocols never leave your machine
+                    </p>
+                </div>
+
+                <div class="text-center p-6 rounded-2xl border border-ec-border bg-ec-surface/40 backdrop-blur-sm"
+                     data-animate="fade-up" data-delay="240">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-ec-glow/10 text-ec-glow flex items-center justify-center mb-4">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="8.5" cy="7" r="4"/>
+                            <path d="M20 8v6"/>
+                            <path d="M23 11h-6"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-sm font-semibold text-white mb-1"
+                        data-en="Open Source" data-he="קוד פתוח">Open Source</h3>
+                    <p class="text-xs text-ec-dim"
+                       data-en="Transparent, auditable, and community-driven"
+                       data-he="שקוף, ניתן לביקורת ומונע קהילה">
+                        Transparent, auditable, and community-driven
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== CTA SECTION ========== -->
+    <section class="py-28 px-6 relative">
+        <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-ec-border2 to-transparent"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,197,94,0.05),transparent_70%)]"></div>
+
+        <div class="max-w-3xl mx-auto text-center relative z-10">
+            <div class="rounded-[32px] border border-ec-border bg-ec-surface/50 backdrop-blur-sm p-12 md:p-16
+                        shadow-[0_0_60px_rgba(34,197,94,0.05)]"
+                 data-animate="fade-up">
+                <p class="text-sm font-medium tracking-[0.18em] text-ec-glow uppercase mb-4"
+                   data-en="Get Started" data-he="התחילו עכשיו">Get Started</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4"
+                    data-en="Ready to review your protocol?" data-he="מוכנים לבדוק את הפרוטוקול?">
+                    Ready to review your protocol?
+                </h2>
+                <p class="text-ec-dim max-w-lg mx-auto mb-10"
+                   data-en="Upload your Council HTML export and get a comprehensive ethics review in minutes."
+                   data-he="העלו את קובץ ה-HTML מהמועצה וקבלו בדיקת אתיקה מקיפה בדקות.">
+                    Upload your Council HTML export and get a comprehensive ethics review in minutes.
+                </p>
+                <a href="/app"
+                   class="glow-pulse inline-flex px-10 py-4 bg-ec-glow text-black font-semibold rounded-xl
+                          text-lg hover:bg-ec-glow/90 transition-all duration-300
+                          shadow-[0_0_40px_rgba(34,197,94,0.3)]">
+                    <span data-en="Open Analyzer" data-he="פתח בודק">Open Analyzer</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="border-t border-ec-border py-10 px-6">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-ec-muted">
+            <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-ec-glow to-ec-accent
+                            flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                        <path d="M9 12l2 2 4-4"/>
+                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <span>EthicTech</span>
+            </div>
+            <p data-en="AI-powered IACUC protocol review aligned with Israeli animal welfare law"
+               data-he="בדיקת פרוטוקולי IACUC מונעת AI בהתאמה לחוק צער בעלי חיים הישראלי">
+                AI-powered IACUC protocol review aligned with Israeli animal welfare law
+            </p>
+        </div>
+    </footer>
+
+    <script src="/static/js/landing.js"></script>
+</body>
+</html>

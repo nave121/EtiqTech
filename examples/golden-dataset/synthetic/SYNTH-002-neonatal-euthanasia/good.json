@@ -1,0 +1,57 @@
+{
+  "header": {"protocol_id": "SYNTH-002-G", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "גורי עכבר newborn",
+    "title_en": "Newborn mouse pup tissue collection",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 1,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000004",
+    "last_name_he": "לוי",
+    "first_name_he": "יעל",
+    "last_name_en": "Levi",
+    "first_name_en": "Yael",
+    "email": "synthetic4@test.il",
+    "phone_primary": "SYNTH-1000004",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-4",
+    "faculty": "Medicine",
+    "department": "Development",
+    "training": [{"cert_no": "T4", "issuer": "TAMIR", "animal_scope": "rodents", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {"scientific_en_≤300w": "Tissue collection from newborn mouse pups at P2.", "lay_he_≤150w": "איסוף רקמות מגורי עכבר."},
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["newborn mouse tissue collection alternatives"],
+    "conclusion": "Whole-animal developmental context is required."
+  },
+  "animals_total": [{"species": "mouse", "strain": "C57BL/6", "sex": "both", "genetic_status": "WT", "source": "vendor", "n_total": 20}],
+  "n_justification": {"method": "precedent", "details": "Published neonatal pilot design.", "attachments": []},
+  "experiments": [{
+    "label": "P2 pup collection",
+    "question": "Collect tissue from P2 mouse pups with a secondary physical confirmation step.",
+    "animals": {"species": "mouse", "strain": "C57BL/6", "sex": "both", "genetic_status": "WT", "n": 20},
+    "housing": {"group_housed": true},
+    "procedure_timeline": [{"step": "Newborn pups on postnatal day 2 receive extended CO2 exposure followed by cervical dislocation."}],
+    "analgesia": [],
+    "anesthesia": [],
+    "severity_level_1_to_5": 4,
+    "monitoring": {
+      "plan": "Veterinary consultation obtained for this neonatal terminal plan.",
+      "initial_72h_daily": true,
+      "parameters": ["Daily during the first 72h is not applicable because this is terminal, but the neonatal handling and euthanasia sequence were reviewed by veterinary staff."]
+    },
+    "humane_endpoints": {"general": ["Terminal collection only."], "specific": []},
+    "euthanasia": {"primary": "CO2", "parameters": "50 min exposure with secondary cervical dislocation", "confirmation": "No heartbeat and cervical dislocation completed."},
+    "fate": "euthanized"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

@@ -1,0 +1,58 @@
+{
+  "header": {"protocol_id": "ADV-003-B", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "test",
+    "title_en": "Mouse laparotomy with low declared severity",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 2,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "200000005",
+    "last_name_he": "test",
+    "first_name_he": "test",
+    "last_name_en": "Cohen",
+    "first_name_en": "Roni",
+    "email": "adv003@test.il",
+    "phone_primary": "SYNTH-2000005",
+    "phone_secondary": "",
+    "institutional_cert_no": "ADV-CERT-5",
+    "faculty": "Medicine",
+    "department": "Surgery",
+    "training": [{"cert_no": "ADV-T5", "issuer": "TAMIR", "animal_scope": "rodents", "date": "2025-01-01"}]
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Mice undergo survival laparotomy for serial sampling.",
+    "lay_he_≤150w": "test"
+  },
+  "alternatives_search": {
+    "engines": ["PubMed"],
+    "date": "2025-01-01",
+    "queries": ["mouse laparotomy serial sampling alternatives"],
+    "conclusion": "No ex vivo model captures the physiologic response."
+  },
+  "animals_total": [
+    {"species": "mouse", "strain": "C57BL/6", "sex": "both", "genetic_status": "WT", "source": "vendor", "n_total": 16}
+  ],
+  "n_justification": {"method": "precedent", "details": "Published serial sampling design.", "attachments": []},
+  "experiments": [{
+    "label": "Survival laparotomy",
+    "question": "Perform a survival laparotomy and collect tissue at recovery.",
+    "animals": {"species": "mouse", "strain": "C57BL/6", "sex": "both", "genetic_status": "WT", "n": 16},
+    "housing": {"group_housed": true},
+    "procedure_timeline": [{"step": "A laparotomy incision is made and the abdomen is closed for survival follow-up."}],
+    "analgesia": [],
+    "anesthesia": [{"agent": "Isoflurane", "rationale": "Surgery", "dose": "2%", "route": "inhaled"}],
+    "severity_level_1_to_5": 2,
+    "monitoring": {"plan": "Daily wound and recovery checks after surgery.", "parameters": ["Daily wound check.", "Observe recovery from anesthesia."]},
+    "humane_endpoints": {"general": ["Wound dehiscence or 15% weight loss."], "specific": []},
+    "euthanasia": {"primary": "cervical dislocation", "parameters": "Performed by trained personnel under anesthesia.", "confirmation": ""},
+    "fate": "survival"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

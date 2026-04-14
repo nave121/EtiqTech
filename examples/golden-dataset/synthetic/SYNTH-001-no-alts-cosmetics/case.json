@@ -1,0 +1,26 @@
+{
+  "case_id": "SYNTH-001",
+  "case_type": "synthetic_pair",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "mouse",
+  "pain_category": "B",
+  "procedure_types": ["topical_testing"],
+  "primary_risks": ["missing_alternatives_search", "cosmetics_ban"],
+  "files": {
+    "bad_json": "examples/golden-dataset/synthetic/SYNTH-001-no-alts-cosmetics/bad.json",
+    "good_json": "examples/golden-dataset/synthetic/SYNTH-001-no-alts-cosmetics/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["alts:missing", "cosmetics:ban", "euthanasia:conditions-missing"],
+    "good_expected_l1_refs": ["euthanasia:conditions-missing"],
+    "target_l2_themes": ["three_Rs_alternatives", "harm_benefit_analysis"],
+    "target_l3_sections": ["alternatives_search", "scientific_justification"],
+    "must_not_miss_tags": ["no_alternatives_search_category_de", "cosmetics_testing_ban"],
+    "notes_for_reviewers": "Synthetic low-burden case for prohibited cosmetics/cleaning-product style testing with an empty alternatives section."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "header": {"protocol_id": "SYNTH-007-G", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "טוקסיקולוגיה בחזירים",
+    "title_en": "Pig toxicology study with early intervention",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 1,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000014",
+    "last_name_he": "חן",
+    "first_name_he": "עומר",
+    "last_name_en": "Chen",
+    "first_name_en": "Omer",
+    "email": "synthetic14@test.il",
+    "phone_primary": "SYNTH-1000014",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-14",
+    "faculty": "Medicine",
+    "department": "Toxicology",
+    "training": [{"cert_no": "T14", "issuer": "TAMIR", "animal_scope": "large animals", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {"scientific_en_≤300w": "Large-animal toxicology study with early intervention criteria.", "lay_he_≤150w": "מחקר טוקסיקולוגיה עם התערבות מוקדמת."},
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["pig toxicology severe distress alternative"],
+    "conclusion": "No replacement reproduces the integrated cardiovascular response."
+  },
+  "animals_total": [{"species": "pig", "strain": "Large White", "sex": "both", "genetic_status": "WT", "source": "vendor", "n_total": 10}],
+  "n_justification": {"method": "precedent", "details": "Pilot toxicology study.", "attachments": []},
+  "experiments": [{
+    "label": "Controlled toxicology challenge",
+    "question": "Animals are euthanized early if severe distress criteria emerge.",
+    "animals": {"species": "pig", "strain": "Large White", "sex": "both", "genetic_status": "WT", "n": 10},
+    "housing": {"group_housed": false},
+    "procedure_timeline": [{"step": "Animals receive a controlled challenge with predefined intervention criteria."}],
+    "analgesia": [],
+    "anesthesia": [],
+    "severity_level_1_to_5": 4,
+    "monitoring": {"plan": "Observe with predefined intervention criteria.", "parameters": ["Daily during the first 72h with respiratory, posture, and pain assessment."]},
+    "humane_endpoints": {"general": ["Respiratory distress, persistent convulsions, or inability to stand trigger immediate euthanasia."], "specific": []},
+    "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "No heartbeat."},
+    "fate": "survival"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

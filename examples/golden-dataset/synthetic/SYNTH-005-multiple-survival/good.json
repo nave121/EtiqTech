@@ -1,0 +1,69 @@
+{
+  "header": {"protocol_id": "SYNTH-005-G", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "פרוצדורה שרידות אחת",
+    "title_en": "One survival laparotomy procedure in rabbits",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 2,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000010",
+    "last_name_he": "הררי",
+    "first_name_he": "נועה",
+    "last_name_en": "Harari",
+    "first_name_en": "Noa",
+    "email": "synthetic10@test.il",
+    "phone_primary": "SYNTH-1000010",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-10",
+    "faculty": "Medicine",
+    "department": "Surgery",
+    "training": [{"cert_no": "T10", "issuer": "TAMIR", "animal_scope": "rabbits", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {"scientific_en_≤300w": "One survival procedure followed by terminal collection.", "lay_he_≤150w": "פרוצדורה שרידות אחת על ארנבים."},
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["rabbit repeated survival surgery justification"],
+    "conclusion": "No replacement provides the needed serial tissue data."
+  },
+  "animals_total": [{"species": "rabbit", "strain": "NZW", "sex": "female", "genetic_status": "WT", "source": "vendor", "n_total": 8}],
+  "n_justification": {"method": "precedent", "details": "Serial sampling design.", "attachments": []},
+  "experiments": [
+    {
+      "label": "First survival surgery",
+      "question": "Perform a first survival laparotomy procedure.",
+      "animals": {"species": "rabbit", "strain": "NZW", "sex": "female", "genetic_status": "WT", "n": 4},
+      "housing": {"group_housed": false},
+      "procedure_timeline": [{"step": "Laparotomy surgery for the first survival procedure."}],
+      "analgesia": [{"agent": "Buprenorphine", "rationale": "Pain", "dose": "0.03 mg/kg", "route": "SC"}],
+      "anesthesia": [{"agent": "Isoflurane", "rationale": "Surgery", "dose": "2%", "route": "inhaled"}],
+      "severity_level_1_to_5": 3,
+      "monitoring": {"plan": "Daily checks.", "parameters": ["Daily wound check."]},
+      "humane_endpoints": {"general": ["Weight loss or wound dehiscence."], "specific": []},
+      "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "No heartbeat."},
+      "fate": "survival"
+    },
+    {
+      "label": "Terminal collection",
+      "question": "Collect terminal tissue after the first study arm.",
+      "animals": {"species": "rabbit", "strain": "NZW", "sex": "female", "genetic_status": "WT", "n": 4},
+      "housing": {"group_housed": false},
+      "procedure_timeline": [{"step": "Terminal tissue collection under deep anesthesia."}],
+      "analgesia": [],
+      "anesthesia": [{"agent": "Isoflurane", "rationale": "Terminal procedure", "dose": "2%", "route": "inhaled"}],
+      "severity_level_1_to_5": 2,
+      "monitoring": {"plan": "Terminal procedure.", "parameters": ["No survival follow-up needed."]},
+      "humane_endpoints": {"general": ["Terminal collection."], "specific": []},
+      "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "No heartbeat."},
+      "fate": "euthanized"
+    }
+  ],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

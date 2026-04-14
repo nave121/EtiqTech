@@ -1,0 +1,61 @@
+{
+  "header": {"protocol_id": "ADV-002-B", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "test",
+    "title_en": "Lethal inflammatory challenge in rats",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 2,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "200000003",
+    "last_name_he": "test",
+    "first_name_he": "test",
+    "last_name_en": "Bar",
+    "first_name_en": "Noam",
+    "email": "adv002@test.il",
+    "phone_primary": "SYNTH-2000003",
+    "phone_secondary": "",
+    "institutional_cert_no": "ADV-CERT-3",
+    "faculty": "Medicine",
+    "department": "Inflammation",
+    "training": [{"cert_no": "ADV-T3", "issuer": "TAMIR", "animal_scope": "rats", "date": "2025-01-01"}]
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Rats receive a lethal inflammatory challenge for biomarker analysis.",
+    "lay_he_≤150w": "test"
+  },
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["rat inflammatory challenge biomarker alternatives"],
+    "conclusion": "Whole-animal inflammatory kinetics are required."
+  },
+  "animals_total": [
+    {"species": "rat", "strain": "Sprague Dawley", "sex": "both", "genetic_status": "WT", "source": "vendor", "n_total": 24}
+  ],
+  "n_justification": {"method": "precedent", "details": "Published inflammatory survival model.", "attachments": []},
+  "experiments": [{
+    "label": "Inflammatory challenge",
+    "question": "Track biomarker changes after a lethal inflammatory challenge.",
+    "animals": {"species": "rat", "strain": "Sprague Dawley", "sex": "both", "genetic_status": "WT", "n": 24},
+    "housing": {"group_housed": true},
+    "procedure_timeline": [{"step": "Animals receive the inflammatory challenge and are sampled until study completion."}],
+    "analgesia": [],
+    "anesthesia": [],
+    "severity_level_1_to_5": 4,
+    "monitoring": {
+      "plan": "Daily monitoring during the first 72 hours and weekly thereafter, with veterinary consultation on the monitoring plan.",
+      "parameters": ["Daily clinical scoring during the first 72 hours.", "Weekly review after stabilization.", "Consulting veterinarian reviews intervention thresholds."]
+    },
+    "humane_endpoints": {"general": ["Animals remain on study until death or moribundity."], "specific": []},
+    "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirmed by absent heartbeat."},
+    "fate": "survival"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

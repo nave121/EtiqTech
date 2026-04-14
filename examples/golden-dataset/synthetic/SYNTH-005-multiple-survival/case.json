@@ -1,0 +1,26 @@
+{
+  "case_id": "SYNTH-005",
+  "case_type": "must_not_miss",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "rabbit",
+  "pain_category": "C",
+  "procedure_types": ["multiple_survival", "surgery"],
+  "primary_risks": ["cumulative_burden", "reuse_justification"],
+  "files": {
+    "bad_json": "examples/golden-dataset/synthetic/SYNTH-005-multiple-survival/bad.json",
+    "good_json": "examples/golden-dataset/synthetic/SYNTH-005-multiple-survival/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["housing:density", "surgery:multiple-survival"],
+    "good_expected_l1_refs": ["housing:density"],
+    "target_l2_themes": ["sex_and_reuse", "harm_benefit_analysis"],
+    "target_l3_sections": ["scientific_justification", "analgesia_and_anesthesia", "housing"],
+    "must_not_miss_tags": ["multiple_major_survival_without_justification"],
+    "notes_for_reviewers": "Synthetic multi-surgery rabbit case for cumulative burden and reuse review."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

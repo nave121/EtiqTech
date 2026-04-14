@@ -1,0 +1,53 @@
+{
+  "header": {"protocol_id": "SYNTH-007-B", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "טוקסיקולוגיה בחזירים",
+    "title_en": "Pig toxicology study with prolonged unameliorated distress",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 1,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000013",
+    "last_name_he": "חן",
+    "first_name_he": "עומר",
+    "last_name_en": "Chen",
+    "first_name_en": "Omer",
+    "email": "synthetic13@test.il",
+    "phone_primary": "SYNTH-1000013",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-13",
+    "faculty": "Medicine",
+    "department": "Toxicology",
+    "training": [{"cert_no": "T13", "issuer": "TAMIR", "animal_scope": "large animals", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {"scientific_en_≤300w": "Large-animal toxicology study with prolonged severe suffering.", "lay_he_≤150w": "מחקר טוקסיקולוגיה עם סבל ממושך."},
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["pig toxicology severe distress alternative"],
+    "conclusion": "No replacement reproduces the integrated cardiovascular response."
+  },
+  "animals_total": [{"species": "pig", "strain": "Large White", "sex": "both", "genetic_status": "WT", "source": "vendor", "n_total": 10}],
+  "n_justification": {"method": "precedent", "details": "Pilot toxicology study.", "attachments": []},
+  "experiments": [{
+    "label": "Severe toxicology challenge",
+    "question": "Pigs may experience prolonged convulsions and respiratory failure for several days before terminal collection.",
+    "animals": {"species": "pig", "strain": "Large White", "sex": "both", "genetic_status": "WT", "n": 10},
+    "housing": {"group_housed": false},
+    "procedure_timeline": [{"step": "Animals receive escalating toxin challenge with expected multi-day distress and convulsions."}],
+    "analgesia": [],
+    "anesthesia": [],
+    "severity_level_1_to_5": 5,
+    "monitoring": {"plan": "Observe through the full severe course.", "parameters": ["Record convulsions."]},
+    "humane_endpoints": {"general": ["Death or irreversible collapse."], "specific": []},
+    "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "No heartbeat."},
+    "fate": "survival"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

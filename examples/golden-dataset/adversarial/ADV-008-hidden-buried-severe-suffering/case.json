@@ -1,0 +1,26 @@
+{
+  "case_id": "ADV-008",
+  "case_type": "adversarial",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "pig",
+  "pain_category": "E",
+  "procedure_types": ["toxicology", "hidden_violation"],
+  "primary_risks": ["buried_prolonged_distress"],
+  "files": {
+    "bad_json": "examples/golden-dataset/adversarial/ADV-008-hidden-buried-severe-suffering/bad.json",
+    "good_json": "examples/golden-dataset/adversarial/ADV-008-hidden-buried-severe-suffering/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["housing:density"],
+    "good_expected_l1_refs": ["housing:density"],
+    "target_l2_themes": ["harm_benefit_analysis", "severity_monitoring_analgesia"],
+    "target_l3_sections": ["severity_classification", "monitoring_and_endpoints"],
+    "must_not_miss_tags": ["severe_long_lasting_suffering"],
+    "notes_for_reviewers": "Hidden violation: the bad variant normalizes prolonged recumbency, anorexia, and social withdrawal before scheduled collection without explicit rescue thresholds."
+  },
+  "dependencies": {
+    "blocked_by_rules": ["P2-epic-anchoring-bias-dual-pass", "P3-epic-self-consistency-voting"],
+    "current_expected_status": "future_capability"
+  }
+}

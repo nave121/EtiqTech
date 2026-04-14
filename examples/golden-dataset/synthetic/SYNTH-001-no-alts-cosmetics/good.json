@@ -1,0 +1,53 @@
+{
+  "header": {"protocol_id": "SYNTH-001-G", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "בדיקת פורמולציה טופיקלית",
+    "title_en": "Topical formulation compatibility study",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 1,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000002",
+    "last_name_he": "כהן",
+    "first_name_he": "תמר",
+    "last_name_en": "Cohen",
+    "first_name_en": "Tamar",
+    "email": "synthetic2@test.il",
+    "phone_primary": "SYNTH-1000002",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-2",
+    "faculty": "Medicine",
+    "department": "Dermatology",
+    "training": [{"cert_no": "T2", "issuer": "TAMIR", "animal_scope": "rodents", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {"scientific_en_≤300w": "Compatibility study for a topical formulation.", "lay_he_≤150w": "בדיקת התאמה של פורמולציה."},
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["topical formulation irritation alternative non-animal"],
+    "conclusion": "Cell culture screening did not answer the integrated irritation question for this formulation."
+  },
+  "animals_total": [{"species": "mouse", "strain": "ICR", "sex": "female", "genetic_status": "WT", "source": "vendor", "n_total": 12}],
+  "n_justification": {"method": "precedent", "details": "Small exploratory cohort.", "attachments": []},
+  "experiments": [{
+    "label": "Topical compatibility test",
+    "question": "Does the topical formulation remain compatible with intact skin?",
+    "animals": {"species": "mouse", "strain": "ICR", "sex": "female", "genetic_status": "WT", "n": 12},
+    "housing": {"group_housed": true},
+    "procedure_timeline": [{"step": "Apply the test formulation to clipped dorsal skin once daily."}],
+    "analgesia": [],
+    "anesthesia": [],
+    "severity_level_1_to_5": 2,
+    "monitoring": {"plan": "Observe for erythema.", "parameters": ["Daily visual check with withdrawal if lesions persist."]},
+    "humane_endpoints": {"general": ["Persistent ulceration or severe dermatitis."], "specific": []},
+    "euthanasia": {"primary": "cervical dislocation", "parameters": "", "confirmation": ""},
+    "fate": "euthanized"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

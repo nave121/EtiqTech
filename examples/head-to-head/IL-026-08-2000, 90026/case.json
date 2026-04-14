@@ -1,0 +1,52 @@
+{
+  "case_id": "REAL-115",
+  "case_type": "real_pair",
+  "review_status": "reviewer_ready",
+  "source_origin": "real_redacted",
+  "species": "mouse",
+  "pain_category": "C",
+  "procedure_types": [
+    "oncology",
+    "pilot",
+    "imaging"
+  ],
+  "primary_risks": [
+    "pilot_scope",
+    "imaging_frequency",
+    "tumor_burden"
+  ],
+  "files": {
+    "bad_html": "examples/head-to-head/IL-026-08-2000, 90026/bad_IL-026-08-2000_alt2.html",
+    "good_html": "examples/head-to-head/IL-026-08-2000, 90026/good_IL-026-08-2000.html",
+    "case_report": "examples/head-to-head/IL-026-08-2000, 90026/CASE_REPORT.md"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": [
+      "special:oncology",
+      "vet:consultation"
+    ],
+    "good_expected_l1_refs": [
+      "postop:monitoring",
+      "severity:analgesia",
+      "special:oncology",
+      "special:stereotaxic",
+      "vet:consultation"
+    ],
+    "target_l2_themes": [
+      "N_and_justification",
+      "harm_benefit_analysis",
+      "scientific_coherence"
+    ],
+    "target_l3_sections": [
+      "scientific_justification",
+      "animal_numbers",
+      "monitoring_and_endpoints"
+    ],
+    "must_not_miss_tags": [],
+    "notes_for_reviewers": "Good variant introduces additional deterministic findings; keeping both outputs explicit is important for regression stability."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

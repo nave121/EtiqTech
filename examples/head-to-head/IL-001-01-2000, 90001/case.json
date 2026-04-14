@@ -1,0 +1,51 @@
+{
+  "case_id": "REAL-007",
+  "case_type": "real_pair",
+  "review_status": "reviewer_ready",
+  "source_origin": "real_redacted",
+  "species": "mouse",
+  "pain_category": "C",
+  "procedure_types": [
+    "nanomaterials",
+    "sound_stimulation",
+    "pilot"
+  ],
+  "primary_risks": [
+    "term_scope",
+    "nanomaterials",
+    "documentation_coherence"
+  ],
+  "files": {
+    "bad_html": "examples/head-to-head/IL-001-01-2000, 90001/bad_IL-001-01-2000_alt1.html",
+    "good_html": "examples/head-to-head/IL-001-01-2000, 90001/good_IL-001-01-2000.html",
+    "case_report": "examples/head-to-head/IL-001-01-2000, 90001/CASE_REPORT.md"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": [
+      "endpoints:20%-only",
+      "special:nanomaterials",
+      "term:track"
+    ],
+    "good_expected_l1_refs": [
+      "endpoints:20%-only",
+      "special:nanomaterials",
+      "term:track"
+    ],
+    "target_l2_themes": [
+      "three_Rs_alternatives",
+      "harm_benefit_analysis",
+      "scientific_coherence"
+    ],
+    "target_l3_sections": [
+      "alternatives_search",
+      "animal_numbers",
+      "monitoring_and_endpoints"
+    ],
+    "must_not_miss_tags": [],
+    "notes_for_reviewers": "Real pair remains valuable for pilot-scope review even though the current deterministic outputs do not change between variants."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

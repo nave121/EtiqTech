@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EthicTech - IACUC Protocol Review</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-content">
+            <div class="header-brand">
+                <div class="logo">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4"/>
+                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>EthicTech</h1>
+                    <p class="subtitle">IACUC Protocol Review</p>
+                </div>
+            </div>
+            <div class="header-actions" id="header-actions" hidden>
+                <span class="file-name" id="current-file-name"></span>
+                <button class="btn-export" id="export-pdf-btn" disabled title="Waiting for LLM verification to complete…">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Export PDF
+                </button>
+                <button class="btn-new" id="new-analysis-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    New Analysis
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <!-- Upload Section -->
+        <section id="upload-section" class="upload-section">
+            <div class="upload-card">
+                <div class="upload-zone" id="upload-zone">
+                    <div class="upload-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </div>
+                    <p class="upload-text">Drag and drop Council HTML export</p>
+                    <p class="upload-subtext">or click to browse files</p>
+                    <input type="file" id="file-input" accept=".html,.htm" hidden>
+                </div>
+            </div>
+            <div class="upload-loading" id="upload-loading" hidden>
+                <div class="loading-card">
+                    <div class="spinner"></div>
+                    <p class="loading-text">Analyzing protocol...</p>
+                    <p class="loading-subtext">Parsing and validating against Israeli law requirements</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results-section" class="results-section" hidden>
+            <!-- Summary Cards -->
+            <div class="summary-cards" id="summary-cards">
+                <div class="summary-card status-card" id="status-card">
+                    <div class="card-icon" id="status-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-label">Status</span>
+                        <span class="card-value" id="summary-status">PASS</span>
+                    </div>
+                </div>
+                <div class="summary-card errors-card" id="errors-card">
+                    <div class="card-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="15" y1="9" x2="9" y2="15"/>
+                            <line x1="9" y1="9" x2="15" y2="15"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-value" id="error-count">0</span>
+                        <span class="card-label">Errors</span>
+                    </div>
+                </div>
+                <div class="summary-card warnings-card" id="warnings-card">
+                    <div class="card-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-value" id="warning-count">0</span>
+                        <span class="card-label">Warnings</span>
+                    </div>
+                </div>
+                <div class="summary-card llm-card" id="llm-card">
+                    <div class="card-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
+                            <path d="M12 2a10 10 0 0 1 10 10"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-value" id="llm-summary">--</span>
+                        <span class="card-label">LLM Review</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Container -->
+            <div class="document-container">
+                <div class="document-wrapper">
+                    <div class="document-content" id="document-content">
+                        <!-- Rendered HTML with inline badges -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviewer Notes Panel -->
+            <div class="reviewer-notes-panel" id="reviewer-notes-panel">
+                <div class="notes-header">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    <span>Reviewer Notes</span>
+                </div>
+                <textarea id="reviewer-notes-input" placeholder="Add your overall review notes here. These will be included in the PDF export." rows="4"></textarea>
+            </div>
+
+            <!-- Detail Panel (slides up from bottom) -->
+            <div class="detail-panel" id="detail-panel" hidden>
+                <div class="detail-header">
+                    <div class="detail-title-area">
+                        <span class="detail-badge" id="detail-badge">Error</span>
+                        <span class="detail-title" id="detail-title">Issue Details</span>
+                    </div>
+                    <button class="detail-close" id="detail-close">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="detail-content" id="detail-content">
+                    <!-- Selected issue details appear here -->
+                </div>
+            </div>
+
+            <!-- LLM Progress Card (floating) -->
+            <div class="llm-progress-card" id="llm-progress-card">
+                <div class="llm-progress-header">
+                    <div class="llm-status-indicator">
+                        <span class="status-dot" id="llm-status-dot"></span>
+                        <span class="status-text" id="llm-status-text">Starting LLM review...</span>
+                    </div>
+                    <button class="llm-minimize" id="llm-minimize">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="4 14 10 14 10 20"/>
+                            <polyline points="20 10 14 10 14 4"/>
+                            <line x1="14" y1="10" x2="21" y2="3"/>
+                            <line x1="3" y1="21" x2="10" y2="14"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="llm-progress-body" id="llm-progress-body">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="llm-progress-fill"></div>
+                        </div>
+                        <span class="progress-text" id="llm-progress-text">0 / 12 themes</span>
+                    </div>
+                    <div class="llm-thinking" id="llm-thinking">
+                        <div class="thinking-header">
+                            <span class="thinking-label">Analyzing</span>
+                            <span class="thinking-theme" id="thinking-theme"></span>
+                        </div>
+                        <div class="thinking-content" id="thinking-content"></div>
+                    </div>
+                </div>
+                <div class="llm-results-summary" id="llm-results-summary" hidden>
+                    <!-- Mini results summary when minimized -->
+                </div>
+                <div class="llm-export-cta" id="llm-export-cta" hidden>
+                    <span class="llm-export-label">&#10003; Review complete</span>
+                    <button class="btn-export-inline" id="llm-export-btn">Export Full Report PDF</button>
+                </div>
+            </div>
+            <!-- Human Eye (Layer 3) Review -->
+            <button class="btn-layer3" id="layer3-btn" hidden>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/>
+                </svg>
+                Human Eye Review
+            </button>
+
+            <div class="llm-progress-card" id="layer3-card" hidden>
+                <div class="llm-progress-header">
+                    <div class="llm-status-indicator">
+                        <span class="status-dot running" id="layer3-status-dot"></span>
+                        <span class="status-text" id="layer3-status-text">Starting Human Eye review...</span>
+                    </div>
+                </div>
+                <div class="llm-progress-body">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="layer3-progress-fill"></div>
+                        </div>
+                    </div>
+                    <div class="llm-thinking" id="layer3-thinking">
+                        <div class="thinking-header">
+                            <span class="thinking-label">Reviewing</span>
+                        </div>
+                        <div class="thinking-content" id="layer3-thinking-content"></div>
+                    </div>
+                </div>
+                <div id="layer3-results" hidden style="padding:12px 16px;font-size:.875rem;"></div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "case_id": "SYNTH-003",
+  "case_type": "must_not_miss",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "rat",
+  "pain_category": "E",
+  "procedure_types": ["survival_surgery", "pain_model"],
+  "primary_risks": ["unrelieved_pain", "death_endpoint"],
+  "files": {
+    "bad_json": "examples/golden-dataset/synthetic/SYNTH-003-category-e-death-endpoint/bad.json",
+    "good_json": "examples/golden-dataset/synthetic/SYNTH-003-category-e-death-endpoint/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["endpoints:death-only", "housing:density", "postop:monitoring", "severity:analgesia", "severity:monitoring", "vet:consultation"],
+    "good_expected_l1_refs": ["housing:density"],
+    "target_l2_themes": ["severity_monitoring_analgesia", "euthanasia_and_endpoints", "harm_benefit_analysis"],
+    "target_l3_sections": ["severity_classification", "monitoring_and_endpoints", "analgesia_and_anesthesia"],
+    "must_not_miss_tags": ["category_e_without_justification", "death_as_endpoint_without_justification"],
+    "notes_for_reviewers": "Synthetic Category E case where the bad variant omits both analgesia and earlier humane endpoints."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

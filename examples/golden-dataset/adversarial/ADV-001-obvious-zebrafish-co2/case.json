@@ -1,0 +1,26 @@
+{
+  "case_id": "ADV-001",
+  "case_type": "adversarial",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "zebrafish",
+  "pain_category": "C",
+  "procedure_types": ["terminal_collection", "euthanasia"],
+  "primary_risks": ["species_method_mismatch"],
+  "files": {
+    "bad_json": "examples/golden-dataset/adversarial/ADV-001-obvious-zebrafish-co2/bad.json",
+    "good_json": "examples/golden-dataset/adversarial/ADV-001-obvious-zebrafish-co2/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["euthanasia:CO2", "euthanasia:secondary-method", "euthanasia:species-method"],
+    "good_expected_l1_refs": [],
+    "target_l2_themes": ["euthanasia_and_endpoints"],
+    "target_l3_sections": ["euthanasia"],
+    "must_not_miss_tags": ["unacceptable_euthanasia_for_species"],
+    "notes_for_reviewers": "Obvious species-method mismatch: adult zebrafish listed for CO2 euthanasia with no AVMA-compliant method details."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

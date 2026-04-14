@@ -1,0 +1,26 @@
+{
+  "case_id": "SYNTH-004",
+  "case_type": "must_not_miss",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "zebrafish",
+  "pain_category": "D",
+  "procedure_types": ["infectious_disease", "high_severity"],
+  "primary_risks": ["missing_humane_endpoints", "insufficient_monitoring"],
+  "files": {
+    "bad_json": "examples/golden-dataset/synthetic/SYNTH-004-missing-endpoints/bad.json",
+    "good_json": "examples/golden-dataset/synthetic/SYNTH-004-missing-endpoints/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["endpoints:20%-only", "severity:monitoring", "vet:consultation"],
+    "good_expected_l1_refs": [],
+    "target_l2_themes": ["severity_monitoring_analgesia", "euthanasia_and_endpoints", "harm_benefit_analysis"],
+    "target_l3_sections": ["severity_classification", "monitoring_and_endpoints", "euthanasia"],
+    "must_not_miss_tags": ["missing_humane_endpoints_high_severity"],
+    "notes_for_reviewers": "Synthetic high-severity case where the bad variant uses only a 20% endpoint and weak monitoring."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

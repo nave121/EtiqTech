@@ -1,0 +1,53 @@
+{
+  "header": {"protocol_id": "SYNTH-002-B", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "גורי עכבר newborn",
+    "title_en": "Newborn mouse pup tissue collection",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 1,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000003",
+    "last_name_he": "לוי",
+    "first_name_he": "יעל",
+    "last_name_en": "Levi",
+    "first_name_en": "Yael",
+    "email": "synthetic3@test.il",
+    "phone_primary": "SYNTH-1000003",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-3",
+    "faculty": "Medicine",
+    "department": "Development",
+    "training": [{"cert_no": "T3", "issuer": "TAMIR", "animal_scope": "rodents", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {"scientific_en_≤300w": "Tissue collection from newborn mouse pups at P2.", "lay_he_≤150w": "איסוף רקמות מגורי עכבר."},
+  "alternatives_search": {
+    "engines": ["PubMed"],
+    "date": "2025-01-01",
+    "queries": ["newborn mouse tissue collection alternatives"],
+    "conclusion": "Whole-animal developmental context is required."
+  },
+  "animals_total": [{"species": "mouse", "strain": "C57BL/6", "sex": "both", "genetic_status": "WT", "source": "vendor", "n_total": 20}],
+  "n_justification": {"method": "precedent", "details": "Published neonatal pilot design.", "attachments": []},
+  "experiments": [{
+    "label": "P2 pup collection",
+    "question": "Collect tissue from P2 mouse pups after CO2 exposure.",
+    "animals": {"species": "mouse", "strain": "C57BL/6", "sex": "both", "genetic_status": "WT", "n": 20},
+    "housing": {"group_housed": true},
+    "procedure_timeline": [{"step": "Newborn pups are placed in CO2 before dissection on postnatal day 2."}],
+    "analgesia": [],
+    "anesthesia": [],
+    "severity_level_1_to_5": 4,
+    "monitoring": {"plan": "Immediate terminal collection.", "parameters": ["One terminal observation."]},
+    "humane_endpoints": {"general": ["Terminal collection only."], "specific": []},
+    "euthanasia": {"primary": "CO2", "parameters": "", "confirmation": ""},
+    "fate": "euthanized"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

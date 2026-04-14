@@ -1,0 +1,58 @@
+{
+  "header": {"protocol_id": "ADV-006-G", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "test",
+    "title_en": "Rabbit wound-healing model with substantive alternatives search",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 3,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "200000012",
+    "last_name_he": "test",
+    "first_name_he": "test",
+    "last_name_en": "Friedman",
+    "first_name_en": "Neta",
+    "email": "adv006-good@test.il",
+    "phone_primary": "SYNTH-2000012",
+    "phone_secondary": "",
+    "institutional_cert_no": "ADV-CERT-12",
+    "faculty": "Medicine",
+    "department": "Dermatology",
+    "training": [{"cert_no": "ADV-T12", "issuer": "TAMIR", "animal_scope": "rabbits", "date": "2025-01-01"}]
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Rabbit wound-healing protocol for biomaterial assessment.",
+    "lay_he_≤150w": "test"
+  },
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase", "AGRICOLA"],
+    "date": "2025-01-01",
+    "queries": ["rabbit wound healing biomaterial replacement", "ex vivo skin substitute wound closure biomaterial"],
+    "conclusion": "Organotypic skin cultures and benchtop scaffolds were reviewed, but none reproduce vascularized healing, repeated biopsy, and scar formation over time in this model."
+  },
+  "animals_total": [
+    {"species": "rabbit", "strain": "NZW", "sex": "female", "genetic_status": "WT", "source": "vendor", "n_total": 18}
+  ],
+  "n_justification": {"method": "precedent", "details": "Prior biomaterial wound-healing study.", "attachments": []},
+  "experiments": [{
+    "label": "Wound-healing assessment",
+    "question": "Create standardized skin wounds and compare healing between biomaterials.",
+    "animals": {"species": "rabbit", "strain": "NZW", "sex": "female", "genetic_status": "WT", "n": 18},
+    "housing": {"group_housed": false},
+    "procedure_timeline": [{"step": "Under anesthesia, standardized skin wounds are created and followed during healing."}],
+    "analgesia": [{"agent": "Buprenorphine", "rationale": "Pain control", "dose": "0.03 mg/kg", "route": "SC"}],
+    "anesthesia": [{"agent": "Isoflurane", "rationale": "Wound creation", "dose": "2%", "route": "inhaled"}],
+    "severity_level_1_to_5": 3,
+    "monitoring": {"plan": "Daily wound checks after the procedure.", "parameters": ["Daily wound score.", "Record appetite and mobility."]},
+    "humane_endpoints": {"general": ["Infection, dehiscence, or 15% weight loss."], "specific": ["Purulent wound discharge triggers euthanasia."]},
+    "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirmed by absent heartbeat."},
+    "fate": "survival"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

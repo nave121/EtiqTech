@@ -1,0 +1,53 @@
+{
+  "header": {"protocol_id": "SYNTH-006-G", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "הדמיה בהרדמה",
+    "title_en": "Imaging study under general anesthesia",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 1,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000012",
+    "last_name_he": "בר",
+    "first_name_he": "ליאת",
+    "last_name_en": "Bar",
+    "first_name_en": "Liat",
+    "email": "synthetic12@test.il",
+    "phone_primary": "SYNTH-1000012",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-12",
+    "faculty": "Medicine",
+    "department": "Imaging",
+    "training": [{"cert_no": "T12", "issuer": "TAMIR", "animal_scope": "rodents", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {"scientific_en_≤300w": "Imaging study under documented anesthesia.", "lay_he_≤150w": "מחקר הדמיה בהרדמה כללית."},
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["general anesthesia imaging mouse study"],
+    "conclusion": "Whole-animal imaging context is required."
+  },
+  "animals_total": [{"species": "mouse", "strain": "C57BL/6", "sex": "both", "genetic_status": "WT", "source": "vendor", "n_total": 24}],
+  "n_justification": {"method": "precedent", "details": "Imaging pilot.", "attachments": []},
+  "experiments": [{
+    "label": "Imaging under anesthesia",
+    "question": "Imaging session under documented general anesthesia.",
+    "animals": {"species": "mouse", "strain": "C57BL/6", "sex": "both", "genetic_status": "WT", "n": 24},
+    "housing": {"group_housed": true},
+    "procedure_timeline": [{"step": "Mice undergo imaging under isoflurane anesthesia without neuromuscular blockade."}],
+    "analgesia": [],
+    "anesthesia": [{"agent": "Isoflurane", "rationale": "Imaging", "dose": "2%", "route": "inhaled"}],
+    "severity_level_1_to_5": 3,
+    "monitoring": {"plan": "Observe after imaging.", "parameters": ["Daily check and recovery scoring."]},
+    "humane_endpoints": {"general": ["Unexpected respiratory distress."], "specific": []},
+    "euthanasia": {"primary": "cervical dislocation", "parameters": "", "confirmation": ""},
+    "fate": "survival"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

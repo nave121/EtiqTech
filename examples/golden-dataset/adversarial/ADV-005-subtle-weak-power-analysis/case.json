@@ -1,0 +1,26 @@
+{
+  "case_id": "ADV-005",
+  "case_type": "adversarial",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "mouse",
+  "pain_category": "C",
+  "procedure_types": ["imaging", "numbers_justification"],
+  "primary_risks": ["semantically_weak_power_analysis"],
+  "files": {
+    "bad_json": "examples/golden-dataset/adversarial/ADV-005-subtle-weak-power-analysis/bad.json",
+    "good_json": "examples/golden-dataset/adversarial/ADV-005-subtle-weak-power-analysis/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": [],
+    "good_expected_l1_refs": [],
+    "target_l2_themes": ["N_and_justification", "scientific_coherence"],
+    "target_l3_sections": ["animal_numbers", "scientific_justification"],
+    "must_not_miss_tags": [],
+    "notes_for_reviewers": "Subtle deficiency: the bad variant claims a power analysis but never states alpha, power, effect size, or attrition logic."
+  },
+  "dependencies": {
+    "blocked_by_rules": ["P2-epic-anchoring-bias-dual-pass"],
+    "current_expected_status": "partially_testable"
+  }
+}

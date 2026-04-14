@@ -1,0 +1,26 @@
+{
+  "case_id": "SYNTH-002",
+  "case_type": "synthetic_pair",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "mouse",
+  "pain_category": "D",
+  "procedure_types": ["developmental", "euthanasia"],
+  "primary_risks": ["species_specific_euthanasia", "neonatal_handling"],
+  "files": {
+    "bad_json": "examples/golden-dataset/synthetic/SYNTH-002-neonatal-euthanasia/bad.json",
+    "good_json": "examples/golden-dataset/synthetic/SYNTH-002-neonatal-euthanasia/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["euthanasia:CO2", "euthanasia:displacement-rate", "euthanasia:secondary-method", "severity:monitoring", "special:neonatal-CO2", "vet:consultation"],
+    "good_expected_l1_refs": ["euthanasia:displacement-rate"],
+    "target_l2_themes": ["euthanasia_and_endpoints", "harm_benefit_analysis"],
+    "target_l3_sections": ["monitoring_and_endpoints", "euthanasia"],
+    "must_not_miss_tags": ["unacceptable_euthanasia_for_species"],
+    "notes_for_reviewers": "Synthetic neonatal mouse case to represent AVMA-sensitive euthanasia logic before the full species matrix lands."
+  },
+  "dependencies": {
+    "blocked_by_rules": ["P1-epic-avma-euthanasia-matrix"],
+    "current_expected_status": "partially_testable"
+  }
+}

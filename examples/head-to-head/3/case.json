@@ -1,0 +1,57 @@
+{
+  "case_id": "REAL-003",
+  "case_type": "real_pair",
+  "review_status": "reviewer_ready",
+  "source_origin": "real_redacted",
+  "species": "mouse",
+  "pain_category": "D",
+  "procedure_types": [
+    "oncology",
+    "viral_model",
+    "survival_surgery"
+  ],
+  "primary_risks": [
+    "analgesia",
+    "oncology_endpoints",
+    "biosafety"
+  ],
+  "files": {
+    "bad_html": "examples/head-to-head/3/bad.html",
+    "good_html": "examples/head-to-head/3/good.html",
+    "case_report": "examples/head-to-head/3/CASE_REPORT.md"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": [
+      "euthanasia:displacement-rate",
+      "euthanasia:secondary-method",
+      "special:biosafety",
+      "special:oncology",
+      "surgery:multiple-survival",
+      "vet:consultation"
+    ],
+    "good_expected_l1_refs": [
+      "euthanasia:displacement-rate",
+      "euthanasia:secondary-method",
+      "special:biosafety",
+      "special:oncology",
+      "surgery:multiple-survival",
+      "vet:consultation"
+    ],
+    "target_l2_themes": [
+      "severity_monitoring_analgesia",
+      "euthanasia_and_endpoints",
+      "harm_benefit_analysis"
+    ],
+    "target_l3_sections": [
+      "scientific_justification",
+      "monitoring_and_endpoints",
+      "euthanasia"
+    ],
+    "must_not_miss_tags": [],
+    "notes_for_reviewers": "This pair is useful for committee-level scope and burden review even though many deterministic findings persist in both variants."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

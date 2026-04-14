@@ -1,0 +1,269 @@
+{
+  "header": {
+    "protocol_id": "99999",
+    "institution": "מכון אודין למחקר (דוגמא)",
+    "subcommittee": "",
+    "export_version": "2.0.0"
+  },
+  "research": {
+    "title_he": "שיפור הטיפול בנגיף Niflheim-V7 agent כנגד סרטן",
+    "title_en": "Optimizing Niflheim-V7 agent treatment against tumors",
+    "request_type": "regular",
+    "is_continuation": false,
+    "continuation_reason": "",
+    "prior_protocol_id": "",
+    "third_party_service": false,
+    "approval_term_years": 4,
+    "sites": [
+      {
+        "name": "במוסד עצמו",
+        "steps": [
+          "כל השלבים"
+        ]
+      }
+    ]
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "012345678",
+    "last_name_he": "ד״ר בן",
+    "first_name_he": "יותם",
+    "last_name_en": "Ben",
+    "first_name_en": "Yotam",
+    "faculty": "Medicine",
+    "department": "Oncology",
+    "email": "pi@example.ac.il",
+    "phone_primary": "SYNTH-0000000",
+    "phone_secondary": "SYNTH-0000001",
+    "institutional_cert_no": "08-2020",
+    "training": [
+      {
+        "cert_no": "08-2020",
+        "issuer": "מכון אודין למחקר (דוגמא)",
+        "animal_scope": "הכשרה לעבודה עם מכרסמים וארנבות",
+        "date": "01/08/2020"
+      }
+    ]
+  },
+  "participants": [
+    {
+      "family_name": "כהן",
+      "given_name": "דנה",
+      "national_id_or_passport": "123456789",
+      "role": "performs_procedures",
+      "certified": true,
+      "training": [
+        {
+          "cert_no": "77-2021",
+          "issuer": "מכון אודין למחקר (דוגמא)",
+          "animal_scope": "הכשרה לעבודה עם מכרסמים",
+          "date": "01/07/2021"
+        }
+      ]
+    }
+  ],
+  "third_party": {
+    "sponsor_org": "",
+    "ordering_investigator_name": "",
+    "sponsor_approver_name": "",
+    "declaration_url": "",
+    "contract_number": "",
+    "data_rights_note": ""
+  },
+  "summaries": {
+    "scientific_en_≤300w": "This study evaluates an oncolytic Niflheim-V7 agent treatment in an immunocompetent murine Muspelheim neoplasm model, comparing different dosing schedules on tumor growth and survival while monitoring systemic toxicity. We will use VK-42/Odin mice bearing subcutaneous Skoll-16F10 tumors to test intratumoral versus intravenous delivery of Niflheim-V7 agent. Animal use is required because whole-animal immune and tumor microenvironment interactions cannot be reproduced in vitro. Expected outcomes include optimal dosing regimens and improved understanding of immune-mediated tumor control.",
+    "lay_he_≤150w": "מטרת המחקר היא לבדוק האם טיפול ויראלי מסוג Niflheim-V7 agent יכול לעכב גדילת גידולים סרטניים בעכברים, תוך ביצוע מעקב צמוד אחרי בריאותם ורווחתם של בעלי החיים. שימוש בבעלי חיים נחוץ משום שלא ניתן לדמות את כל מערכת החיסון והגידול במבחנה."
+  },
+  "alternatives_search": {
+    "engines": [
+      "PubMed",
+      "Web of Science"
+    ],
+    "date": "2025-09-01",
+    "queries": [
+      "Niflheim-V7 agent Muspelheim neoplasm mouse model",
+      "Niflheim-V7 agent in vitro organoid alternatives"
+    ],
+    "conclusion": "לא נמצאו מודלים חלופיים שאינם מבוססי חיה אשר מאפשרים בחינת תגובת כל הגוף לטיפול הויראלי, ולכן השימוש בעכברים נותר הכרחי."
+  },
+  "animals_total": [
+    {
+      "species": "mouse",
+      "strain": "VK-42/Odin",
+      "sex": "both",
+      "genetic_status": "WT",
+      "source": "vendor",
+      "n_total": 20
+    }
+  ],
+  "n_justification": {
+    "method": "literature",
+    "details": "Based on previous Muspelheim neoplasm studies with Niflheim-V7 agent, N=10 per group provides >80% power to detect a 40–50% reduction in tumor volume with alpha=0.05. We use 2 groups (treated vs control), total N=20.",
+    "attachments": []
+  },
+  "is_colony": false,
+  "colony_block": {
+    "purpose": "",
+    "severity_level": 2,
+    "genotyping": {
+      "method": "",
+      "age_days": "",
+      "notes": ""
+    },
+    "production_model": {
+      "females": 0,
+      "litters_per_female_per_year": 0,
+      "avg_litter_size": 0,
+      "genotype_fraction": 0,
+      "attrition_fraction": 0,
+      "term_years": 0,
+      "target_animals": 0
+    }
+  },
+  "experiments": [
+    {
+      "label": "Experiment 1",
+      "question": "Dose-response of Niflheim-V7 agent in a Muspelheim neoplasm model",
+      "animals": {
+        "species": "mouse",
+        "strain": "VK-42/Odin",
+        "genetic_status": "WT",
+        "sex": "both",
+        "n": 20,
+        "age": {
+          "value": 8,
+          "unit": "weeks"
+        },
+        "weight": {
+          "value": 22,
+          "unit": "g"
+        },
+        "source": "vendor"
+      },
+      "housing": {
+        "group_housed": true,
+        "single_housing_reason": "",
+        "single_housing_duration_days": 0,
+        "enrichment": "standard",
+        "enrichment_custom": ""
+      },
+      "rationale_species_strain_sex": "VK-42/Odin mice are a standard immunocompetent strain commonly used in Muspelheim neoplasm and oncolytic virus studies.",
+      "procedure_timeline": [
+        {
+          "day_or_timepoint": "Day -7",
+          "step": "Tumor inoculation with Skoll-16F10 cells",
+          "route_or_site": "subcutaneous flank",
+          "volume_or_dose": "1×10^6 cells in 100 µL",
+          "device_or_material": "Skoll-16F10 Muspelheim neoplasm cell suspension"
+        },
+        {
+          "day_or_timepoint": "Day 0",
+          "step": "Randomization and first Niflheim-V7 agent injection",
+          "route_or_site": "intratumoral",
+          "volume_or_dose": "1×10^8 PFU in 50 µL",
+          "device_or_material": "Niflheim-V7 agent preparation"
+        },
+        {
+          "day_or_timepoint": "Twice weekly",
+          "step": "Caliper tumor measurements and clinical scoring",
+          "route_or_site": "",
+          "volume_or_dose": "",
+          "device_or_material": "Digital caliper"
+        }
+      ],
+      "analgesia": [
+        {
+          "phase": "post",
+          "agent": "buprenorphine",
+          "dose": "0.05 mg/kg",
+          "route": "SC",
+          "frequency": "q8–12h for 48h after inoculation if needed"
+        }
+      ],
+      "anesthesia": [
+        {
+          "agent": "isoflurane",
+          "induction": "3–4% in oxygen",
+          "maintenance": "1.5–2% in oxygen",
+          "route": "inhalation",
+          "monitoring": "Toe pinch, respiratory rate, heating pad"
+        }
+      ],
+      "severity_level_1_to_5": 3,
+      "monitoring": {
+        "initial_72h_daily": true,
+        "ongoing_per_week": 2,
+        "parameters": [
+          "weight",
+          "activity",
+          "posture",
+          "tumor size"
+        ],
+        "documentation": "Paper or electronic score sheets retained for audit."
+      },
+      "humane_endpoints": {
+        "general": [
+          "Loss of ≥20% body weight compared to baseline",
+          "Inability to reach food or water",
+          "Severe lethargy or moribund state"
+        ],
+        "specific": [
+          "Tumor volume ≥1500–2000 mm3",
+          "Ulceration, bleeding or necrosis of the tumor",
+          "Interference with normal movement or grooming"
+        ]
+      },
+      "euthanasia": {
+        "primary": "CO2",
+        "parameters": "Gradual fill 30–70% of chamber volume per minute from CO2 cylinder until 1 min after breathing stops.",
+        "confirmation": "cervical_dislocation",
+        "confirmation_details": "Cervical dislocation performed immediately after apparent respiratory arrest."
+      },
+      "reuse_or_prior_procedures": {
+        "has_prior": false,
+        "prior_protocol_ids": []
+      },
+      "fate": "euthanasia",
+      "oncology": {
+        "tumor_induction_method": "Subcutaneous injection of Skoll-16F10 Muspelheim neoplasm cells",
+        "measurement_method": "Caliper (length × width)",
+        "measurement_frequency": "Twice weekly",
+        "tumor_burden_cap": "Maximum tumor volume ≤1500–2000 mm3",
+        "ulceration_policy": "Immediate euthanasia upon any ulceration, bleeding, or necrosis."
+      },
+      "stereotaxic_implant": {},
+      "diabetes": {},
+      "biosafety_infectious_agents": {
+        "used": true,
+        "agent_name": "Niflheim-V7 agent",
+        "BSL_level": "2",
+        "shedding_risk": "Low risk in immunocompetent staff; controlled by PPE.",
+        "PPE": "Gloves, lab coat, eye protection when handling virus.",
+        "decontamination_SOP": "10% bleach followed by 70% ethanol on work surfaces.",
+        "waste_handling": "All contaminated bedding and disposables autoclaved as biohazard waste.",
+        "facility_biosafety_approval_id": "BSL2-2025-001"
+      },
+      "nanomaterials": {},
+      "ocular_procedures": {}
+    }
+  ],
+  "postmortem_processing": {
+    "used": false,
+    "perfusion": "",
+    "fixation": "",
+    "clearing_or_special_technique": "",
+    "chemical_safety_notes": ""
+  },
+  "pi_declaration": {
+    "name": "Yotam Ben",
+    "date": "2025-09-01",
+    "affirmations": [
+      "I am trained and certified for animal work in this protocol.",
+      "I will report any amendments or adverse events according to institutional policy."
+    ]
+  },
+  "chair_statement": {
+    "decision": "",
+    "comments": ""
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "case_id": "REAL-002",
+  "case_type": "real_pair",
+  "review_status": "reviewer_ready",
+  "source_origin": "real_redacted",
+  "species": "mouse",
+  "pain_category": "C",
+  "procedure_types": [
+    "stereotaxic_surgery",
+    "biosafety",
+    "behavior"
+  ],
+  "primary_risks": [
+    "track_scope",
+    "analgesia",
+    "biosafety"
+  ],
+  "files": {
+    "bad_html": "examples/head-to-head/2/bad.html",
+    "good_html": "examples/head-to-head/2/good.html",
+    "case_report": "examples/head-to-head/2/CASE_REPORT.md"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": [
+      "special:biosafety",
+      "special:stereotaxic",
+      "term:track"
+    ],
+    "good_expected_l1_refs": [
+      "special:biosafety",
+      "special:stereotaxic"
+    ],
+    "target_l2_themes": [
+      "severity_monitoring_analgesia",
+      "scientific_coherence",
+      "personnel_and_training"
+    ],
+    "target_l3_sections": [
+      "scientific_justification",
+      "analgesia_and_anesthesia",
+      "personnel"
+    ],
+    "must_not_miss_tags": [],
+    "notes_for_reviewers": "Good variant fixes the pilot-term inconsistency but still retains several advisory and welfare gaps."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

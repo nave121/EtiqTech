@@ -1,0 +1,62 @@
+{
+  "header": {"protocol_id": "ADV-005-G", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "test",
+    "title_en": "Longitudinal imaging cohort with explicit power analysis",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 3,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "200000010",
+    "last_name_he": "test",
+    "first_name_he": "test",
+    "last_name_en": "Erez",
+    "first_name_en": "Tal",
+    "email": "adv005-good@test.il",
+    "phone_primary": "SYNTH-2000010",
+    "phone_secondary": "",
+    "institutional_cert_no": "ADV-CERT-10",
+    "faculty": "Medicine",
+    "department": "Imaging",
+    "training": [{"cert_no": "ADV-T10", "issuer": "TAMIR", "animal_scope": "mice", "date": "2025-01-01"}]
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Large mouse imaging cohort for longitudinal signal quantification with explicit power assumptions.",
+    "lay_he_≤150w": "test"
+  },
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["mouse longitudinal imaging alternatives"],
+    "conclusion": "No non-animal method reproduces longitudinal whole-body kinetics."
+  },
+  "animals_total": [
+    {"species": "mouse", "strain": "NSG", "sex": "female", "genetic_status": "WT", "source": "vendor", "n_total": 120}
+  ],
+  "n_justification": {
+    "method": "power",
+    "details": "Power analysis assumed alpha 0.05, power 0.8, effect size 0.6, and 36 animals per arm with 10% attrition reserve.",
+    "attachments": []
+  },
+  "experiments": [{
+    "label": "Longitudinal imaging",
+    "question": "Track longitudinal imaging signal across three treatment arms.",
+    "animals": {"species": "mouse", "strain": "NSG", "sex": "female", "genetic_status": "WT", "n": 120},
+    "housing": {"group_housed": true},
+    "procedure_timeline": [{"step": "Animals undergo non-survival imaging and are euthanized at scheduled harvest."}],
+    "analgesia": [],
+    "anesthesia": [{"agent": "Isoflurane", "rationale": "Imaging", "dose": "2%", "route": "inhaled"}],
+    "severity_level_1_to_5": 2,
+    "monitoring": {"plan": "Daily husbandry observation.", "parameters": ["Daily cage-side observation."]},
+    "humane_endpoints": {"general": ["Scheduled harvest or earlier euthanasia for distress."], "specific": ["Persistent lethargy or 15% weight loss triggers euthanasia."]},
+    "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirmed by absent heartbeat."},
+    "fate": "euthanized"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

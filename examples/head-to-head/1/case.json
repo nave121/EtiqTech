@@ -1,0 +1,58 @@
+{
+  "case_id": "REAL-001",
+  "case_type": "real_pair",
+  "review_status": "reviewer_ready",
+  "source_origin": "real_redacted",
+  "species": "mouse",
+  "pain_category": "D",
+  "procedure_types": [
+    "surgery",
+    "longitudinal_monitoring"
+  ],
+  "primary_risks": [
+    "analgesia",
+    "post_op_welfare",
+    "animal_numbers"
+  ],
+  "files": {
+    "bad_html": "examples/head-to-head/1/bad.html",
+    "good_html": "examples/head-to-head/1/good.html",
+    "case_report": "examples/head-to-head/1/CASE_REPORT.md"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": [
+      "animals:totals-vs-exps",
+      "endpoints:20%-only",
+      "euthanasia:CO2",
+      "euthanasia:displacement-rate",
+      "euthanasia:secondary-method",
+      "surgery:multiple-survival"
+    ],
+    "good_expected_l1_refs": [
+      "endpoints:20%-only",
+      "euthanasia:CO2",
+      "euthanasia:displacement-rate",
+      "euthanasia:secondary-method",
+      "surgery:multiple-survival",
+      "vet:consultation"
+    ],
+    "target_l2_themes": [
+      "N_and_justification",
+      "severity_monitoring_analgesia",
+      "euthanasia_and_endpoints"
+    ],
+    "target_l3_sections": [
+      "animal_numbers",
+      "monitoring_and_endpoints",
+      "analgesia_and_anesthesia"
+    ],
+    "must_not_miss_tags": [
+      "multiple_major_survival_without_justification"
+    ],
+    "notes_for_reviewers": "Bad variant includes an animals-total mismatch on top of persistent welfare issues."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

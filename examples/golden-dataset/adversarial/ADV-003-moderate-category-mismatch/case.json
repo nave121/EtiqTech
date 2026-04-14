@@ -1,0 +1,26 @@
+{
+  "case_id": "ADV-003",
+  "case_type": "adversarial",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "mouse",
+  "pain_category": "C",
+  "procedure_types": ["survival_surgery", "category_mismatch"],
+  "primary_risks": ["underclassified_pain", "missing_analgesia"],
+  "files": {
+    "bad_json": "examples/golden-dataset/adversarial/ADV-003-moderate-category-mismatch/bad.json",
+    "good_json": "examples/golden-dataset/adversarial/ADV-003-moderate-category-mismatch/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["pain:category-consistency"],
+    "good_expected_l1_refs": [],
+    "target_l2_themes": ["severity_monitoring_analgesia", "scientific_coherence"],
+    "target_l3_sections": ["severity_classification", "analgesia_and_anesthesia"],
+    "must_not_miss_tags": ["pain_underclassification"],
+    "notes_for_reviewers": "Moderate inconsistency: the protocol describes a survival laparotomy yet keeps severity at 2 and omits any analgesia."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

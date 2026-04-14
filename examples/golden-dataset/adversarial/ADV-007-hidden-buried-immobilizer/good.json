@@ -1,0 +1,60 @@
+{
+  "header": {"protocol_id": "ADV-007-G", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "test",
+    "title_en": "Cardiac imaging with explicit general anesthesia",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 2,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "200000014",
+    "last_name_he": "test",
+    "first_name_he": "test",
+    "last_name_en": "Golan",
+    "first_name_en": "Amit",
+    "email": "adv007-good@test.il",
+    "phone_primary": "SYNTH-2000014",
+    "phone_secondary": "",
+    "institutional_cert_no": "ADV-CERT-14",
+    "faculty": "Medicine",
+    "department": "Imaging",
+    "training": [{"cert_no": "ADV-T14", "issuer": "TAMIR", "animal_scope": "rodents", "date": "2025-01-01"}]
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Mouse cardiac imaging study with respiratory motion suppression.",
+    "lay_he_≤150w": "test"
+  },
+  "alternatives_search": {
+    "engines": ["PubMed"],
+    "date": "2025-01-01",
+    "queries": ["mouse cardiac imaging motion suppression alternatives"],
+    "conclusion": "Whole-animal imaging is required."
+  },
+  "animals_total": [
+    {"species": "mouse", "strain": "C57BL/6", "sex": "both", "genetic_status": "WT", "source": "vendor", "n_total": 20}
+  ],
+  "n_justification": {"method": "precedent", "details": "Published imaging workflow.", "attachments": []},
+  "experiments": [{
+    "label": "Cardiac imaging",
+    "question": "Acquire motion-limited cardiac images in live mice.",
+    "animals": {"species": "mouse", "strain": "C57BL/6", "sex": "both", "genetic_status": "WT", "n": 20},
+    "housing": {"group_housed": true},
+    "procedure_timeline": [{
+      "step": "Animals are maintained under isoflurane general anesthesia during acquisition with respiratory gating and full physiologic monitoring."
+    }],
+    "analgesia": [],
+    "anesthesia": [{"agent": "Isoflurane", "rationale": "General anesthesia for imaging", "dose": "1.5-2%", "route": "inhaled"}],
+    "severity_level_1_to_5": 2,
+    "monitoring": {"plan": "Observe animals after imaging until ambulatory.", "parameters": ["Respiratory rate and temperature are recorded during acquisition."]},
+    "humane_endpoints": {"general": ["Abort imaging if unexpected distress occurs."], "specific": []},
+    "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirmed by absent heartbeat."},
+    "fate": "survival"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

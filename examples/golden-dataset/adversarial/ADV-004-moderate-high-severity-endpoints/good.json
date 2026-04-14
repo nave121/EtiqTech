@@ -1,0 +1,64 @@
+{
+  "header": {"protocol_id": "ADV-004-G", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "test",
+    "title_en": "High-severity toxicology model with early endpoints",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 2,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "200000008",
+    "last_name_he": "test",
+    "first_name_he": "test",
+    "last_name_en": "Dror",
+    "first_name_en": "Liat",
+    "email": "adv004-good@test.il",
+    "phone_primary": "SYNTH-2000008",
+    "phone_secondary": "",
+    "institutional_cert_no": "ADV-CERT-8",
+    "faculty": "Pharmacy",
+    "department": "Toxicology",
+    "training": [{"cert_no": "ADV-T8", "issuer": "TAMIR", "animal_scope": "mice", "date": "2025-01-01"}]
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "High-severity toxicology challenge in mice with explicit early endpoints.",
+    "lay_he_≤150w": "test"
+  },
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["mouse toxicology whole animal response alternatives"],
+    "conclusion": "No validated replacement exists for systemic toxicity kinetics."
+  },
+  "animals_total": [
+    {"species": "mouse", "strain": "BALB/c", "sex": "both", "genetic_status": "WT", "source": "vendor", "n_total": 36}
+  ],
+  "n_justification": {"method": "power", "details": "Power analysis supports 18 per arm.", "attachments": []},
+  "experiments": [{
+    "label": "Toxicology challenge",
+    "question": "Monitor mice after systemic toxicology exposure.",
+    "animals": {"species": "mouse", "strain": "BALB/c", "sex": "both", "genetic_status": "WT", "n": 36},
+    "housing": {"group_housed": true},
+    "procedure_timeline": [{"step": "Animals receive the toxicology exposure and are monitored for systemic signs."}],
+    "analgesia": [],
+    "anesthesia": [],
+    "severity_level_1_to_5": 4,
+    "monitoring": {
+      "plan": "Daily monitoring during the first 72 hours and weekly thereafter, with veterinary consultation on the monitoring plan.",
+      "parameters": ["Daily scoring during the first 72 hours.", "Weekly review after stabilization.", "Consulting veterinarian reviews intervention criteria."]
+    },
+    "humane_endpoints": {
+      "general": ["Animals are euthanized for recumbency, persistent labored breathing, or 10% weight loss with dehydration."],
+      "specific": ["Clinical score 3/5 triggers euthanasia.", "Failure to reach food or water for 12 hours triggers euthanasia."]
+    },
+    "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirmed by absent heartbeat."},
+    "fate": "survival"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

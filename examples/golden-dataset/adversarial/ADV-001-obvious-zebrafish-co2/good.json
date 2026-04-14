@@ -1,0 +1,58 @@
+{
+  "header": {"protocol_id": "ADV-001-G", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "test",
+    "title_en": "Adult zebrafish terminal collection with MS-222",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 2,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "200000002",
+    "last_name_he": "test",
+    "first_name_he": "test",
+    "last_name_en": "Avidan",
+    "first_name_en": "Maya",
+    "email": "adv001-good@test.il",
+    "phone_primary": "SYNTH-2000002",
+    "phone_secondary": "",
+    "institutional_cert_no": "ADV-CERT-2",
+    "faculty": "Life Sciences",
+    "department": "Aquatics",
+    "training": [{"cert_no": "ADV-T2", "issuer": "TAMIR", "animal_scope": "fish", "date": "2025-01-01"}]
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Terminal tissue collection study in adult zebrafish.",
+    "lay_he_≤150w": "test"
+  },
+  "alternatives_search": {
+    "engines": ["PubMed"],
+    "date": "2025-01-01",
+    "queries": ["adult zebrafish tissue collection alternatives"],
+    "conclusion": "Whole-animal physiology is required."
+  },
+  "animals_total": [
+    {"species": "zebrafish", "strain": "AB", "sex": "both", "genetic_status": "WT", "source": "vendor", "n_total": 40}
+  ],
+  "n_justification": {"method": "precedent", "details": "Published sampling design.", "attachments": []},
+  "experiments": [{
+    "label": "Terminal collection",
+    "question": "Collect terminal tissues from adult zebrafish at study end.",
+    "animals": {"species": "zebrafish", "strain": "AB", "sex": "both", "genetic_status": "WT", "n": 40},
+    "housing": {"group_housed": true},
+    "procedure_timeline": [{"step": "Adult zebrafish are immersed in buffered MS-222 before dissection."}],
+    "analgesia": [],
+    "anesthesia": [],
+    "severity_level_1_to_5": 2,
+    "monitoring": {"plan": "Terminal collection only.", "parameters": ["One terminal observation before necropsy."]},
+    "humane_endpoints": {"general": ["Terminal collection only."], "specific": []},
+    "euthanasia": {"primary": "MS-222 overdose", "parameters": "Buffered overdose per facility SOP.", "confirmation": "Confirmed by loss of opercular movement."},
+    "fate": "euthanized"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

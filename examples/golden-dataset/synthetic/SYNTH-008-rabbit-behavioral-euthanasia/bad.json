@@ -1,0 +1,77 @@
+{
+  "header": {"protocol_id": "SYNTH-008-B", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "מבחן התנהגות בארנבים עם המתת חסד לא מתאימה",
+    "title_en": "Rabbit behavioral habituation study with non-compliant euthanasia",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 2,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000011",
+    "last_name_he": "כץ",
+    "first_name_he": "מיה",
+    "last_name_en": "Katz",
+    "first_name_en": "Maya",
+    "email": "synthetic11@test.il",
+    "phone_primary": "SYNTH-1000011",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-11",
+    "faculty": "Behavioral Sciences",
+    "department": "Auditory Research",
+    "training": [{"cert_no": "T11", "issuer": "TAMIR", "animal_scope": "rabbits", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Behavioral habituation testing in adult rabbits before tissue collection.",
+    "lay_he_≤150w": "מבחן התנהגות קצר בארנבים בוגרים."
+  },
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["rabbit behavioral habituation auditory endpoint tissue collection"],
+    "conclusion": "No non-animal platform captures intact behavioral habituation plus terminal tissue analysis."
+  },
+  "animals_total": [{
+    "species": "rabbit",
+    "strain": "NZW",
+    "sex": "both",
+    "genetic_status": "WT",
+    "source": "vendor",
+    "n_total": 12
+  }],
+  "n_justification": {
+    "method": "precedent",
+    "details": "Published auditory habituation experiments use 6 rabbits per arm.",
+    "attachments": []
+  },
+  "experiments": [{
+    "label": "Behavioral habituation",
+    "question": "Measure habituation to repeated acoustic cues in adult rabbits.",
+    "animals": {
+      "species": "rabbit",
+      "strain": "NZW",
+      "sex": "both",
+      "genetic_status": "WT",
+      "n": 12,
+      "weight": {"value": 1.4, "unit": "kg"}
+    },
+    "housing": {"group_housed": true},
+    "procedure_timeline": [
+      {"step": "Rabbits undergo non-invasive behavioral habituation sessions for 5 days."},
+      {"step": "Terminal brain collection follows the last session."}
+    ],
+    "analgesia": [],
+    "anesthesia": [],
+    "severity_level_1_to_5": 2,
+    "monitoring": {"plan": "Daily observation during the behavioral phase.", "parameters": ["Daily appetite and posture check."]},
+    "humane_endpoints": {"general": ["Persistent recumbency or self-injury."], "specific": []},
+    "euthanasia": {"primary": "cervical dislocation", "parameters": "", "confirmation": ""},
+    "fate": "euthanized"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

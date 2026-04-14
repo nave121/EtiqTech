@@ -1,0 +1,26 @@
+{
+  "case_id": "ADV-006",
+  "case_type": "adversarial",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "rabbit",
+  "pain_category": "D",
+  "procedure_types": ["wound_model", "alternatives_search"],
+  "primary_risks": ["superficial_3Rs_review"],
+  "files": {
+    "bad_json": "examples/golden-dataset/adversarial/ADV-006-subtle-thin-alternatives/bad.json",
+    "good_json": "examples/golden-dataset/adversarial/ADV-006-subtle-thin-alternatives/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["housing:density"],
+    "good_expected_l1_refs": ["housing:density"],
+    "target_l2_themes": ["three_Rs_alternatives"],
+    "target_l3_sections": ["alternatives_search"],
+    "must_not_miss_tags": [],
+    "notes_for_reviewers": "Subtle deficiency: the bad variant includes the required fields for alternatives search but the query breadth and conclusion are too thin to justify replacement failure."
+  },
+  "dependencies": {
+    "blocked_by_rules": ["P2-epic-anchoring-bias-dual-pass"],
+    "current_expected_status": "partially_testable"
+  }
+}

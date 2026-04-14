@@ -1,0 +1,66 @@
+{
+  "header": {"protocol_id": "ADV-008-G", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "test",
+    "title_en": "Large-animal toxicity study with explicit rescue criteria",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 2,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "200000016",
+    "last_name_he": "test",
+    "first_name_he": "test",
+    "last_name_en": "Halevi",
+    "first_name_en": "Dana",
+    "email": "adv008-good@test.il",
+    "phone_primary": "SYNTH-2000016",
+    "phone_secondary": "",
+    "institutional_cert_no": "ADV-CERT-16",
+    "faculty": "Veterinary Medicine",
+    "department": "Translational Models",
+    "training": [{"cert_no": "ADV-T16", "issuer": "TAMIR", "animal_scope": "pigs", "date": "2025-01-01"}]
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Large-animal toxicity study with explicit rescue criteria and early euthanasia thresholds.",
+    "lay_he_≤150w": "test"
+  },
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["pig toxicity translational model alternatives"],
+    "conclusion": "No alternative replicates the integrated cardiovascular response."
+  },
+  "animals_total": [
+    {"species": "pig", "strain": "Large White", "sex": "both", "genetic_status": "WT", "source": "vendor", "n_total": 12}
+  ],
+  "n_justification": {"method": "precedent", "details": "Published translational toxicity workflow.", "attachments": []},
+  "experiments": [{
+    "label": "Toxicity observation",
+    "question": "Observe progressive toxicity before scheduled tissue collection.",
+    "animals": {"species": "pig", "strain": "Large White", "sex": "both", "genetic_status": "WT", "n": 12},
+    "housing": {"group_housed": false},
+    "procedure_timeline": [{
+      "step": "Animals are removed from study for recumbency lasting more than two hours, persistent anorexia, or marked social withdrawal."
+    }],
+    "analgesia": [],
+    "anesthesia": [],
+    "severity_level_1_to_5": 4,
+    "monitoring": {
+      "plan": "Daily monitoring during the first 72 hours and weekly thereafter, with veterinary consultation on the monitoring plan.",
+      "parameters": ["Twice-daily clinical scoring during active toxicity.", "Consulting veterinarian reviews rescue thresholds."]
+    },
+    "humane_endpoints": {
+      "general": ["Euthanize animals before prolonged distress if recumbency, anorexia, or reduced responsiveness persists."],
+      "specific": ["Recumbency longer than two hours triggers euthanasia.", "No food intake for 12 hours triggers euthanasia."]
+    },
+    "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirmed by absent heartbeat."},
+    "fate": "survival"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

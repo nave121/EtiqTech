@@ -1,0 +1,737 @@
+# Introduction (from the original form)
+
+In 1994, the Knesset of Israel enacted a law dealing with the regulation of experiments on
+animals. The Ministry of Health is charged with the implementation of this law through the
+Council for Experiments on Animals.
+No experiments on animals shall be conducted in the State of Israel except in accordance with
+the Prevention of Cruelty to Animals Law - Experiments on Animals (5754-1994). You are
+requested to read the law and confirm this with your signature.
+The law states that no permit shall be granted for conducting experiments on an animal if the
+purpose of the experiment can be achieved by reasonable alternative means. Please verify
+that there are no alternatives to the use of animals in the proposed experiment, and confirm
+this with your signature.
+If the experiment involves the use of hazardous materials (biological, chemical, or physical),
+you must obtain the approval of the Institutional Safety Committee.
+You are requested to announce your commitment to conduct the experiments solely in
+facilities that have received the approval of the Council for Experiments on Animals.
+
+One must not deviate from the conditions of the permit without explicit written approval from
+the Permit Committee.
+By your signature on this form, you undertake to act in accordance with the provisions of the
+Prevention of Cruelty to Animals Law, the Prevention of Cruelty to Animals Rules, and
+according to the Council's guidelines.
+
+# Explanatory Notes for the Request Form
+
+# Submitter for Conducting Experiments
+
+Filling out the request form obligates the applicant to perform a thought process according to
+the 3R principles for the research plan. This process surfaces critical points in the research
+plan that require explanation and additional attention. This is in order to enable the Permit
+Committee to discuss and decide whether the request meets the requirements for granting a
+permit to conduct an experiment on animals.
+
+Filling out the request form must provide a clear response regarding the implementation of
+the principles of working with animals – 3R. The applicant must fill it out in a manner that
+explains and justifies the proposed use of animals with attention to the 3Rs.
+
+The request is not like a request for a research grant, and it must be filled out in a manner
+suitable for the needs of issuing the permit.
+
+In the event that the Permit Committee finds the request meets the requirements and issues a
+permit to conduct the experiment on animals, the permit holder must know that the permit is
+personal and is not transferable.
+
+
+Note: The permit is a document with legal validity and constitutes a license on behalf of the
+State of Israel to perform the experiment on the animal, please give your full attention to filling
+out the request.
+
+# General:
+
+The text size indications for the various sections are estimates only, and the guiding
+consideration for the filler is focus, purposefulness, and conciseness.
+The request must establish the factual basis for conducting the research and for conducting
+the experiment in the chosen format.
+
+## Subsection 1: Research Subject
+
+Write the specific question for the research.
+If it involves testing substances, note the substance - the research subject; if it involves
+testing / establishing a model for a specific disease, note the disease.
+--- Page 1 ---
+
+## Subsection 2: Subject in English
+
+Must match the subject in Hebrew.
+
+## Subsection 3: Third-Party Research
+
+**Definition of Third-Party Experiment:** An experiment which is conducted at the initiative of
+a body that is not of the Institution, and which will not be identified in the request
+form/experiment approval, and for which the Principal Investigator (institution member) / the
+Institution has no connection to its planning and/or rights to the results and to the experiment
+protocol, and which is conducted as a service to that body.
+
+**Uploading an Attachment**
+
+## Subsection: Duplicate Experiments Prohibition Declaration
+
+## Attachment *
+
+```
+● The attachment will be visible only to the Permit Committee - it will not be visible to the
+Council.
+```
+**Directive:** Definition of Third-Party Experiment: An experiment which is conducted at the
+initiative of a body that is not of the Institution, and which will not be identified in the request
+form/experiment approval, and for which the Principal Investigator (institution
+member)/Institution has no connection to its planning and/or rights to the results and to the
+experiment protocol, and which is conducted as a service to that body.
+
+**Directive:** Definition of Duplicate Experiments: Approaching multiple institutions in order to
+perform the same experiment, in parallel or while conducting the experiment at another
+institution, and this without informing the institution of the existence of another approval for
+
+
+the same research and of its performance on animals previously, in parallel, and/or in the
+future, and thereby achieving an increase in the number of animals that will undergo the
+experiment beyond what is appropriate for that experiment.
+
+## Subsection 4: Follow-up Research
+
+Directive: As long as the request deals with the same medical device and/or the same test
+substance (or a derivative thereof), it will be considered follow-up research, even if the animal
+model has been changed and even if the previous research was performed at another
+approved institution in Israel.
+Also moving between different testing stages, for example, first research on safety and
+second research on efficacy, will be considered follow-up research.
+● The Committee has the option to open the original permit (or see it as an attachment).
+
+## Subsection 6: Research Site
+
+Indicate where the research will be performed in all its parts.
+The options are: In the institution itself / In another institution / At an authorized site.
+**In the institution itself** - Meaning in a facility within the researcher's parent institution that
+the Council's Supervising Veterinarian has approved.
+
+**In another institution** - Meaning in a research facility of an institution approved for
+conducting animal experiments that is not the researcher's parent institution, approved by the
+Council's Supervising Veterinarian. Its name must be explicitly stated (there will be a list of
+approved institutions).
+
+**At an authorized site** - Meaning a site approved ad-hoc by the Council's Supervising
+Veterinarian for a specific experiment. This refers to a site that is not of an institution
+approved for conducting animal experiments. Its name must be explicitly stated.
+
+--- Page 2 ---
+
+In studies where parts of them are done in more than one institution (e.g., sending for CT or
+for sacrifice...), the names of all sites for every part of the experiment must be noted, and this
+must be repeated in the experiment description so it is clear which part is done at which site.
+In research intended to be performed at a research facility of another institution, the
+Institutional Committee (for use and care of animals) of the researcher's parent institution
+must verify with the Institutional Committee responsible for the facility the receipt of its
+consent to perform the research in its facilities before a permit is issued.
+A research site is a facility approved for conducting animal research by the Council's
+Supervising Veterinarian that has received written approval for such.
+
+# Part C in the Request Form
+
+
+## The Principal Investigator
+
+Details will upload automatically after the completion of the researcher setup in the system. If
+the details are incorrect, the researcher must correct them in the researcher registration
+window in the system*.
+
+```
+● There are certain details that only the Institutional Committee can enter, not the
+researcher.
+If a researcher does not exist in the system, they must contact the Institutional
+Committee for Animal Care and Use at their parent institution to perform the initial setup
+for him - from which he can complete his registration in the system.
+```
+**Note** (Will upload automatically from system registration data), you must record the
+certification number for conducting animal research given by the Institution Head or by the
+Institutional Committee (if authorized for such). This is the responsibility of the Institutional
+Committee.
+
+# Part D in the Request Form - Participants
+
+# and Training
+
+## General
+
+**Directive:** List all participants in the research.
+
+## Authorized Researcher
+
+Authorized - Marking a participant as authorized means that he is authorized to conduct
+experiments on animals as established by law. I.e., received approval from the Head of the
+Parent Institution of the Principal Investigator to engage in animal research at the institution.
+Note that this approval is specific to the institution and is not valid nationwide.
+Note, if you wish to add a researcher during the research, after a permit has been issued for
+conducting the research, his joining is conditional upon authorization he will receive for such
+from the Permit Committee from which the permit was issued, and the Institutional Committee
+is obligated to document this. In no case does this refer to joining or changing the Principal
+Investigator. Changing a Principal Investigator requires issuing a new permit.
+
+## Connection to Research
+
+**Connection to Research** - Meaning in what status the participant belongs to the experiment
+(Principal Investigator, Engaged in Experiment (performs procedures on animals), Associate
+Researcher (does not perform procedures on animals)) - anyone performing procedures on
+animals must appear in the participant list and must be authorized to conduct experiments on
+animals. State certification number.
+
+
+A participant listed as an Associate Researcher cannot engage in the research. This status is
+intended for researchers / partners who request to appear on the permit without actually
+engaging in animal research.
+Any participant (Researcher / Partner) intending to actually engage in animal research will be
+marked as status 'Engaged in Research' if he is not the Principal Investigator.
+--- Page 3 ---
+
+## Training of Those Engaged in Research
+
+Directive: This is a continuation table for the participant list indicating the training of
+whichever participant is intended to perform the procedures on the animals in the permit.
+(Those you marked as such in the field 'Connection to Research'). This refers to training
+relevant to the animals in the research request.
+Note: State the type of training, training certificate number, and the name of the institution
+issuing the certificate.
+Note: A training certificate is valid nationwide whereas the Authorization certificate is valid
+only at the researcher's parent institution. Anyone performing procedures on animals needs
+Authorization from the Institution Head even if he passed training.
+A Principal Investigator who also engages in research will appear in status 'Principal
+Investigator' in the list of those engaged in research.
+Participants engaged in research who are not in status 'Principal Investigator' will appear in
+status 'Engaged in Experiment'.
+
+# Part E in the Request Form
+
+## Subsection 3 - Research Abstract and Purpose of Animal Use in
+
+## Research
+
+The abstract shall be filled out in the English language.
+The abstract will answer five points detailed below in their order of appearance.
+A. What is the subject you are researching.
+B. What is known about the subject (including relevant previous results if it is follow-up
+research).
+C. What is the specific question to be investigated in this research including the scientific
+rationale for the experiment.
+D. What is the proposed use of animals to answer the question and justification, including
+explanation of the model.
+E. Predicted outcome from the research results.
+Note: If it is follow-up research, relevant previous results must be detailed.
+The abstract needs to be focused on the research question for which the request is
+submitted. Sub-sections A and B need to be focused and short. Expand on the specific
+question in the request and the scientific rationale for it. Explain the proposed use of animals
+with an orientation towards answering the scientific question and the suitability of the animal
+
+
+type and model to answer the question. And also state the predicted outcome. Explain the
+main points of the experimental model and its significance to the animal and the research
+question.
+If there is a need to include introductions in the abstract, bring them only on condition that
+the main information in them appears explicitly in the text. Do not bring more than 2 sources
+(no more than 5 years back).
+Even in research done due to regulatory requirement, the rationale for testing in animals must
+be explained - and how it fits to answer the question.
+The field is split into 5 sub-fields:
+3.1 The Scientific Subject: What is the scientific subject you are researching (up to 50 words)
+3.2 Relevant Background to Request: What is known about the subject in the context relevant
+to the request (including relevant previous results if it is follow-up research) (up to 100 words)
+3.3 The Specific Question to be Investigated in the Request and the Scientific Rationale for it:
+What is the specific question to be investigated in this research including the scientific
+rationale for the experiment (up to 150 words)
+--- Page 4 ---
+
+3.4 The Proposed Use of Animals and Why it is Suitable to Answer the Question to be
+Investigated: What is the proposed use of animals to answer the specific question of the
+request and the justification for such, including explanation of the model (up to 100 words).
+The nature of the model and its significance to the animal in the relevant timeframe to the
+experiment needs to be clear.
+3.5 Predicted Outcome: What is supposed to be known from conducting the experiment (up
+to 50 words)
+Sections 3.1 - 3.3 are science only, only in section 3.4 do we talk about animals.
+
+## Subsection: Justify the Reason for Using Animals for the Research
+
+In this field the applicant must explain in simple form (in language understood by the general
+public) why he needs to conduct an experiment on animals. Include information on what is
+being researched, why it is important, why the submitter needs to do the research on animals,
+why he chose to perform it on the specific type of animal, and what is the benefit expected to
+come from it.
+This field will be limited to 150 words.
+This field is intended for the non-professional reader.
+This field will be filled out in the Hebrew language.
+
+## Subsection 5 - Preliminary Experiments in Alternative Methods
+
+New: State if preliminary experiments were done using alternative methods to the research.
+For example: computerized models, in-vitro experiments, experiments on tissue cultures,
+experiments on organs from slaughterhouses and the like...
+If you chose 'Yes', a field 'Detail Preliminary Experiments' will open and in it one must detail the
+types of preliminary experiments done in alternative methods that preceded the current
+research request.
+
+
+## Subsection 6 - Manner of Search for Alternatives
+
+State the alternative search process you conducted:
+Good Search Practice on Animal Alternative-EU
+Other Process – Detail - Text
+The request submitter will detail that he searched for alternatives, how he searched, and the
+results of the search he performed.
+Failure to fill the sections with required content will prevent its approval. A researcher who
+filled that he searched for alternatives and did not detail how he searched and/or not the
+search results, his request will not pass. If the researcher chose the search method 'Other', he
+must state the method.
+Alternative Search Process:
+The European Union issued a guidance document for searching alternatives to experiments
+on animals. It is a search method that it is reasonable that whoever follows it performed a
+proper search process. Since the researcher's declaration regarding the absence of a
+reasonable alternative to the experiment on animals is part of the examination process of the
+request for a permit to conduct an experiment, we recommend that researchers use this
+process.
+Main points of the method and link to reference material:
+https://eurl-ecvam.jrc.ec.europa.eu/search-guide
+https://www.google.com/search?q=https://eurl-ecvam.jrc.ec.europa.eu/now-available-ecvam-
+search-guide-on-alternatives-to-animal-testing
+--- Page 5 ---
+
+Official sites for alternative methods:
+European Union site:
+European Union Reference Laboratory for alternatives to animal testing (EURL ECVAM)
+https://www.google.com/search?q=http://ihcp.jrc.ec.europa.eu/our_labs/eurl-ecvam/validation
+-regulatory-acceptance
+United States site:
+Interagency Coordinating Committee on the Validation of Alternative Methods
+[http://iccvam.niehs.nih.gov/methods/methods.htm](http://iccvam.niehs.nih.gov/methods/methods.htm)
+
+# Part F in the Request Form
+
+## Subsection 2: Animal Type and Required Number
+
+If the animal required for the experiment is missing from the list, the Institutional Committee
+representative must contact the Council secretariat to add the missing animal to the list.
+
+```
+● There is an organized form for such a request that you will receive from the Council
+secretariat.
+The number is the total number of each animal type for the entire research.
+```
+
+# Part G in the Request Form – Reasoning
+
+# and Description of Experiment Course
+
+# [This is Experimental Groups]
+
+## Subsection: The Scientific Question
+
+Detail the specific scientific question the experimental group is intended to answer. Different
+questions will be written in separate experimental groups.
+
+## Subsection: Reasoning for Choice of Animal Type, Strain, and Sex
+
+Explain and justify the relevance of the choice of each animal type, strain, and sex to the
+specific research question intending to be investigated and its ability to provide an answer to
+the scientific question one wants to investigate in the request. There is no need to write that
+this is the animal lowest on the evolutionary ladder (this is obvious). Explain the chosen model
+in the animal, and explain its relevance to the scientific question. Justify the choice of animal
+sex, whether the experiment will be done on males and females together, on males and/or on
+females only. (Example: Type - Mouse, Strain - C57BL, Required Sex - Males and Females).
+
+If it is research stemming from a regulatory need
+Directive: If it is research stemming from a regulatory need, state the specific regulation
+according to which the need was determined and its essence (additional details to be
+completed in the experiment course field).
+Directive: In any request for conducting toxicology experiments and/or toxicity experiments on
+animals, there will appear in the field specific reference to the following parameters: A)
+Examination of current alternatives on the subject on official sites. B) If the experiment is done
+due to regulatory requirement, state the specific requirement, the validity of the requirement,
+and the manner of checking its validity. [Attach the regulatory requirement as an attachment]
+C) If an official alternative exists and it is not possible to use it, please justify.
+--- Page 6 ---
+
+## Subsection: Reasoning for Number of Animals
+
+Provide full reasoning for the requested number of animals.
+Start from the smallest experimental unit (for example from the chosen group size) - explain
+its size and why it was chosen, and link it to the experimental question.
+Continue to the number of groups (if 5 groups are needed explain why 5 groups and the like),
+and from there to the experimental stages, until reaching the total number.
+It is desirable to add statistical reasoning for group size for the required statistical power of
+the results.
+Link quantitatively the required numbers to the experimental stages. For example, when it is
+
+
+necessary to produce protein in a certain amount then the experimental group will be of x
+individuals because from every animal it is possible to produce such and such protein. And so
+forth.
+It is recommended to explain the experimental need according to the chronological order of
+the experiment, such that it is possible to track the transition of animals between stages (if
+used in more than one stage).
+Explanation for group size of the type 'this is accepted' is not proper. If the matter is accepted
+then there is a scientific reason for it and that must be stated.
+Breeding is also an experimental stage, and the breeding plan must be adapted to
+experimental stages and allocation of animals to stages.
+New: It is possible and desirable to present the data in table form.
+
+## Subsection: Description of Experiment Course in Animals and
+
+## Treatment of Them
+
+Note that the course of the experiment is requested and not a list of procedures.
+First, build a clear timeline / experiment flowchart of what happens with the animal from the
+moment it enters the experiment until it finishes its participation including noting intermediate
+stations. Example of intermediate stations: acclimatization, fasting before surgery, the surgery,
+post-operative follow-up, treatment regimen including times for every treatment, exact time
+for ending the experiment for every single animal. If organ harvesting is required at the end of
+the experiment, state this explicitly.
+If there are critical points required to assess animal transition between stage to stage and/or
+those requiring special attention this is the place to note them, including stating the
+performance criteria or Score or acceptance indices for every experimental stage in a
+multi-stage experiment according to which the researcher works (this is the place to mention
+that one must relate to these indices also in conditions for stopping the experiment). These
+indices will allow the committee to assess the need for groups, for the duration of the stages,
+and for the required intervention points.
+
+**Note:** If it involves research done in a large number of strains and/or experimental groups
+(mainly in mice), after detailing the timeline / experiment flow in a single animal, detail how the
+whole research will be timed in the different groups and strains.
+
+Only after the experiment flow is clear, detail what procedure is actually performed at each
+stage.
+The detail needs to be at a level that can be relied upon when the permit stands for
+examination by bodies that are not the Permit Committee (for example: Council audit).
+This is the place to determine and explain any special procedure, including deviation from
+norms, that the Committee wants to enforce in the permit (monitoring conditions, or anything
+that does not match the regular conduct of the animal). This is the place to explain if holding
+of single animals is required and if so for what duration of time it is permitted.
+Euthanasia, when it is required, is part of the experiment course.
+
+
+--- Page 7 ---
+
+**Note:** Breeding and crossing are also experimental stages, if they are required, provide the
+breeding plan and demonstrate how it matches the need and the experimental stages.
+
+## Subsection: Anesthesia
+
+The request submitter must state whether there will be use of anesthetic agents in the
+experiment described in the group.
+If he marked Yes, he must detail the type of agent he chose, justify why he chose this agent
+(why the agent is suitable for the requested use in the experiment), detail the administration
+regimen of the anesthetic agent, and the dosage that will be given for every agent.
+● There is a list of example agents on the site, if an agent is missing for the submitter he
+must contact the Institutional Committee regarding the need, which in turn, and when it
+establishes the need, will appeal to the Council secretariat with a request to add an
+agent.
+
+## Subsection: Analgesia (Pain Relief)
+
+The request submitter must state whether use is made of analgesics in the experiment
+described in the group.
+If he chose No, he must detail the reason for non-use of analgesics.
+If he chose Yes and similar to the anesthesia subsection, he must detail the type of agent he
+chose, justify why he chose this agent (why the agent is suitable for the requested use in the
+experiment), detail the administration regimen of analgesics, and the dosage that will be given
+for every agent.
+
+## Subsection: Severity Level Classification
+
+Classification of severity levels for experiments on animals
+Explanation for a non-professional person (professional definitions follow)
+Every severity grade assesses the potential for pain and suffering to which the animal is likely
+to be exposed, even if it occurs strictly momentarily in the experiment. This does not mean
+that the potential will be realized. Note that the potential for pain and suffering and not the
+procedure are what determine the severity level. Note that if a certain severity grade was
+determined for an experiment, it does not mean that the animal will be exposed to the said
+pain and suffering the entire time of the experiment.
+**Severity Grade 1:** Collection of organs from animals that did not undergo any experiment and
+were euthanized in an accepted manner for the purpose of organ collection.
+
+Severity Grade 2: Research where the animal is not expected to experience pain and suffering
+or such where the potential for pain and suffering to which the animal will be exposed is
+minimal and does not exceed temporary discomfort.
+Example, research where the pain and suffering does not exceed the pain involved in a single
+injection (for example taking a blood sample) to a naïve animal.
+Severity Grade 3: Research where the potential for pain and suffering to which the animal will
+
+
+be exposed is at a level that must not cause significant changes in physiological parameters
+such as heart rate and respiration or in its social behavior or in the appearance of the animal.
+During or after experiments in this category, animals will not show signs of self-injury,
+anorexia, dehydration, hyperactivity, lying down or crouching beyond what is accepted,
+excessive vocalization, particularly aggressive behavior or phenomena of isolation.
+An experiment performed under general anesthesia from which the animal will not wake up
+(acute experiment) will be classified as Severity Grade 3 even if an experimental procedure of
+a higher severity grade is performed on the animal. This is because the action will be
+performed solely when the animal is under general anesthesia from which it will not wake up.
+--- Page 8 ---
+
+Severity Grade 4: Research where the potential for pain and suffering to which the animal will
+be exposed is such that is accompanied by a change in the natural physiological activity of
+the animal, or by prolonged restraint, or development of local cancer. Animals in such
+experiments will be treated by means of giving analgesics so that the autonomous function of
+the animal will not be impaired, provided that giving analgesics has the ability to relieve the
+animal. Under the group of experiments that is likely to fit this severity grade classification
+there are types of experiments where giving analgesics is not necessary. Severity Grade 4
+classification stems from the essence of the procedure and its effect on the animal and not
+from the very act of giving analgesics.
+Severity Grade 4 is determined according to the experimental procedure and its effect on the
+animal. Severity Grade 4 classification for an experiment determines that the pain caused to
+the animal during the experiment will be treated with analgesics according to need (this is in
+contrast to grades 3 and 5).
+Severity Grade 5: Research where the potential for pain and suffering to which the animal will
+be exposed is substantial and continuous. Under this classification will be found studies in
+which the animals are not treated with analgesics, studies where widespread cancerous
+tumors will develop or studies likely to cause death (such as use of toxins). Scientific
+justification must be given why it is not possible to use analgesics.
+Experiments are likely to be classified as Severity Grade 5 even if the experimental procedure
+is of a lower severity grade. Thus for example an experiment where the procedure done is of
+Severity Grade 4 but it is not possible to give analgesics in it, because the very act of giving
+analgesics conflicts with the experiment goals. In this case classification of Severity Level 5
+indicates the inability to relieve the animal by medicinal means (analgesics), however other
+means to relieve the animal will indeed be operated. Another case that raises the severity
+classification from level 4 to 5 is research in metastatic cancer. In this case even if analgesics
+are given, Severity Grade 5 classification will still be given. The reason for this is the inability to
+assess the metastatic nature. So too in toxicity experiments, the classification of Severity
+Grade 5 indicates the potential risk, however usually these experiments do not cause death –
+since their goal is not to kill animals but to provide a drug in a safe dosage for use in humans.
+Few are the studies receiving classification of Severity Grade 5 that express in practice the
+conditions of substantial and continuous pain and suffering.
+**General Notes**
+
+
+```
+● Research will always be classified at the highest severity grade even if most of the
+research stages and even most of the research duration are done at a low severity level.
+For example, stage A – breeding, stage B – toxicity.
+● Severity grades do not reflect only the potential for pain and suffering that can be
+caused due to the experimental procedure but also whether there is treatment with
+analgesics. Therefore granting approval at level 4, for example, can be preferable in terms
+of prevention of cruelty to animals compared to approval of the same experiment which
+would be classified as an experiment of Severity Grade 3.
+● In addition to the severity level classification, clear and absolute conditions for stopping
+the participation of the animal in the experiment will be determined for every experiment.
+These conditions will define specific and relevant indices for the planned experimental
+model such that they will allow relieving as much as possible the pain and suffering of the
+animal. Removal of the animal from the experiment according to these conditions will be
+performed even if the experiment goals were not achieved. I.e., conditions are defined
+that if met, there will be no more scientific value in continuing the existence of the
+research in the animal and the consideration of prevention of cruelty to animals will
+overcome any other consideration.
+● An additional step taken for the welfare of animals in studies of Severity Grade
+classification 4 and 5, is the existence of a designated monitoring procedure for the
+health of the animals in the experiment.
+```
+--- Page 9 ---
+
+Professional Explanation for Researchers
+Below is the severity level classification determined by the Council on March 21, 2006, and in
+an update from September 17, 2017.
+**Grade of pain and suffering during the experiment and after it**
+
+**Severity Grade 1:** Collection of organs from animals that did not undergo any experiment and
+were euthanized in an accepted manner for the purpose of organ collection.
+
+Severity Grade 2: Experiments which cause at most mild and temporary discomfort only.
+Examples:
+
+1. Injections Oral, SC, IP, IM, IV (not including Intrathoracic, Intracardiac, Intradermal), that
+    do not cause pain (beyond the injection pain) or harmful phenomena.
+2. Capture, observation and/or marking of animals.
+3. Behavioral experiments without stress (not including water maze, predator-prey
+    experiments and others at a similar level).
+4. Causing mild pain that the animal can avoid.
+5. Tattooing for marking.
+6. Taking a blood sample from peripheral blood vessels (not including heart, retro-orbital
+    sinus) up to the approved amount, without anesthesia.
+7. Feeding animals a diet that does not cause any clinical phenomenon.
+
+Severity Grade 3: Experiments with potential for causing minor stress, suffering or mild pain
+
+
+and without causing continuous disturbance in the general state, in wellbeing or in the proper
+activity of the animal.
+Experiments at this level must not cause significant changes in the appearance of the animal,
+in physiological parameters such as heart rate and respiration or in its social behavior. During
+or after experiments in this category, animals will not show signs of self-injury, anorexia,
+dehydration, hyperactivity, lying down or crouching beyond what is accepted, excessive
+vocalization, particularly aggressive behavior or phenomena of isolation.
+An experiment performed under general anesthesia from which the animal will not wake up
+(acute experiment) will be classified as Severity Grade 3 even if an experimental procedure of
+a higher severity grade is performed on the animal. This is because the action will be
+performed solely when the animal is under general anesthesia from which it will not wake up.
+
+Examples:
+
+1. Surgeries performed under general anesthesia and the animal is euthanized before its
+    return to consciousness.
+2. Cannulations and insertion of catheters to different body cavities under anesthesia.
+3. Small surgeries under anesthesia (such as biopsies, laparoscopies).
+4. Taking a blood sample under anesthesia from the heart or from the retro-orbital sinus.
+
+--- Page 10 ---
+
+5. Restriction of movement for a short time beyond the time required for performing simple
+    checks and/or marking animals, but which does not deviate from causing minimal stress.
+6. Prevention of food or water for periods of up to 12 hours during the active hours of the
+    animal.
+
+Severity Grade 4: Experiments with potential for causing pain, suffering or moderate stress, as
+well as experiments with potential to cause continuous disturbance in the general state, in
+wellbeing or in the proper activity of the animal.
+Research where the potential for pain and suffering to which the animal will be exposed is
+such that is accompanied by a change in the natural physiological activity of the animal, or by
+prolonged restraint, or development of local cancer. Animals in such experiments will be
+treated by means of giving analgesics so that the autonomous function of the animal will not
+be impaired, provided that giving analgesics has the ability to relieve the animal. Under the
+group of experiments that is likely to fit this severity grade classification there are types of
+experiments where giving analgesics is not necessary. Severity Grade 4 classification stems
+from the essence of the procedure and its effect on the animal and not from the very act of
+giving analgesics.
+Severity Grade 4 is determined according to the experimental procedure and its effect on the
+animal. Severity Grade 4 classification for an experiment determines that the pain caused to
+the animal during the experiment will be treated with analgesics according to need (this is in
+contrast to grades 3 and 5).
+
+Examples:
+
+
+1. Major surgeries at the end of which the animal wakes up and is treated with analgesics
+    according to need.
+2. Local cancerous tumors in an animal treated with analgesics according to need.
+3. Restriction of movement for a prolonged time (beyond 60 minutes).
+4. Use of materials impairing physiological activity (radiation, carcinogens, infections, toxins
+    that do not cause death) while treating with analgesics if needed.
+5. Prevention of food or water for a period exceeding 12 hours during the active hours of
+    the animal, but without great weight loss.
+6. Significant change of environmental conditions (temp, lighting).
+7. Addiction and withdrawal experiments.
+8. Causing stress in predator-prey experiments.
+9. Procedures causing sensory, motor damage or severe or permanent anatomical or
+    physiological changes, when the animal is treated with analgesics according to need.
+10. Use of CFA (Complete Freund's Adjuvant).
+11. Causing pain from which the animal cannot avoid while giving analgesics.
+
+Severity Grade 5: Experiments with potential for causing substantial stress, suffering or pain,
+as well as experiments with potential to cause significant and continuous disturbance in the
+general state, in wellbeing or in the proper activity of the animal.
+Research where the potential for pain and suffering to which the animal will be exposed is
+substantial and continuous. Under this classification will be found studies in which the animals
+are not treated with analgesics, studies where
+--- Page 11 ---
+
+widespread cancerous tumors will develop or studies likely to cause death (such as use of
+toxins). Scientific justification must be given why it is not possible to use analgesics.
+Experiments are likely to be classified as Severity Grade 5 even if the experimental procedure
+is of a lower severity grade. Thus for example an experiment where the procedure done is of
+Severity Grade 4 but it is not possible to give analgesics in it, because the very act of giving
+analgesics conflicts with the experiment goals. In this case classification of Severity Level 5
+indicates the inability to relieve the animal by medicinal means (analgesics), however other
+means to relieve the animal will indeed be operated. Another case that raises the severity
+classification from level 4 to 5 is research in metastatic cancer. In this case even if analgesics
+are given, Severity Grade 5 classification will still be given. The reason for this is the inability to
+assess the metastatic nature. So too in toxicity experiments, the classification of Severity
+Grade 5 indicates the potential risk, however usually these experiments do not cause death –
+since their goal is not to kill animals but to provide a drug in a safe dosage for use in humans.
+Few are the studies receiving classification of Severity Grade 5 that express in practice the
+conditions of substantial and continuous pain and suffering.
+**Note:** In severity grades 4 and 5 and in general, it is not the giving of the analgesic that
+defines the severity level but the essence of the experimental procedure and its significance
+to the animal. Thus research of Severity Grade 4 is possible where analgesics will not be
+given, and research of Severity Grade 5 is possible where analgesics will be given (or another
+
+
+severity grade than 4).
+
+**New:** Choosing Severity Grade 4 or 5 will open a window to note the monitoring conditions
+required for the animal in the experiment. The monitoring conditions will usually be
+accompanied by documentation of indices that will be determined and will even be
+accompanied if needed by score tables.
+
+## Subsection: Conditions for Stopping Experiment
+
+State general veterinary conditions for animal health and specific conditions for the chosen
+experiment model that if they are met the animal will be removed from the experiment even if
+its goals were not achieved. (Note – in the request form the subject is divided into separate
+subsections).
+Determination of conditions of the type, consult with the veterinarian is not an accepted
+criterion; determining weight loss of 20% - is not a sufficient index.
+One must relate to specific indices for the experiment (score, cancerous tumor size, cancer
+load, and the like).
+● A practical guide for determining and developing END POINT for experiments on animals
+has been sent to institutions.
+
+## Subsection: Previous Experiment on the Animal
+
+The request submitter must state if any of the animals intended to take part in the requested
+research already participated in an experiment conducted by virtue of another permit. This is
+not a general question but specific. Prevention of cruelty to animals rules 2001 state that
+repeated use of an animal for an experiment must be avoided, unless it involves exceptional
+circumstances detailed in the rules. The default is that an animal does not participate in more
+than one experiment.
+
+--- Page 12 ---
+
+## Subsection: Euthanasia
+
+**New:** State the euthanasia method suitable for the animal. Note we moved to noting the
+method according to the euthanasia route (route) and not according to the euthanasia agent.
+After choosing the euthanasia route one must detail the manner of performing the euthanasia
+including choice of agents and dosages. Note that if there is a need to harvest organs not all
+agents are suitable.
+
+## Subsection: Fate of Animal
+
+State the suitable fate for the animal at the end of the experiment. Whether it will be
+euthanized or rehabilitated.
+The Council encourages any possibility to rehabilitate animals at the end of the experiment.
+Rehabilitation options are:
+Rehabilitation (for example monkeys)
+
+
+Offer for adoption (for example dogs cats rabbits)
+Return to herd (for example farm animals)
+Return to nature (for example wild animals)
+**Reminder** - if euthanasia is required for the purpose of organ harvesting state this in the
+experiment course.
+
+## Subsection: Researcher's Declaration
+
+Signature on this section is a condition for transferring the request to the Committee.
+I have read the law and I undertake to adhere to use of animals as detailed in this request
+according to the law and according to the institution regulations.
+I undertake to appeal to the Committee to receive its approval for any change in what is stated
+in this document.
+I have read the booklet of guidelines and instructions of the institution on the subject of
+experiments on animals and I undertake to act according to them and according to the
+Council guidelines.
+I declare that for the requested experiment there is no alternative.
+I have passed training in conducting experiments on animals and in minimizing the pain
+caused to them, and I received authorization from the Institution Head.
+All those engaged in this experiment passed / will pass training as above prior to their
+participation in the experiment.
+I undertake to conduct the experiments solely in facilities that received the approval of the
+Committee for Experiments on Animals in the institution.
+I undertake in cases of returning an animal to the herd to verify that the veterinarian
+responsible for the herd is aware of the history of treatments the animal underwent before it
+returns to the herd.
+
+# General
+
+It is possible to upload attachments
+It is possible to enter tables
+It is possible to mark and differentiate changes and corrections in the text by means of
+highlighting, bolding, color, font etc.
+It is possible to enter scientific symbols and formulas
+--- Page 13 ---
+
+

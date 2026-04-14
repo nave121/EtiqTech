@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ethicchecker
+  labels:
+    app: ethicchecker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ethicchecker
+  template:
+    metadata:
+      labels:
+        app: ethicchecker
+    spec:
+      serviceAccountName: ethicchecker
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: ethicchecker
+          image: ethicchecker:local  # Replace with your registry image
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - containerPort: 4242
+          env:
+            - name: OLLAMA_BASE_URL
+              value: "https://ollama.com"
+            - name: OLLAMA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ollama-cloud
+                  key: api-key
+            - name: OLLAMA_MODEL
+              value: "qwen3.5:397b-cloud"
+            - name: OLLAMA_NUM_CTX
+              value: "32768"
+            - name: LLM_TEMPERATURE
+              value: "0.2"
+            - name: LLM_MAX_TOKENS
+              value: "8192"
+            - name: OLLAMA_TIMEOUT_SECONDS
+              value: "300"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: app-output
+              mountPath: /app/output
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 4242
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 4242
+            initialDelaySeconds: 5
+            periodSeconds: 30
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: app-output
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ethicchecker
+spec:
+  selector:
+    app: ethicchecker
+  ports:
+    - port: 80
+      targetPort: 4242

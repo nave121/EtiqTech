@@ -1,0 +1,78 @@
+{
+  "status": "pass",
+  "errors": 0,
+  "warnings": 0,
+  "generated_at": "2025-11-26T07:10:51.195451Z",
+  "checklist": [
+    {
+      "status": "pass",
+      "message": "Regular track: title does not contain 'Pilot/פיילוט'.",
+      "suggested_fix": "Remove 'Pilot/פיילוט' indicators or change request_type to 'pilot'.",
+      "severity": "error",
+      "reference": "title:track"
+    },
+    {
+      "status": "pass",
+      "message": "Approval term consistent with request type.",
+      "suggested_fix": "Pilot track must request 1 year; regular/colony/continuation 1–4 years (often 3–4).",
+      "severity": "error",
+      "reference": "term:track"
+    },
+    {
+      "status": "pass",
+      "message": "PI has at least one training certificate recorded.",
+      "suggested_fix": "Add at least one entry to pi.training[].",
+      "severity": "error",
+      "reference": "pi:training"
+    },
+    {
+      "status": "pass",
+      "message": "Participant 1 performs procedures and has training.",
+      "suggested_fix": "Add at least one training certificate to this participant.",
+      "severity": "error",
+      "reference": "participant:training"
+    },
+    {
+      "status": "pass",
+      "message": "Animals totals match the sum over experiments.",
+      "suggested_fix": "Adjust animals_total[].n_total or per-experiment animals.n so that totals equal the sum per (species,strain,sex,genetic_status). Merge duplicate rows with same key.",
+      "severity": "error",
+      "reference": "animals:totals-vs-exps"
+    },
+    {
+      "status": "pass",
+      "message": "Experiment 1: CO₂ euthanasia flow & confirmation documented.",
+      "suggested_fix": "Specify CO₂ flow rate as '30–70% chamber volume/min from cylinder' AND a confirmation method (e.g. cervical dislocation, thoracotomy).",
+      "severity": "error",
+      "reference": "euthanasia:CO2"
+    },
+    {
+      "status": "pass",
+      "message": "Experiment 1: oncology block has burden cap and ulceration policy.",
+      "suggested_fix": "Fill oncology.tumor_burden_cap (e.g. '≤1500–2000 mm3') and oncology.ulceration_policy (e.g. 'Immediate euthanasia if ulceration appears').",
+      "severity": "error",
+      "reference": "special:oncology"
+    },
+    {
+      "status": "pass",
+      "message": "Experiment 1: biosafety agent/BSL/PPE documented.",
+      "suggested_fix": "Fill biosafety_infectious_agents: agent_name, BSL_level, PPE, decontamination_SOP, waste_handling, facility_biosafety_approval_id.",
+      "severity": "error",
+      "reference": "special:biosafety"
+    },
+    {
+      "status": "pass",
+      "message": "Scientific abstract within 300 words (75).",
+      "suggested_fix": "Shorten or move methodological detail to later sections.",
+      "severity": "error",
+      "reference": "summaries:scientific-length"
+    },
+    {
+      "status": "pass",
+      "message": "Lay summary within 150 words (39).",
+      "suggested_fix": "Shorten and remove technical detail; keep as lay explanation.",
+      "severity": "error",
+      "reference": "summaries:lay-length"
+    }
+  ]
+}

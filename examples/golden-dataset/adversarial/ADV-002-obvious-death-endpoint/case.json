@@ -1,0 +1,26 @@
+{
+  "case_id": "ADV-002",
+  "case_type": "adversarial",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "rat",
+  "pain_category": "E",
+  "procedure_types": ["lethal_challenge", "survival"],
+  "primary_risks": ["death_as_endpoint"],
+  "files": {
+    "bad_json": "examples/golden-dataset/adversarial/ADV-002-obvious-death-endpoint/bad.json",
+    "good_json": "examples/golden-dataset/adversarial/ADV-002-obvious-death-endpoint/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["endpoints:death-only"],
+    "good_expected_l1_refs": [],
+    "target_l2_themes": ["euthanasia_and_endpoints", "harm_benefit_analysis"],
+    "target_l3_sections": ["monitoring_and_endpoints", "scientific_justification"],
+    "must_not_miss_tags": ["death_as_endpoint_without_justification"],
+    "notes_for_reviewers": "Obvious endpoint failure: the bad variant permits animals to remain on study until death or moribundity with no earlier stopping criteria."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

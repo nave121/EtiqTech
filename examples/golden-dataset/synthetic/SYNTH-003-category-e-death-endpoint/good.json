@@ -1,0 +1,57 @@
+{
+  "header": {"protocol_id": "SYNTH-003-G", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "מודל כאב כרוני",
+    "title_en": "Chronic thoracotomy pain model",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 2,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000006",
+    "last_name_he": "אביב",
+    "first_name_he": "מיכל",
+    "last_name_en": "Aviv",
+    "first_name_en": "Michal",
+    "email": "synthetic6@test.il",
+    "phone_primary": "SYNTH-1000006",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-6",
+    "faculty": "Medicine",
+    "department": "Pain",
+    "training": [{"cert_no": "T6", "issuer": "TAMIR", "animal_scope": "rodents", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {"scientific_en_≤300w": "Thoracotomy pain model with rescue analgesia and early endpoints.", "lay_he_≤150w": "מודל כאב כרוני עם שיכוך כאב ונקודות סיום מוקדמות."},
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["thoracotomy pain model alternative"],
+    "conclusion": "No non-animal alternative captures the full systemic pain phenotype."
+  },
+  "animals_total": [{"species": "rat", "strain": "Sprague Dawley", "sex": "male", "genetic_status": "WT", "source": "vendor", "n_total": 16}],
+  "n_justification": {"method": "power", "details": "Power analysis supports 8 per group.", "attachments": []},
+  "experiments": [{
+    "label": "Thoracotomy survival surgery",
+    "question": "Thoracotomy surgery with rescue analgesia and early clinical endpoints.",
+    "animals": {"species": "rat", "strain": "Sprague Dawley", "sex": "male", "genetic_status": "WT", "n": 16},
+    "housing": {"group_housed": false},
+    "procedure_timeline": [{"step": "Thoracotomy surgery is performed under anesthesia followed by scheduled rescue analgesia."}],
+    "analgesia": [{"agent": "Buprenorphine", "rationale": "Post-operative pain control", "dose": "0.05 mg/kg", "route": "SC", "frequency": "q8-12h"}],
+    "anesthesia": [{"agent": "Isoflurane", "rationale": "Surgery", "dose": "2%", "route": "inhaled"}],
+    "severity_level_1_to_5": 5,
+    "monitoring": {
+      "plan": "Veterinary consultation obtained for the analgesic plan.",
+      "initial_72h_daily": true,
+      "parameters": ["Daily during the first 72h, then at least weekly thereafter with weight, posture, grooming, and pain-score review."]
+    },
+    "humane_endpoints": {"general": ["10% weight loss, abnormal posture, self-neglect, or sustained pain score escalation."], "specific": ["Immediate euthanasia before moribundity."]},
+    "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirm lack of heartbeat."},
+    "fate": "survival"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

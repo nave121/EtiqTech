@@ -1,0 +1,491 @@
+/* ============================================
+   Dark Theme Overrides for EthicTech Analyzer
+   Overrides CSS custom properties from main.css
+   ============================================ */
+
+:root {
+    /* Surface colors — dark */
+    --surface-bg: #0a0a0a;
+    --surface-card: #111111;
+    --surface-elevated: #1a1a1a;
+
+    /* Text colors — light on dark */
+    --text-primary: #e5e5e5;
+    --text-secondary: #a3a3a3;
+    --text-muted: #737373;
+
+    /* Brand — brighten for dark bg */
+    --brand-primary: #3b82f6;
+    --brand-primary-dark: #2563eb;
+    --brand-primary-light: rgba(59, 130, 246, 0.15);
+    --brand-secondary: #8b5cf6;
+
+    /* Borders — dark */
+    --border-light: #1f1f1f;
+    --border-medium: #2a2a2a;
+
+    /* Shadows — deeper for dark bg */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 10px 10px -5px rgba(0, 0, 0, 0.6);
+
+    /* Status colors — brighter for dark bg readability */
+    --status-pass: #22c55e;
+    --status-pass-light: rgba(34, 197, 94, 0.12);
+    --status-pass-border: rgba(34, 197, 94, 0.35);
+    --status-fail: #ef4444;
+    --status-fail-light: rgba(239, 68, 68, 0.12);
+    --status-fail-border: rgba(239, 68, 68, 0.35);
+    --status-warning: #f59e0b;
+    --status-warning-light: rgba(245, 158, 11, 0.12);
+    --status-warning-border: rgba(245, 158, 11, 0.35);
+
+    /* Font */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ============================================
+   Header — dark glass effect
+   ============================================ */
+.app-header {
+    background-color: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom-color: #1f1f1f;
+}
+
+.back-to-home {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.back-to-home:hover {
+    color: #22c55e;
+    background-color: rgba(34, 197, 94, 0.08);
+}
+
+/* Logo glow */
+.logo {
+    background: linear-gradient(135deg, #22c55e 0%, #3b82f6 100%);
+    box-shadow: 0 0 24px rgba(34, 197, 94, 0.25);
+}
+
+.brand-text h1 {
+    color: #ffffff;
+}
+
+/* ============================================
+   Upload zone — dark with green glow hover
+   ============================================ */
+.upload-zone {
+    background-color: #111111;
+    border-color: #2a2a2a;
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+    border-color: #22c55e;
+    background-color: rgba(34, 197, 94, 0.04);
+    box-shadow: 0 0 40px rgba(34, 197, 94, 0.08), inset 0 0 40px rgba(34, 197, 94, 0.02);
+}
+
+.upload-zone:hover .upload-icon,
+.upload-zone.drag-over .upload-icon {
+    color: #22c55e;
+}
+
+/* Model selection — dark */
+.model-selection {
+    border-top-color: #1f1f1f;
+}
+
+.model-select-group select {
+    background-color: #0a0a0a;
+    border-color: #2a2a2a;
+    color: #e5e5e5;
+}
+
+.model-select-group select:hover {
+    border-color: #22c55e;
+}
+
+.model-select-group select:focus {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+}
+
+.loading-card {
+    background-color: #111111;
+    border: 1px solid #1f1f1f;
+}
+
+.spinner {
+    border-color: #2a2a2a;
+    border-top-color: #22c55e;
+}
+
+/* ============================================
+   Summary Cards — subtle glow borders
+   ============================================ */
+.summary-card {
+    background-color: #111111;
+    border-color: #1f1f1f;
+}
+
+.status-card .card-icon {
+    background-color: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+}
+
+.status-card.fail .card-icon {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+}
+
+.status-card.pass .card-value {
+    color: #22c55e;
+}
+
+.status-card.fail .card-value {
+    color: #ef4444;
+}
+
+.errors-card .card-icon {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+}
+
+.errors-card .card-value {
+    color: #ef4444;
+}
+
+.warnings-card .card-icon {
+    background-color: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+}
+
+.warnings-card .card-value {
+    color: #f59e0b;
+}
+
+.llm-card .card-icon {
+    background-color: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+}
+
+/* ============================================
+   Document container
+   ============================================ */
+.document-container {
+    background-color: #111111;
+    border-color: #1f1f1f;
+}
+
+.document-content [data-ref]:hover {
+    background-color: #1a1a1a;
+}
+
+.document-content table th {
+    background-color: #1a1a1a;
+}
+
+.document-content table td,
+.document-content table th {
+    border-color: #2a2a2a;
+}
+
+.document-content .experiment {
+    border-color: #2a2a2a;
+    background-color: #0e0e0e;
+}
+
+.document-content .header {
+    border-bottom-color: #2a2a2a;
+}
+
+.document-content .sub-header {
+    border-bottom-color: #1f1f1f;
+}
+
+/* ============================================
+   Reviewer notes
+   ============================================ */
+.reviewer-notes-panel {
+    background-color: #111111;
+    border-color: #1f1f1f;
+}
+
+.notes-header {
+    border-bottom-color: #1f1f1f;
+}
+
+.reviewer-notes-panel textarea {
+    background-color: #111111;
+    color: var(--text-primary);
+}
+
+.reviewer-notes-panel textarea::placeholder {
+    color: #525252;
+}
+
+/* ============================================
+   Detail panel — dark glass
+   ============================================ */
+.detail-panel {
+    background-color: rgba(17, 17, 17, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top-color: #1f1f1f;
+}
+
+.detail-header {
+    background-color: #0e0e0e;
+    border-bottom-color: #1f1f1f;
+}
+
+.detail-close:hover {
+    background-color: #2a2a2a;
+}
+
+.detail-fix {
+    background-color: #0e0e0e;
+    border-left-color: #22c55e;
+}
+
+.detail-fix-label {
+    color: #22c55e;
+}
+
+/* ============================================
+   LLM Progress card — dark glass
+   ============================================ */
+.llm-progress-card {
+    background-color: rgba(17, 17, 17, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-color: #1f1f1f;
+}
+
+.llm-progress-header {
+    background-color: rgba(14, 14, 14, 0.8);
+    border-bottom-color: #1f1f1f;
+}
+
+.llm-minimize:hover {
+    background-color: #2a2a2a;
+}
+
+/* Progress bar glow */
+.progress-fill {
+    background: linear-gradient(90deg, #22c55e 0%, #3b82f6 100%);
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+}
+
+.llm-thinking {
+    background-color: #0e0e0e;
+}
+
+.thinking-label {
+    color: #22c55e;
+}
+
+.thinking-label::before {
+    background-color: #22c55e;
+}
+
+.thinking-content {
+    color: #22c55e;
+}
+
+.status-dot.running {
+    background-color: #22c55e;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+/* Export CTA */
+.llm-export-cta {
+    background-color: rgba(34, 197, 94, 0.08);
+    border-top-color: #1f1f1f;
+}
+
+.llm-export-label {
+    color: #22c55e;
+}
+
+.btn-export-inline {
+    background-color: #22c55e;
+}
+
+.btn-export-inline:hover {
+    background-color: #16a34a;
+}
+
+/* ============================================
+   Layer 3 Human Eye Results Panel — dark
+   ============================================ */
+.layer3-results-panel {
+    background-color: #111111;
+    border-color: #1f1f1f;
+}
+
+.layer3-results-header {
+    border-bottom-color: #1f1f1f;
+}
+
+.layer3-results-header svg {
+    color: #22c55e;
+}
+
+.layer3-summary {
+    border-bottom-color: #1f1f1f;
+}
+
+.layer3-finding {
+    background-color: #0e0e0e;
+    border-left-color: #2a2a2a;
+}
+
+.layer3-finding.critical {
+    border-left-color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.08);
+}
+
+.layer3-finding.major {
+    border-left-color: #f59e0b;
+    background-color: rgba(245, 158, 11, 0.08);
+}
+
+.layer3-finding.compliant {
+    border-left-color: #22c55e;
+    background-color: rgba(34, 197, 94, 0.08);
+}
+
+.layer3-finding.minor {
+    border-left-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.08);
+}
+
+.layer3-finding-action {
+    border-top-color: #1f1f1f;
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+.btn-new {
+    background-color: #22c55e;
+    color: #000000;
+}
+
+.btn-new:hover {
+    background-color: #16a34a;
+}
+
+.btn-export {
+    background-color: #1a1a1a;
+    color: var(--text-primary);
+    border-color: #2a2a2a;
+}
+
+.btn-export:hover:not(:disabled) {
+    background-color: #222222;
+}
+
+.file-name {
+    background-color: #1a1a1a;
+    color: var(--text-secondary);
+}
+
+.btn-layer3 {
+    border-color: rgba(34, 197, 94, 0.3);
+    background: rgba(34, 197, 94, 0.08);
+    color: #22c55e;
+}
+
+.btn-layer3:hover {
+    background: rgba(34, 197, 94, 0.14);
+}
+
+/* ============================================
+   Scrollbar — dark
+   ============================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2a2a2a;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #3a3a3a;
+}
+
+/* ============================================
+   Print — force light theme for PDF readability
+   ============================================ */
+@media print {
+    :root {
+        --surface-bg: #ffffff;
+        --surface-card: #ffffff;
+        --surface-elevated: #f8fafc;
+        --text-primary: #0f172a;
+        --text-secondary: #64748b;
+        --text-muted: #94a3b8;
+        --border-light: #e2e8f0;
+        --border-medium: #cbd5e1;
+    }
+
+    body {
+        background-color: #ffffff;
+        color: #0f172a;
+    }
+
+    .app-header {
+        background-color: #ffffff;
+        backdrop-filter: none;
+    }
+
+    .back-to-home {
+        display: none !important;
+    }
+
+    .summary-card {
+        background-color: #ffffff;
+    }
+
+    .document-container {
+        background-color: #ffffff;
+    }
+
+    .document-content [data-ref] {
+        background: none !important;
+        box-shadow: none !important;
+    }
+
+    .reviewer-notes-panel {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+    }
+
+    .reviewer-notes-panel textarea {
+        background-color: #ffffff;
+        color: #0f172a;
+        border: 1px solid #e2e8f0;
+    }
+}

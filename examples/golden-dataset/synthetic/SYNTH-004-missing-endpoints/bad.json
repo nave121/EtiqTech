@@ -1,0 +1,53 @@
+{
+  "header": {"protocol_id": "SYNTH-004-B", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "מודל זיהום בדגי זברה",
+    "title_en": "High-severity zebrafish infection model",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 2,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000007",
+    "last_name_he": "שחר",
+    "first_name_he": "דנה",
+    "last_name_en": "Shahar",
+    "first_name_en": "Dana",
+    "email": "synthetic7@test.il",
+    "phone_primary": "SYNTH-1000007",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-7",
+    "faculty": "Medicine",
+    "department": "Infection",
+    "training": [{"cert_no": "T7", "issuer": "TAMIR", "animal_scope": "fish", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {"scientific_en_≤300w": "High-severity infection challenge in adult zebrafish.", "lay_he_≤150w": "מודל זיהום בדגי זברה."},
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["adult zebrafish infection alternative model"],
+    "conclusion": "No replacement reproduces the whole-organism host response."
+  },
+  "animals_total": [{"species": "zebrafish", "strain": "AB", "sex": "both", "genetic_status": "WT", "source": "vendor", "n_total": 60}],
+  "n_justification": {"method": "power", "details": "Power analysis supports 30 per arm.", "attachments": []},
+  "experiments": [{
+    "label": "Infection challenge",
+    "question": "Monitor infected fish after challenge with a lethal pathogen.",
+    "animals": {"species": "zebrafish", "strain": "AB", "sex": "both", "genetic_status": "WT", "n": 60},
+    "housing": {"group_housed": true},
+    "procedure_timeline": [{"step": "Fish are challenged with pathogen and observed over several days."}],
+    "analgesia": [],
+    "anesthesia": [],
+    "severity_level_1_to_5": 4,
+    "monitoring": {"plan": "Observe after challenge.", "parameters": ["Weekly check."]},
+    "humane_endpoints": {"general": ["20% weight loss."], "specific": []},
+    "euthanasia": {"primary": "MS-222 overdose", "parameters": "", "confirmation": "No opercular movement."},
+    "fate": "survival"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

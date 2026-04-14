@@ -1,0 +1,57 @@
+{
+  "case_id": "REAL-077",
+  "case_type": "real_pair",
+  "review_status": "reviewer_ready",
+  "source_origin": "real_redacted",
+  "species": "mouse",
+  "pain_category": "D",
+  "procedure_types": [
+    "ocular_surgery",
+    "neuroprotection",
+    "histology"
+  ],
+  "primary_risks": [
+    "model_specific_endpoints",
+    "analgesia",
+    "post_op_monitoring"
+  ],
+  "files": {
+    "bad_html": "examples/head-to-head/IL-013-05-2000, 90013/bad_IL-013-05-2000_alt2.html",
+    "good_html": "examples/head-to-head/IL-013-05-2000, 90013/good_IL-013-05-2000.html",
+    "case_report": "examples/head-to-head/IL-013-05-2000, 90013/CASE_REPORT.md"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": [
+      "euthanasia:displacement-rate",
+      "euthanasia:secondary-method",
+      "postop:monitoring",
+      "special:ocular",
+      "vet:consultation"
+    ],
+    "good_expected_l1_refs": [
+      "euthanasia:displacement-rate",
+      "euthanasia:secondary-method",
+      "postop:monitoring",
+      "special:ocular",
+      "vet:consultation"
+    ],
+    "target_l2_themes": [
+      "severity_monitoring_analgesia",
+      "euthanasia_and_endpoints",
+      "harm_benefit_analysis"
+    ],
+    "target_l3_sections": [
+      "monitoring_and_endpoints",
+      "analgesia_and_anesthesia",
+      "euthanasia"
+    ],
+    "must_not_miss_tags": [
+      "missing_humane_endpoints_high_severity"
+    ],
+    "notes_for_reviewers": "This real ONC case is tagged for endpoint review because the committee repeatedly requested model-specific humane endpoints."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

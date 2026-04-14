@@ -1,0 +1,48 @@
+{
+  "header": {"protocol_id": "SYNTH-001-B", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "בדיקת פורמולציה קוסמטית",
+    "title_en": "Cosmetic formulation irritation screen",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 1,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000001",
+    "last_name_he": "כהן",
+    "first_name_he": "תמר",
+    "last_name_en": "Cohen",
+    "first_name_en": "Tamar",
+    "email": "synthetic1@test.il",
+    "phone_primary": "SYNTH-1000001",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-1",
+    "faculty": "Medicine",
+    "department": "Dermatology",
+    "training": [{"cert_no": "T1", "issuer": "TAMIR", "animal_scope": "rodents", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {"scientific_en_≤300w": "Topical cosmetic screening in mice.", "lay_he_≤150w": "בדיקת חומר קוסמטי."},
+  "alternatives_search": {},
+  "animals_total": [{"species": "mouse", "strain": "ICR", "sex": "female", "genetic_status": "WT", "source": "vendor", "n_total": 12}],
+  "n_justification": {"method": "precedent", "details": "Small exploratory cohort.", "attachments": []},
+  "experiments": [{
+    "label": "Topical patch test",
+    "question": "Does the cosmetic formulation cause skin irritation?",
+    "animals": {"species": "mouse", "strain": "ICR", "sex": "female", "genetic_status": "WT", "n": 12},
+    "housing": {"group_housed": true},
+    "procedure_timeline": [{"step": "Apply cosmetic cream to clipped dorsal skin once daily."}],
+    "analgesia": [],
+    "anesthesia": [],
+    "severity_level_1_to_5": 2,
+    "monitoring": {"plan": "Observe for erythema.", "parameters": ["Daily visual check."]},
+    "humane_endpoints": {"general": ["Persistent ulceration or severe dermatitis."], "specific": []},
+    "euthanasia": {"primary": "cervical dislocation", "parameters": "", "confirmation": ""},
+    "fate": "euthanized"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

@@ -1,0 +1,26 @@
+{
+  "case_id": "ADV-007",
+  "case_type": "adversarial",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "mouse",
+  "pain_category": "C",
+  "procedure_types": ["imaging", "hidden_violation"],
+  "primary_risks": ["buried_immobilizer_language"],
+  "files": {
+    "bad_json": "examples/golden-dataset/adversarial/ADV-007-hidden-buried-immobilizer/bad.json",
+    "good_json": "examples/golden-dataset/adversarial/ADV-007-hidden-buried-immobilizer/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["restraint:duration"],
+    "good_expected_l1_refs": [],
+    "target_l2_themes": ["severity_monitoring_analgesia", "personnel_and_training"],
+    "target_l3_sections": ["analgesia_and_anesthesia", "personnel"],
+    "must_not_miss_tags": ["paralytic_without_anesthesia"],
+    "notes_for_reviewers": "Hidden violation: the bad variant buries a curariform immobilizer in the procedure narrative without any explicit general anesthesia plan."
+  },
+  "dependencies": {
+    "blocked_by_rules": ["P2-epic-anchoring-bias-dual-pass", "P3-epic-self-consistency-voting"],
+    "current_expected_status": "future_capability"
+  }
+}

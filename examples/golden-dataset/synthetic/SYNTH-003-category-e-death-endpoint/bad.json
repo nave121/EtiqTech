@@ -1,0 +1,53 @@
+{
+  "header": {"protocol_id": "SYNTH-003-B", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "מודל כאב כרוני",
+    "title_en": "Chronic thoracotomy pain model",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 2,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000005",
+    "last_name_he": "אביב",
+    "first_name_he": "מיכל",
+    "last_name_en": "Aviv",
+    "first_name_en": "Michal",
+    "email": "synthetic5@test.il",
+    "phone_primary": "SYNTH-1000005",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-5",
+    "faculty": "Medicine",
+    "department": "Pain",
+    "training": [{"cert_no": "T5", "issuer": "TAMIR", "animal_scope": "rodents", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {"scientific_en_≤300w": "Thoracotomy pain model with unrelieved pain to death.", "lay_he_≤150w": "מודל כאב כרוני עם נקודת סיום במוות."},
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["thoracotomy pain model alternative"],
+    "conclusion": "No non-animal alternative captures the full systemic pain phenotype."
+  },
+  "animals_total": [{"species": "rat", "strain": "Sprague Dawley", "sex": "male", "genetic_status": "WT", "source": "vendor", "n_total": 16}],
+  "n_justification": {"method": "power", "details": "Power analysis supports 8 per group.", "attachments": []},
+  "experiments": [{
+    "label": "Thoracotomy survival surgery",
+    "question": "Thoracotomy surgery followed by observation until death from unrelieved pain.",
+    "animals": {"species": "rat", "strain": "Sprague Dawley", "sex": "male", "genetic_status": "WT", "n": 16},
+    "housing": {"group_housed": false},
+    "procedure_timeline": [{"step": "Thoracotomy surgery is performed and animals recover without analgesia."}],
+    "analgesia": [],
+    "anesthesia": [{"agent": "Isoflurane", "rationale": "Surgery", "dose": "2%", "route": "inhaled"}],
+    "severity_level_1_to_5": 5,
+    "monitoring": {"plan": "Observe after surgery.", "parameters": ["Check if moribund."]},
+    "humane_endpoints": {"general": ["Death or moribundity."], "specific": []},
+    "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirm lack of heartbeat."},
+    "fate": "survival"
+  }],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

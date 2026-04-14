@@ -1,0 +1,26 @@
+{
+  "case_id": "ADV-004",
+  "case_type": "adversarial",
+  "review_status": "reviewer_ready",
+  "source_origin": "synthetic",
+  "species": "mouse",
+  "pain_category": "D",
+  "procedure_types": ["toxicology", "endpoint_gap"],
+  "primary_risks": ["weak_humane_endpoints"],
+  "files": {
+    "bad_json": "examples/golden-dataset/adversarial/ADV-004-moderate-high-severity-endpoints/bad.json",
+    "good_json": "examples/golden-dataset/adversarial/ADV-004-moderate-high-severity-endpoints/good.json"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": ["endpoints:20%-only"],
+    "good_expected_l1_refs": [],
+    "target_l2_themes": ["euthanasia_and_endpoints", "severity_monitoring_analgesia"],
+    "target_l3_sections": ["monitoring_and_endpoints", "severity_classification"],
+    "must_not_miss_tags": ["missing_humane_endpoints_high_severity"],
+    "notes_for_reviewers": "Moderate inconsistency: a high-severity toxicology study offers only a generic 20% weight-loss endpoint despite otherwise polished monitoring language."
+  },
+  "dependencies": {
+    "blocked_by_rules": [],
+    "current_expected_status": "fully_testable"
+  }
+}

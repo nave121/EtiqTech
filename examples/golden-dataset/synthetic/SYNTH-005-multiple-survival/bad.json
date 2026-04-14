@@ -1,0 +1,69 @@
+{
+  "header": {"protocol_id": "SYNTH-005-B", "institution": "Synthetic Institute"},
+  "research": {
+    "title_he": "שתי פרוצדורות שרידות",
+    "title_en": "Two survival laparotomy procedures in rabbits",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 2,
+    "sites": []
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "100000009",
+    "last_name_he": "הררי",
+    "first_name_he": "נועה",
+    "last_name_en": "Harari",
+    "first_name_en": "Noa",
+    "email": "synthetic9@test.il",
+    "phone_primary": "SYNTH-1000009",
+    "phone_secondary": "",
+    "institutional_cert_no": "CERT-9",
+    "faculty": "Medicine",
+    "department": "Surgery",
+    "training": [{"cert_no": "T9", "issuer": "TAMIR", "animal_scope": "rabbits", "date": "2024-01-01"}]
+  },
+  "participants": [],
+  "summaries": {"scientific_en_≤300w": "Two survival procedures on the same rabbits.", "lay_he_≤150w": "שתי פרוצדורות שרידות על ארנבים."},
+  "alternatives_search": {
+    "engines": ["PubMed", "Embase"],
+    "date": "2025-01-01",
+    "queries": ["rabbit repeated survival surgery justification"],
+    "conclusion": "No replacement provides the needed serial tissue data."
+  },
+  "animals_total": [{"species": "rabbit", "strain": "NZW", "sex": "female", "genetic_status": "WT", "source": "vendor", "n_total": 8}],
+  "n_justification": {"method": "precedent", "details": "Serial sampling design.", "attachments": []},
+  "experiments": [
+    {
+      "label": "First survival surgery",
+      "question": "Perform a first survival laparotomy procedure.",
+      "animals": {"species": "rabbit", "strain": "NZW", "sex": "female", "genetic_status": "WT", "n": 4},
+      "housing": {"group_housed": false},
+      "procedure_timeline": [{"step": "Laparotomy surgery for the first survival procedure."}],
+      "analgesia": [{"agent": "Buprenorphine", "rationale": "Pain", "dose": "0.03 mg/kg", "route": "SC"}],
+      "anesthesia": [{"agent": "Isoflurane", "rationale": "Surgery", "dose": "2%", "route": "inhaled"}],
+      "severity_level_1_to_5": 3,
+      "monitoring": {"plan": "Daily checks.", "parameters": ["Daily wound check."]},
+      "humane_endpoints": {"general": ["Weight loss or wound dehiscence."], "specific": []},
+      "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "No heartbeat."},
+      "fate": "survival"
+    },
+    {
+      "label": "Second survival surgery",
+      "question": "Re-open the same animals for a second survival laparotomy.",
+      "animals": {"species": "rabbit", "strain": "NZW", "sex": "female", "genetic_status": "WT", "n": 4},
+      "housing": {"group_housed": false},
+      "procedure_timeline": [{"step": "Second laparotomy surgery on the same rabbits."}],
+      "analgesia": [{"agent": "Buprenorphine", "rationale": "Pain", "dose": "0.03 mg/kg", "route": "SC"}],
+      "anesthesia": [{"agent": "Isoflurane", "rationale": "Surgery", "dose": "2%", "route": "inhaled"}],
+      "severity_level_1_to_5": 3,
+      "monitoring": {"plan": "Daily checks.", "parameters": ["Daily wound check."]},
+      "humane_endpoints": {"general": ["Weight loss or wound dehiscence."], "specific": []},
+      "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "No heartbeat."},
+      "fate": "survival"
+    }
+  ],
+  "pi_declaration": {"affirmed": true},
+  "is_colony": false
+}

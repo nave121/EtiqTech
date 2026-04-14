@@ -1,0 +1,58 @@
+{
+  "case_id": "REAL-166",
+  "case_type": "real_pair",
+  "review_status": "reviewer_ready",
+  "source_origin": "real_redacted",
+  "species": "mouse",
+  "pain_category": "D",
+  "procedure_types": [
+    "oncology",
+    "pregnancy_model",
+    "nanomaterials"
+  ],
+  "primary_risks": [
+    "euthanasia_alignment",
+    "offspring_welfare",
+    "nanomaterials"
+  ],
+  "files": {
+    "bad_html": "examples/head-to-head/IL-034-12-2000, 90034/bad_IL-034-12-2000.html",
+    "good_html": "examples/head-to-head/IL-034-12-2000, 90034/good_IL-034-12-2000.html",
+    "case_report": "examples/head-to-head/IL-034-12-2000, 90034/CASE_REPORT.md"
+  },
+  "ground_truth": {
+    "bad_expected_l1_refs": [
+      "endpoints:20%-only",
+      "euthanasia:conditions-missing",
+      "special:nanomaterials",
+      "special:oncology",
+      "vet:consultation"
+    ],
+    "good_expected_l1_refs": [
+      "endpoints:20%-only",
+      "special:nanomaterials",
+      "special:oncology",
+      "vet:consultation"
+    ],
+    "target_l2_themes": [
+      "euthanasia_and_endpoints",
+      "harm_benefit_analysis",
+      "scientific_coherence"
+    ],
+    "target_l3_sections": [
+      "monitoring_and_endpoints",
+      "euthanasia",
+      "housing"
+    ],
+    "must_not_miss_tags": [
+      "unacceptable_euthanasia_for_species"
+    ],
+    "notes_for_reviewers": "Tag is reviewer-driven: the key issue is age-appropriate and role-appropriate euthanasia language for dams and pups."
+  },
+  "dependencies": {
+    "blocked_by_rules": [
+      "P1-epic-avma-euthanasia-matrix"
+    ],
+    "current_expected_status": "partially_testable"
+  }
+}
