@@ -7,7 +7,7 @@ mypy==1.19.1
 requests==2.32.5
 flask==3.1.2
 werkzeug==3.1.5
-pydantic==2.12.4
+pydantic==2.13.0
 pytest-mock==3.15.1
 hypothesis==6.151.9
 gunicorn==23.0.0
