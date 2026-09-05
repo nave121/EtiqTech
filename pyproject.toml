@@ -52,7 +52,7 @@ Security = "https://github.com/nave121/EtiqTech/security/advisories/new"
 # fixtures (examples/) are resolved relative to the repo root, so for running the app
 # use an editable install from a checkout: `pip install -e .`
 [tool.setuptools]
-packages = ["src", "server"]
+packages = ["src", "src.lint_rules", "server"]
 
 [tool.setuptools.package-data]
 server = ["templates/*.html", "static/css/*.css", "static/js/*.js"]
