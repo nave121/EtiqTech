@@ -7,8 +7,7 @@ from typing import Any, Dict, Generator, Optional
 
 import requests
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(name)s] %(message)s")
+logger = logging.getLogger(__name__)  # library module: never configures the root logger (see server/app.py)
 
 
 def _env_float(key: str, default: float) -> float:
@@ -42,6 +41,57 @@ def _ollama_headers() -> Dict[str, str]:
 
 class LLMError(RuntimeError):
     """Raised when an LLM provider call fails."""
+
+
+def estimate_tokens(text: str) -> int:
+    # ponytail: chars/4, calibrated 2026-09-05 against qwen3.6 prompt_eval_count on a real
+    # Layer 3 prompt (113,069 chars -> 27,658 tokens = 4.09 chars/token) and a Layer 2 theme
+    # prompt (4.23). Slightly conservative on purpose; swap in a tokenizer if the guard misfires.
+    return len(text) // 4
+
+
+def context_budget_warning(prompt: str, *, label: str) -> Optional[Dict[str, Any]]:
+    """Return an SSE-shaped warning event when a prompt is close to overflowing num_ctx.
+
+    Ollama silently truncates prompts that exceed num_ctx - num_predict, which
+    degrades the review without any error. Callers yield the returned dict to the
+    client (and log it); None means the prompt fits comfortably.
+    """
+    num_ctx = _env_int("OLLAMA_NUM_CTX", 32768)
+    num_predict = _env_int("LLM_MAX_TOKENS", 8192)
+    available = max(num_ctx - num_predict, 1)
+    est = estimate_tokens(prompt)
+    if est < 0.85 * available:
+        return None
+    overflow = est > available
+    truncates_prompt = est >= num_ctx
+    # Measured 2026-09-05 (Ollama 0.32, qwen3.6): the prompt is truncated only when it
+    # exceeds num_ctx itself; below that it is sent whole, but prompt + num_predict
+    # no longer fit, so generation is cut short or early context is shifted out.
+    if truncates_prompt:
+        consequence = "Ollama WILL truncate the prompt — review quality is degraded. "
+    elif overflow:
+        consequence = "Prompt + max output exceed the window — the answer may be cut short or lose early context. "
+    else:
+        consequence = "Approaching the limit. "
+    msg = (
+        f"{label}: prompt is ~{est} tokens vs ~{available} available "
+        f"(num_ctx={num_ctx}, num_predict={num_predict}). "
+        + consequence
+        + "Raise OLLAMA_NUM_CTX or shorten the protocol."
+    )
+    logger.warning("context budget: %s", msg)
+    return {
+        "type": "warning",
+        "code": "context_budget",
+        "label": label,
+        "estimated_prompt_tokens": est,
+        "available_tokens": available,
+        "num_ctx": num_ctx,
+        "overflow": overflow,
+        "truncates_prompt": truncates_prompt,
+        "message": msg,
+    }
 
 
 def call_llm(

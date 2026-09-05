@@ -123,6 +123,7 @@ EtiqTech reviews protocols in three layers:
 | `FLASK_DEBUG` | `false` | Enable Flask debug mode |
 | `SECRET_KEY` | (random) | Required in production |
 | `PORT` | `4242` | Listen port (gunicorn.conf.py) |
+| `LOG_LEVEL` | `INFO` | Server log level; DEBUG is opt-in |
 | `GUNICORN_THREADS` | `64` | Thread pool = max concurrent LLM streams |
 | `PROXY_FIX` | unset | `1` to trust one X-Forwarded-For hop behind a reverse proxy |
 | `RATELIMIT_ENABLED` | `true` | `false` only for load tests; refused in production |

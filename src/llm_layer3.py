@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
 from .llm_agent import LAW_PATH
-from .llm_clients import call_llm, call_llm_stream
+from .llm_clients import call_llm, call_llm_stream, context_budget_warning
 from .xmeta_catalog import load_high_leverage_catalog
 
 PROMPTS_DIR = Path(__file__).parent.parent / "llm"
@@ -262,7 +262,7 @@ def should_trigger_layer3(
         protocol_id = ""
         if instance:
             protocol_id = str((instance.get("header") or {}).get("protocol_id", ""))
-        seed = int(hashlib.md5(protocol_id.encode()).hexdigest(), 16) % 1000
+        seed = int(hashlib.md5(protocol_id.encode(), usedforsecurity=False).hexdigest(), 16) % 1000
         if seed < int(sampling_rate * 1000):
             return True, "random_sampling"
 
@@ -392,6 +392,7 @@ def run_human_eye(
 
     # Pass 1 — section-by-section
     p1_prompt = _build_pass1_prompt(instance, lint_report)
+    context_budget_warning(p1_prompt, label="Layer 3 / pass 1")  # logs; no stream to notify
     try:
         raw1 = call_llm(p1_prompt, provider=provider, model=model, temperature=temperature)
         pass1 = _parse_layer3_json(raw1)
@@ -400,6 +401,7 @@ def run_human_eye(
 
     # Pass 2 — cross-reference + synthesis
     p2_prompt = _build_pass2_prompt(instance, lint_report, pass1, layer2_result)
+    context_budget_warning(p2_prompt, label="Layer 3 / pass 2")
     try:
         raw2 = call_llm(p2_prompt, provider=provider, model=model, temperature=temperature)
         pass2 = _parse_layer3_json(raw2)
@@ -450,6 +452,9 @@ def run_human_eye_stream(
     yield {"type": "pass_start", "pass": 1, "label": "Section-by-section review"}
 
     p1_prompt = _build_pass1_prompt(instance, lint_report)
+    warning = context_budget_warning(p1_prompt, label="Layer 3 / pass 1")
+    if warning:
+        yield {**warning, "pass": 1}
     full_response1 = ""
     try:
         for token in call_llm_stream(p1_prompt, provider=provider, model=model, temperature=temperature):
@@ -466,6 +471,9 @@ def run_human_eye_stream(
     yield {"type": "pass_start", "pass": 2, "label": "Cross-reference & synthesis"}
 
     p2_prompt = _build_pass2_prompt(instance, lint_report, pass1, layer2_result)
+    warning = context_budget_warning(p2_prompt, label="Layer 3 / pass 2")
+    if warning:
+        yield {**warning, "pass": 2}
     full_response2 = ""
     try:
         for token in call_llm_stream(p2_prompt, provider=provider, model=model, temperature=temperature):

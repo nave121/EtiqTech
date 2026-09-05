@@ -862,10 +862,23 @@
             case 'complete':
                 handleComplete(data);
                 break;
+            case 'warning':
+                showStreamWarning(llmProgressCard, data);
+                break;
             case 'error':
                 handleLLMError(data);
                 break;
         }
+    }
+
+    // Context-budget (and future) warnings from the server: visible, not dismissable, escaped.
+    function showStreamWarning(card, data) {
+        if (!card) return;
+        const note = document.createElement('div');
+        note.className = 'stream-warning';
+        note.setAttribute('role', 'status');
+        note.textContent = data.message || 'Warning from server';
+        card.insertBefore(note, card.firstChild);
     }
 
     // Handle Theme Start
@@ -1119,6 +1132,9 @@
                 break;
             case 'pass_done':
                 layer3ProgressFill.style.width = data.pass === 1 ? '65%' : '95%';
+                break;
+            case 'warning':
+                showStreamWarning(document.getElementById('layer3-card'), data);
                 break;
             case 'complete':
                 layer3ProgressFill.style.width = '100%';

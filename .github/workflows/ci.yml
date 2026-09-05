@@ -70,5 +70,7 @@ jobs:
           done
           curl -fs localhost:4242/api/health | tee health.json
           python3 -c "import json; h=json.load(open('health.json')); assert h['law_loaded'] is True, h"
-          docker logs etiqtech 2>&1 | grep -q "LAW TEXT NOT FOUND" && { echo 'law warning present in logs'; exit 1; } || true
+          if docker logs etiqtech 2>&1 | grep -q "LAW TEXT NOT FOUND"; then
+            echo 'law warning present in container logs'; exit 1
+          fi
           docker rm -f etiqtech

@@ -2,6 +2,8 @@ import os
 import sys
 import json
 import logging
+import threading
+import uuid
 from datetime import datetime, timedelta
 
 # Add the parent directory to the path so we can import src modules
@@ -23,6 +25,13 @@ from src.llm_layer3 import run_human_eye_stream
 # (e.g. reverse proxy with basic auth, OAuth, or API key middleware).
 # ───────────────────────────────────────────────────────────────────
 
+# Logging is configured HERE (the entrypoint) and nowhere else. Default INFO:
+# DEBUG would let urllib3/requests echo request internals, and no log level may
+# ever carry protocol text (see PRIVACY invariants). LOG_LEVEL=DEBUG is opt-in.
+logging.basicConfig(
+    level=os.getenv('LOG_LEVEL', 'INFO').upper(),
+    format='%(asctime)s [%(name)s] %(levelname)s %(message)s',
+)
 logger = logging.getLogger(__name__)
 
 if not law_loaded():
@@ -218,12 +227,16 @@ def health():
     return jsonify({'status': 'ok', 'law_loaded': law_loaded()})
 
 
-# Store analysis results temporarily for LLM verification
+# Store analysis results temporarily for LLM verification.
+# In-memory only, ~1h TTL, never written to disk (see PRIVACY.md). Mutated from
+# many gthread threads, so every read/write of the dict goes through _cache_lock.
 _analysis_cache = {}
+_cache_lock = threading.Lock()
+MAX_SESSIONS = 100
 
 
 def _cleanup_expired_sessions(max_age_hours=1):
-    """Remove sessions older than max_age_hours."""
+    """Remove sessions older than max_age_hours. Caller holds _cache_lock."""
     cutoff = datetime.now() - timedelta(hours=max_age_hours)
     expired = [
         key
@@ -232,6 +245,22 @@ def _cleanup_expired_sessions(max_age_hours=1):
     ]
     for key in expired:
         del _analysis_cache[key]
+
+
+def _store_session(entry):
+    session_id = str(uuid.uuid4())
+    with _cache_lock:
+        _cleanup_expired_sessions()
+        _analysis_cache[session_id] = entry
+        # Cap total sessions as a safety net (dicts keep insertion order: oldest first)
+        for k in list(_analysis_cache.keys())[:-MAX_SESSIONS]:
+            del _analysis_cache[k]
+    return session_id
+
+
+def _get_session(session_id):
+    with _cache_lock:
+        return _analysis_cache.get(session_id)
 
 
 @app.route('/api/ollama-models')
@@ -289,23 +318,13 @@ def analyze_with_session():
         provider = request.form.get('provider', '').strip() or None
         model = request.form.get('model', '').strip() or None
 
-        # Generate session ID and cache
-        import uuid
-        session_id = str(uuid.uuid4())
-        _cleanup_expired_sessions()
-        # Also cap total sessions as a safety net
-        if len(_analysis_cache) > 100:
-            oldest = list(_analysis_cache.keys())[:-100]
-            for k in oldest:
-                del _analysis_cache[k]
-
-        _analysis_cache[session_id] = {
+        session_id = _store_session({
             'instance': instance,
             'lint_report': lint_report,
             'provider': provider,
             'model': model,
             'created_at': datetime.now(),
-        }
+        })
 
         return jsonify({
             'success': True,
@@ -331,12 +350,12 @@ def llm_verify_stream(session_id):
     - complete: All themes done, final result
     - error: An error occurred
     """
-    if session_id not in _analysis_cache:
+    cached = _get_session(session_id)
+    if cached is None:
         def error_gen():
             yield f"data: {json.dumps({'type': 'error', 'message': 'Session not found'})}\n\n"
         return Response(error_gen(), mimetype='text/event-stream')
 
-    cached = _analysis_cache[session_id]
     instance = cached['instance']
     lint_report = cached['lint_report']
 
@@ -384,12 +403,12 @@ def human_eye_stream(session_id):
     - complete: final HumanEyeResult
     - error: an error occurred
     """
-    if session_id not in _analysis_cache:
+    cached = _get_session(session_id)
+    if cached is None:
         def error_gen():
             yield f"data: {json.dumps({'type': 'error', 'message': 'Session not found'})}\n\n"
         return Response(error_gen(), mimetype='text/event-stream')
 
-    cached = _analysis_cache[session_id]
     instance = cached['instance']
     lint_report = cached['lint_report']
     layer2_result = cached.get('layer2_result')

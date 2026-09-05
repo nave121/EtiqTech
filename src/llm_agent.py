@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
 
-from .llm_clients import LLMError, call_llm, call_llm_stream, call_llm_two_step
+from .llm_clients import LLMError, call_llm, call_llm_stream, call_llm_two_step, context_budget_warning
 from .schema import IACUC_SCHEMA_V2
 from .xmeta_catalog import load_high_leverage_catalog
 
@@ -1044,6 +1044,7 @@ def run_verification_stream(
 
     total_themes = len(THEME_SPECS)
     processed = 0
+    budget_warned = False  # one warning per stream is enough; theme prompts are all about the same size
 
     for theme_key, theme_spec in THEME_SPECS.items():
         processed += 1
@@ -1064,6 +1065,12 @@ def run_verification_stream(
             lint_report,
             pass_name="blind",
         )
+
+        if not budget_warned:
+            warning = context_budget_warning(blind_prompt, label=f"Layer 2 / {theme_spec['label']}")
+            if warning:
+                budget_warned = True
+                yield {**warning, "theme": theme_key}
 
         # Stream tokens (or fall back to two-step non-streaming if OLLAMA_TWO_STEP=1)
         full_response = ""

@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "etiqtech"
+version = "0.1.0"
+description = "AI-assisted pre-submission review for animal research ethics protocols (IACUC-style): deterministic linter + local-LLM thematic review"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+keywords = ["iacuc", "animal-research", "ethics", "3rs", "linter", "ollama"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Framework :: Flask",
+    "Topic :: Scientific/Engineering",
+]
+# Runtime deps. requirements.txt keeps the exact pins used by the Docker image.
+dependencies = [
+    "beautifulsoup4>=4.13",
+    "lxml>=5",
+    "jsonschema>=4.23",
+    "requests>=2.32",
+    "flask>=3.1",
+    "werkzeug>=3.1",
+    "pydantic>=2.10",
+    "gunicorn>=23",
+    "flask-limiter>=3.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-mock>=3.14",
+    "hypothesis>=6.120",
+    "flake8>=7",
+    "mypy>=1.13",
+    "bandit>=1.8",
+    "pip-audit>=2.7",
+]
+
+[project.urls]
+Homepage = "https://github.com/nave121/EtiqTech"
+Issues = "https://github.com/nave121/EtiqTech/issues"
+Security = "https://github.com/nave121/EtiqTech/security/advisories/new"
+
+# The import layout is historical: code lives in top-level packages `src` and `server`
+# (imports are `from src.x import ...`). Prompts (llm/), the law corpus (resources/) and
+# fixtures (examples/) are resolved relative to the repo root, so for running the app
+# use an editable install from a checkout: `pip install -e .`
+[tool.setuptools]
+packages = ["src", "server"]
+
+[tool.setuptools.package-data]
+server = ["templates/*.html", "static/css/*.css", "static/js/*.js"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
