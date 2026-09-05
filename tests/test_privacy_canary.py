@@ -136,3 +136,49 @@ def test_canary_detects_a_leak(marker, monkeypatch, caplog, capfd):
     list(llm_agent.run_verification_stream(instance, report))
     with pytest.raises(AssertionError, match="log record"):
         _assert_clean(marker, caplog, capfd)
+
+
+def test_invalid_llm_json_path_never_logs_response(marker, monkeypatch, caplog, capfd):
+    """parse_llm_json embeds a preview of the raw response in its ValueError; that text reaches the
+    fallback rationale (UI) — it must never reach a log."""
+    caplog.set_level(logging.DEBUG)
+    html = FIXTURE.read_text(encoding="utf-8").replace(INSTITUTION, marker)
+    instance = _plant(parse_html(html), marker)
+    report = lint(instance, profile="default")
+    garbage = f"Sure! Here is my analysis of {marker} — no JSON for you"
+    monkeypatch.setattr(llm_agent, "call_llm_stream", lambda *a, **k: iter([garbage]))
+    monkeypatch.setattr(llm_agent, "call_llm", lambda *a, **k: garbage)
+    monkeypatch.setattr(llm_layer3, "call_llm_stream", lambda *a, **k: iter([garbage]))
+    monkeypatch.setattr(llm_layer3, "call_llm", lambda *a, **k: garbage)
+    events = list(llm_agent.run_verification_stream(instance, report))
+    assert events[-1]["type"] == "complete"
+    l3 = list(llm_layer3.run_human_eye_stream(instance, report, events[-1]["result"], force=True))
+    assert l3[-1]["type"] == "complete"
+    _assert_clean(marker, caplog, capfd)
+
+
+def test_server_error_path_never_logs_body(marker, monkeypatch, caplog, capfd):
+    """Force the generic 500 branch: the traceback is logged, the body must not be."""
+    caplog.set_level(logging.DEBUG)
+    import server.app as app_module
+
+    def explode(html):
+        raise RuntimeError("parser died")  # message deliberately free of the body; the test checks the frames
+    monkeypatch.setattr(app_module, "parse_html", explode)
+    app.config["TESTING"] = True
+    with app.test_client() as client:
+        for route in ("/api/analyze", "/api/analyze-with-session"):
+            r = client.post(route, json={"html_content": f"<html><body>{marker}</body></html>"})
+            assert r.status_code == 500
+    assert any("Analysis" in rec.message and rec.exc_info for rec in caplog.records)
+    _assert_clean(marker, caplog, capfd)
+
+
+def test_canary_detects_stdout_and_stderr_leaks(marker, capfd, caplog):
+    import sys
+    print(marker)
+    with pytest.raises(AssertionError, match="stdout"):
+        _assert_clean(marker, caplog, capfd)
+    sys.stderr.write(marker + "\n")
+    with pytest.raises(AssertionError, match="stderr"):
+        _assert_clean(marker, caplog, capfd)
