@@ -16,7 +16,7 @@
   plain-language findings, guided first run. Not started; scheduled after the eval gate.
 
 ## Invariants (never break)
-All tests green (660 now, 440 original untouched) · no protocol text persisted or logged at any
+All tests green (684 now, 440 original untouched) · no protocol text persisted or logged at any
 level · local-first LLM by default · LLM never gates/filters/rewrites Layer 1 · advisory framing
 permanent · auth stays at the reverse proxy.
 
@@ -35,12 +35,13 @@ permanent · auth stays at the reverse proxy.
 | P2 retrieval layer + cited grounding | done, **off by default** | 3b67301, 64ca1ed |
 | P2 eval gate (grounded vs ungrounded) | done (subset): **no gain, grounding stays off by default**; rerun conditions in docs/benchmarks.md | 342092b, bf331e4 |
 | P2 Norecopa ingest | **blocked on maintainer** (access path) | — |
-| P3.1 rule registry (ids, version, docs/rules.md) | done; **module split executing** per `linter-split-plan.md` (workflow, 8 batches, snapshot-checked) | 592aa81, 9e04573, bd2e383 |
+| P3.1 rule registry + module split | **done**: 59 ids, `src/lint_rules/` package, snapshot byte-identical through 8 batches | 592aa81, 9e04573, bd2e383, 9f90148..35856f3 |
 | P3.2 pack mechanism + EU spike | done (EU rules await review) | 6a173f9 |
 | P3.3 schema contract + adapters | done | 20ef270, 77158b0, f71c98a |
 | P3.4 providers (OpenAI-compat, Anthropic) | done | c5287c3, 6e00a43 |
 | P3.5 feedback loop (metadata only) | done | a62cd84, 398ef47 |
 | P4 prepare-mapping, demo mode, README diagram, acknowledgements | done | 8449d66, 9ce976b |
+| Rule coverage fixtures (23 of 27 never-firing rules) | done, merged | 9a6648b |
 | P4 demo GIF, social preview, i18n toggle, public deploy | not done | — |
 | Design (non-tech-friendly UX) | spec done (`docs/design/spec.md`); 9 commits executing on branch `design-ux` (worktree ../EtiqTech-design) | 3af9372 |
 
@@ -49,12 +50,12 @@ permanent · auth stays at the reverse proxy.
 2. Parser output validates against the schema on 0/94 fixtures (Hebrew enums, missing summary key) — normalize parser vs widen schema. `analysis.summary.single_sex_design` is always False on real exports as a consequence.
 3. Layer 3 pass-1 ≈ 27.7k real tokens vs 24.6k available at the 32k default window, on every protocol.
 4. `term:track` can increment `errors` without a failing checklist item; `title:pilot-label` is emitted as severity error but counted as a warning (pre-existing linter counting bugs, found by review of 6a173f9).
-5. 27 of 59 rules fire on no fixture; `three_Rs_alternatives` is a target theme in only 3 of 28 golden cases.
+5. 4 of 59 rules (`header`, `research`, `pi`, `required`) fire on no fixture (unreachable from canonical JSON; need a broken HTML export); `three_Rs_alternatives` is a target theme in only 3 of 28 golden cases.
 6. On the 27B test model the blind pass barely separates good from bad protocols (see docs/benchmarks.md).
 7. `the_law.txt` is a word-reversed duplicate of the PDF text — candidate for deletion (rule: never delete without OK).
 
 ## Running jobs (as of step 25, resumed after the 21:00 limit reset)
-- Workflows resumed from cache: `linter-module-split` (batches 5–7 left), `design-ux-implement` (commits 4–9 left), `rule-coverage-fixtures` (verify + wire left), `sprint-audit` (all), `research-statute-and-layer3` (all). Eval finished.
+- Still running: `design-ux-implement` (commits 5–9 on branch design-ux), `sprint-audit`, `research-statute-and-layer3`. Done: split, coverage, eval.
 
 ## Branches / worktrees
 - `design-ux` at `../EtiqTech-design`: design commits land here; merge into main after the linter split finishes (files disjoint except src/rules.py additive fields).
@@ -70,7 +71,7 @@ python scripts/eval_grounding.py --report         # if output/eval_grounding.jso
 Long LLM jobs write resumable JSONL under `output/` (gitignored); relaunch the same command to continue.
 
 ## Next steps (in order)
-1. Merge `design-ux` and `rule-coverage` into main once the split finishes; run the full suite; review the merge.
+1. Merge the rest of `design-ux` (commits 5–9) when its workflow finishes; act on the audit report and the research memos.
 2. Review follow-ups as they arrive.
 3. Design task (non-technical UX) — plan first, then build.
 4. Optional if time: P3.1 module split in small batches; i18n toggle.
