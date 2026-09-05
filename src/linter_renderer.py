@@ -13,9 +13,8 @@ import argparse
 import datetime
 import html
 import json
-import re
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from .schema import IACUC_SCHEMA_V2  # not used for strict validation yet, but here for future use
 from .rules import annotate_report, apply_pack
@@ -44,12 +43,6 @@ from .lint_rules.helpers import (  # noqa: F401  (helpers stay importable from h
     _coerce_int,
     _animal_weight_grams,
     _nonempty,
-)
-from .avma_matrix import (
-    normalize_species,
-    normalize_method,
-    check_method_for_species,
-    get_displacement_rate_range,
 )
 
 
