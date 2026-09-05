@@ -308,6 +308,7 @@ def _call_ollama(
 def call_llm_two_step(
     prompt: str,
     *,
+    provider: Optional[str] = None,
     model: Optional[str] = None,
     temperature: Optional[float] = None,
     max_tokens: Optional[int] = None,
@@ -321,9 +322,9 @@ def call_llm_two_step(
     Uses Ollama /api/chat for multi-turn conversation.
     Falls back to call_llm() if provider is not ollama.
     """
-    if provider_name() != "ollama":
-        # Two-step is Ollama-specific; fall back gracefully.
-        return call_llm(prompt, model=model, temperature=temperature, max_tokens=max_tokens)
+    if provider_name(provider) != "ollama":
+        # Two-step is Ollama-specific; fall back gracefully — with the caller's provider, not the env default.
+        return call_llm(prompt, provider=provider, model=model, temperature=temperature, max_tokens=max_tokens)
 
     resolved_model = model or os.getenv("OLLAMA_MODEL", "qwen3.5:35b")
     base_url = ollama_base_url()
@@ -517,7 +518,8 @@ def _call_openai_compat(prompt: str, *, model: str, temperature: Optional[float]
     resp = requests.post(endpoint, json=_openai_payload(prompt, model, temperature, max_tokens, False),
                          headers=_openai_headers(), timeout=timeout, allow_redirects=False)
     if resp.status_code != 200:
-        raise LLMError(f"OpenAI-compatible endpoint responded with HTTP {resp.status_code}: {resp.text[:300]}")
+        logger.warning("openai-compat HTTP %s: %s", resp.status_code, resp.text[:300])  # body stays in the server log
+        raise LLMError(f"OpenAI-compatible endpoint responded with HTTP {resp.status_code}")
     try:
         body = resp.json()
         text = body["choices"][0]["message"]["content"]
@@ -537,7 +539,8 @@ def _call_openai_compat_stream(prompt: str, *, model: str, temperature: Optional
     resp = requests.post(endpoint, json=_openai_payload(prompt, model, temperature, max_tokens, True),
                          headers=_openai_headers(), timeout=timeout, stream=True, allow_redirects=False)
     if resp.status_code != 200:
-        raise LLMError(f"OpenAI-compatible endpoint responded with HTTP {resp.status_code}: {resp.text[:300]}")
+        logger.warning("openai-compat/stream HTTP %s: %s", resp.status_code, resp.text[:300])
+        raise LLMError(f"OpenAI-compatible endpoint responded with HTTP {resp.status_code}")
     for line in resp.iter_lines():
         if not line:
             continue
@@ -549,8 +552,16 @@ def _call_openai_compat_stream(prompt: str, *, model: str, temperature: Optional
             break
         try:
             chunk = json.loads(data)
+        except ValueError:
+            continue
+        if isinstance(chunk, dict) and chunk.get("error"):
+            # gateways report rate limits / overflow mid-stream without closing; never pass that off as "done"
+            err = chunk["error"] if isinstance(chunk["error"], dict) else {"message": str(chunk["error"])}
+            logger.warning("openai-compat/stream error event: %s", json.dumps(err)[:300])
+            raise LLMError(f"OpenAI-compatible stream reported an error ({err.get('type') or err.get('code') or 'error'})")
+        try:
             token = ((chunk.get("choices") or [{}])[0].get("delta") or {}).get("content")
-        except (ValueError, AttributeError, IndexError):
+        except (AttributeError, IndexError, TypeError):
             continue
         if token:
             yield token
@@ -567,7 +578,12 @@ def _anthropic_client():
     except ImportError as exc:
         raise LLMError("LLM_PROVIDER=anthropic needs the 'anthropic' package: pip install 'etiqtech[anthropic]'") from exc
     base_url = gated_base_url("anthropic")
-    return anthropic.Anthropic(base_url=base_url, timeout=_env_float("OLLAMA_TIMEOUT_SECONDS", 300))
+    # The SDK's default HTTP client follows redirects; every other adapter refuses them, so must this one.
+    return anthropic.Anthropic(
+        base_url=base_url,
+        timeout=_env_float("OLLAMA_TIMEOUT_SECONDS", 300),
+        http_client=anthropic.DefaultHttpxClient(follow_redirects=False),
+    )
 
 
 def _anthropic_kwargs(prompt: str, model: str, max_tokens: Optional[int]) -> Dict[str, Any]:
@@ -585,6 +601,7 @@ def _call_anthropic(prompt: str, *, model: str, max_tokens: Optional[int]) -> st
     try:
         message = client.messages.create(**_anthropic_kwargs(prompt, model, max_tokens))
     except Exception as exc:  # SDK error classes are only importable when the SDK is
+        logger.warning("anthropic call failed: %s: %s", type(exc).__name__, str(exc)[:300])  # detail stays server-side
         raise LLMError(f"Anthropic API call failed: {type(exc).__name__}") from exc
     if getattr(message, "stop_reason", None) == "refusal":
         raise LLMError("Anthropic model refused the request (stop_reason=refusal)")
@@ -607,6 +624,7 @@ def _call_anthropic_stream(prompt: str, *, model: str, max_tokens: Optional[int]
     except LLMError:
         raise
     except Exception as exc:
+        logger.warning("anthropic stream failed: %s: %s", type(exc).__name__, str(exc)[:300])
         raise LLMError(f"Anthropic API stream failed: {type(exc).__name__}") from exc
     if getattr(final, "stop_reason", None) == "refusal":
         raise LLMError("Anthropic model refused the request (stop_reason=refusal)")

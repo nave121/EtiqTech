@@ -1020,7 +1020,7 @@ def run_verification(
         )
         try:
             if use_two_step:
-                raw = call_llm_two_step(blind_prompt, model=model, temperature=temperature)
+                raw = call_llm_two_step(blind_prompt, provider=provider, model=model, temperature=temperature)
             else:
                 raw = call_llm(
                     blind_prompt,
@@ -1066,6 +1066,7 @@ def run_verification(
             if use_two_step:
                 raw = call_llm_two_step(
                     reconcile_prompt,
+                    provider=provider,
                     model=model,
                     temperature=temperature,
                 )
@@ -1200,6 +1201,7 @@ def run_verification_stream(
                 # Two-step does not support streaming; emit full response as a single token.
                 full_response = call_llm_two_step(
                     blind_prompt,
+                    provider=provider,
                     model=model,
                     temperature=temperature,
                 )
@@ -1262,6 +1264,7 @@ def run_verification_stream(
             if use_two_step:
                 full_response = call_llm_two_step(
                     reconcile_prompt,
+                    provider=provider,
                     model=model,
                     temperature=temperature,
                 )

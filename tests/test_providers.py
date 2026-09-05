@@ -187,3 +187,41 @@ def test_llm_providers_endpoint_lists_configured_only(monkeypatch):
         body = c.get("/api/llm-providers").get_json()
     anth = next(p for p in body["providers"] if p["name"] == "anthropic")
     assert anth["local"] is False and anth["usable"] is False  # remote and not opted in -> shown but disabled
+
+
+def test_openai_compat_midstream_error_event_raises(monkeypatch):
+    monkeypatch.setenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+    monkeypatch.setenv("OPENAI_MODEL", "m")
+    lines = [b'data: {"choices":[{"delta":{"content":"partial"},"index":0}]}',
+             b'data: {"error":{"type":"rate_limit_exceeded","message":"slow down"}}', b'data: [DONE]']
+    monkeypatch.setattr(requests, "post", lambda *a, **k: _Resp(lines=lines))
+    with pytest.raises(LLMError, match="rate_limit_exceeded"):
+        list(call_llm_stream("prompt", provider="openai"))
+
+
+def test_openai_compat_http_error_body_stays_out_of_the_message(monkeypatch):
+    monkeypatch.setenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+    monkeypatch.setenv("OPENAI_MODEL", "m")
+    r = _Resp(status=400, body={"error": {"message": "echoing your prompt: SECRET-PROTOCOL-TEXT"}})
+    monkeypatch.setattr(requests, "post", lambda *a, **k: r)
+    with pytest.raises(LLMError) as ei:
+        call_llm("prompt", provider="openai")
+    assert "SECRET-PROTOCOL-TEXT" not in str(ei.value) and "400" in str(ei.value)
+
+
+def test_two_step_honours_the_request_provider(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+    monkeypatch.setenv("OPENAI_MODEL", "m")
+    seen = []
+    monkeypatch.setattr(requests, "post", lambda url, **k: seen.append(url) or _Resp(body=OPENAI_CHAT))
+    llm_clients.call_llm_two_step("prompt", provider="openai")
+    assert seen == ["http://localhost:8000/v1/chat/completions"], seen  # not the Ollama /api/chat two-step
+
+
+def test_anthropic_client_never_follows_redirects(monkeypatch):
+    anthropic = pytest.importorskip("anthropic")
+    monkeypatch.setenv("ETIQTECH_ALLOW_REMOTE_LLM", "1")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    client = llm_clients._anthropic_client()
+    assert client._client.follow_redirects is False
