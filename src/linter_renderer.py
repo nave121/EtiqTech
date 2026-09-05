@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Tuple
 
 from .schema import IACUC_SCHEMA_V2  # not used for strict validation yet, but here for future use
 from .rules import annotate_report, apply_pack
+from .lint_rules.context import RuleContext, _rule  # noqa: F401  (_rule stays importable from here)
 from .avma_matrix import (
     normalize_species,
     normalize_method,
@@ -100,23 +101,6 @@ table{
 def _e(val: Any) -> str:
     """HTML-escape helper."""
     return html.escape("" if val is None else str(val))
-
-
-def _rule(
-    ok: bool,
-    msg_ok: str,
-    msg_fail: str,
-    fix: str = "",
-    severity: str = "error",
-    ref: str = "",
-) -> Dict[str, Any]:
-    return {
-        "status": "pass" if ok else "fail",
-        "message": msg_ok if ok else msg_fail,
-        "suggested_fix": fix,
-        "severity": severity,
-        "reference": ref,
-    }
 
 
 def _flatten_text(value: Any) -> str:
@@ -298,40 +282,22 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
     if profile not in ("default", "strict_law"):
         profile = "default"
 
-    checks: List[Dict[str, Any]] = []
-    errors = 0
-    warnings = 0
-
-    def req(path: str, obj: Dict[str, Any], keys: List[str]) -> bool:
-        nonlocal errors
-        missing = [k for k in keys if k not in obj]
-        if missing:
-            errors += 1
-            checks.append(
-                _rule(
-                    False,
-                    "",
-                    f"Missing required fields at {path}: {missing}",
-                    ref=f"required:{path}",
-                )
-            )
-            return False
-        return True
+    ctx = RuleContext(instance=instance, profile=profile)
 
     # --- header ---
     if "header" not in instance:
-        errors += 1
-        checks.append(_rule(False, "", "Missing 'header' block.", ref="header"))
+        ctx.errors += 1
+        ctx.checks.append(_rule(False, "", "Missing 'header' block.", ref="header"))
     else:
-        req("header", instance["header"], ["protocol_id", "institution"])
+        ctx.req("header", instance["header"], ["protocol_id", "institution"])
 
     # --- research ---
     if "research" not in instance:
-        errors += 1
-        checks.append(_rule(False, "", "Missing 'research' block.", ref="research"))
+        ctx.errors += 1
+        ctx.checks.append(_rule(False, "", "Missing 'research' block.", ref="research"))
     else:
         r = instance["research"]
-        req(
+        ctx.req(
             "research",
             r,
             [
@@ -351,7 +317,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         # Title vs track
         if rt == "regular":
             bad = any(w in title_he for w in ["פיילוט", "פילוט"]) or "Pilot" in title_en
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     not bad,
                     "Regular track: title does not contain 'Pilot/פיילוט'.",
@@ -361,10 +327,10 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if bad:
-                errors += 1
+                ctx.errors += 1
         if rt == "pilot":
             has_pilot = ("פיילוט" in title_he) or ("Pilot" in title_en)
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     has_pilot,
                     "Pilot track: title clearly marked as Pilot.",
@@ -374,7 +340,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if not has_pilot:
-                warnings += 1
+                ctx.warnings += 1
 
         # term vs track
         term = r.get("approval_term_years")
@@ -385,13 +351,13 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             ideal_term = (term == 1) if is_pilot else True
             
             severity = "warning" if (ok_term and not ideal_term) else "error"
-            if not ok_term: errors += 1 # Strict range check
-            if ok_term and not ideal_term: warnings += 1
+            if not ok_term: ctx.errors += 1 # Strict range check
+            if ok_term and not ideal_term: ctx.warnings += 1
 
             fix_term = (
                 "Pilot track ideally 1 year; regular/colony/continuation 1–4 years."
             )
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     ideal_term,
                     "Approval term consistent with request type.",
@@ -407,7 +373,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             ok_cont = bool(r.get("prior_protocol_id")) and bool(
                 r.get("continuation_reason")
             )
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     ok_cont,
                     "Continuation has previous protocol ID and reason.",
@@ -416,7 +382,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if not ok_cont:
-                errors += 1
+                ctx.errors += 1
 
         # third-party
         if r.get("third_party_service"):
@@ -429,7 +395,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 "Fill third_party.sponsor_org, ordering_investigator_name, "
                 "sponsor_approver_name, and ideally declaration_url."
             )
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     ok_tp,
                     "Third-party metadata is present.",
@@ -439,15 +405,15 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if not ok_tp:
-                errors += 1
+                ctx.errors += 1
 
     # --- PI & training ---
     pi = instance.get("pi") or {}
     if not pi:
-        errors += 1
-        checks.append(_rule(False, "", "Missing 'pi' block.", ref="pi"))
+        ctx.errors += 1
+        ctx.checks.append(_rule(False, "", "Missing 'pi' block.", ref="pi"))
     else:
-        req(
+        ctx.req(
             "pi",
             pi,
             [
@@ -463,7 +429,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             ],
         )
         has_pi_training = bool(pi.get("training"))
-        checks.append(
+        ctx.checks.append(
             _rule(
                 has_pi_training,
                 "PI has at least one training certificate recorded.",
@@ -473,7 +439,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             )
         )
         if not has_pi_training:
-            errors += 1
+            ctx.errors += 1
 
     # --- participants & training ---
     participants = instance.get("participants") or []
@@ -484,7 +450,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
 
         if role == "performs_procedures":
             ok_tr = bool(training)
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     ok_tr,
                     f"Participant {idx} performs procedures and has training.",
@@ -494,10 +460,10 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if not ok_tr:
-                errors += 1
+                ctx.errors += 1
 
         if certified and not training:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -507,7 +473,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref="participant:certified-without-training",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
     # --- animals totals vs experiments sums ---
     totals = instance.get("animals_total") or []
@@ -569,6 +535,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
 
     mismatch_details: List[str] = []
     total_n_all = sum(int(t.get("n_total") or 0) for t in totals)
+    ctx.exps, ctx.totals, ctx.exp_signals, ctx.total_n_all = exps, totals, exp_signals, total_n_all
     
     # Check if totals are simplified (missing strain/genetics, or combined
     # multi-strain totals that can't match individual experiment strains)
@@ -618,7 +585,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             "Adjust animals_total[].n_total or per-experiment animals.n so that totals "
             "equal the sum per species (if simplified) or per detailed subgroup."
         )
-        checks.append(
+        ctx.checks.append(
             _rule(
                 ok_totals,
                 "Animals totals match the sum over experiments.",
@@ -628,7 +595,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             )
         )
         if not ok_totals:
-            errors += 1
+            ctx.errors += 1
 
     # --- pilot scope heuristic (soft) ---
     research = instance.get("research") or {}
@@ -643,7 +610,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 "Pilot requests are expected to be short and small-N. "
                 "Consider staging feasibility in a smaller protocol or using 'regular/continuation' track."
             )
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -654,7 +621,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref="scope:pilot-size",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
     # --- single-sex justification heuristic (soft) ---
     sexes_seen: set = set()
@@ -686,7 +653,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 "rationale_species_strain_sex explaining why only this sex is used "
                 "and how this reduces total animal use."
             )
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -696,7 +663,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref="sex:rationale",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
         full_rationale = " ".join(
             (e.get("rationale_species_strain_sex") or "").strip() for e in exps
@@ -739,7 +706,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             kw in full_rationale for kw in sabv_convenience_keywords
         )
         if not full_rationale or sabv_convenience_only or not has_sabv_scientific_basis:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -752,7 +719,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref="sex:sabv",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
     # --- large-N justification heuristic (soft) ---
     n_just = instance.get("n_justification") or {}
@@ -762,7 +729,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             "For large total N, expand n_justification.details with numeric reasoning "
             "(group sizes, endpoints, expected attrition) rather than a brief statement."
         )
-        checks.append(
+        ctx.checks.append(
             _rule(
                 False,
                 "",
@@ -772,7 +739,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 ref="N:justification-detail",
             )
         )
-        warnings += 1
+        ctx.warnings += 1
 
     # --- power analysis method check (advisory) ---
     # Israeli law §8(b): minimal number required. PHS Policy IV.C.1.a: appropriateness of numbers.
@@ -785,7 +752,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
     has_adequate_method = any(kw in n_method for kw in adequate_method_keywords) or \
                           any(kw in details_text.lower() for kw in adequate_method_keywords)
     if non_pilot and total_n_all > 50 and not has_adequate_method:
-        checks.append(
+        ctx.checks.append(
             _rule(
                 False,
                 "",
@@ -799,7 +766,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 ref="N:power-analysis",
             )
         )
-        warnings += 1
+        ctx.warnings += 1
 
     # --- euthanasia rules ---
     for idx, e in enumerate(exps, start=1):
@@ -824,7 +791,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     has_confirm = True  # Implicitly confirmed via anesthesia protocols
 
             if not has_confirm:
-                checks.append(
+                ctx.checks.append(
                     _rule(
                         False,
                         "",
@@ -835,13 +802,13 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     )
                 )
                 if profile == "strict_law":
-                    errors += 1
+                    ctx.errors += 1
                 else:
-                    warnings += 1
+                    ctx.warnings += 1
 
         if method_key == "inhalant_overdose":
             ok_overdose = bool(confirmation)
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     ok_overdose,
                     f"Experiment {idx}: inhalant overdose has confirmation step.",
@@ -851,7 +818,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if not ok_overdose:
-                errors += 1
+                ctx.errors += 1
 
     # --- neonatal CO₂ check (law-critical) ---
     # AVMA 2020: CO₂ requires 50-min exposure for mice/rats on day of birth, or a
@@ -884,7 +851,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             continue
         has_secondary = any(kw in all_text for kw in secondary_keywords)
         if not has_secondary:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -899,9 +866,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if profile == "strict_law":
-                errors += 1
+                ctx.errors += 1
             else:
-                warnings += 1
+                ctx.warnings += 1
 
     # --- AVMA species-euthanasia matrix rules ---
     # Cross-reference declared species × euthanasia method against AVMA 2020 matrix.
@@ -927,7 +894,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         # Rule: euthanasia:species-method — UNACCEPTABLE method for species
         # Error in BOTH profiles (absolute prohibition).
         if avma_result["status"] == "unacceptable":
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -941,7 +908,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref=f"euthanasia:species-method:exp-{idx}",
                 )
             )
-            errors += 1
+            ctx.errors += 1
 
         # Rule: euthanasia:precharged-chamber — pre-charged CO₂ chamber detection
         # Error in BOTH profiles (universal prohibition AVMA M3.2).
@@ -954,7 +921,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             "pre-filled", "pre filled",
         ]
         if any(kw in all_eu_text or kw in timeline_txt for kw in precharged_keywords):
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -965,7 +932,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref=f"euthanasia:precharged-chamber:exp-{idx}",
                 )
             )
-            errors += 1
+            ctx.errors += 1
 
         # Rule: euthanasia:displacement-rate — CO₂ without displacement rate
         if method_key == "CO2":
@@ -976,7 +943,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 displacement_mentioned = "displacement" in params.lower() or "vol/min" in params.lower()
                 has_rate = bool(rate_pattern) or displacement_mentioned
                 if not has_rate:
-                    checks.append(
+                    ctx.checks.append(
                         _rule(
                             False,
                             "",
@@ -992,9 +959,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                         )
                     )
                     if profile == "strict_law":
-                        errors += 1
+                        ctx.errors += 1
                     else:
-                        warnings += 1
+                        ctx.warnings += 1
 
         # Rule: euthanasia:secondary-method — CO₂/inhalant without physical secondary
         if method_key in ("CO2", "inhalant_overdose"):
@@ -1005,7 +972,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             confirm_text = (confirmation + " " + params).lower()
             has_physical = any(kw in confirm_text for kw in physical_kws)
             if not has_physical:
-                checks.append(
+                ctx.checks.append(
                     _rule(
                         False,
                         "",
@@ -1020,9 +987,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     )
                 )
                 if profile == "strict_law":
-                    errors += 1
+                    ctx.errors += 1
                 else:
-                    warnings += 1
+                    ctx.warnings += 1
 
         # Rule: euthanasia:cervical-weight — cervical dislocation exceeding weight limit
         if method_key == "cervical_dislocation":
@@ -1034,7 +1001,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 if wt_val is not None:
                     wt_g = wt_val if wt_unit == "g" else wt_val * 1000
                     if wt_g > max_wt:
-                        checks.append(
+                        ctx.checks.append(
                             _rule(
                                 False,
                                 "",
@@ -1050,12 +1017,12 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                             )
                         )
                         if profile == "strict_law":
-                            errors += 1
+                            ctx.errors += 1
                         else:
-                            warnings += 1
+                            ctx.warnings += 1
                 else:
                     # Weight not specified but species has a limit — flag it
-                    checks.append(
+                    ctx.checks.append(
                         _rule(
                             False,
                             "",
@@ -1070,9 +1037,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                         )
                     )
                     if profile == "strict_law":
-                        errors += 1
+                        ctx.errors += 1
                     else:
-                        warnings += 1
+                        ctx.warnings += 1
 
         # Rule: euthanasia:conditions-missing — conditionally acceptable without documentation
         if avma_result["status"] == "conditionally_acceptable":
@@ -1096,7 +1063,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 condition_kws = ["trained", "justified", "anesthesia", "anesthe", "sedat"]
                 has_documentation = any(kw in all_text for kw in condition_kws)
                 if not has_documentation:
-                    checks.append(
+                    ctx.checks.append(
                         _rule(
                             False,
                             "",
@@ -1111,9 +1078,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                         )
                     )
                     if profile == "strict_law":
-                        errors += 1
+                        ctx.errors += 1
                     else:
-                        warnings += 1
+                        ctx.warnings += 1
 
     # --- severity vs monitoring ---
     for idx, e in enumerate(exps, start=1):
@@ -1133,7 +1100,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 "For severity ≥4, monitoring must be daily during the first 72h and at "
                 "least once per week afterwards."
             )
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     ok_mon,
                     f"Experiment {idx}: severity≥4 has adequate monitoring.",
@@ -1143,7 +1110,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if not ok_mon:
-                errors += 1
+                ctx.errors += 1
 
     # --- analgesia presence for invasive, moderate-severity work (soft) ---
     invasive_keywords = [
@@ -1159,6 +1126,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         "stereotax",
         "implant",
     ]
+    ctx.invasive_keywords = invasive_keywords
     for idx, e in enumerate(exps, start=1):
         sev = e.get("severity_level_1_to_5")
         if not isinstance(sev, int) or sev < 3:
@@ -1187,7 +1155,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             )
             # Israeli law §1 Schedule: experiments causing pain must use anesthesia/analgesia.
             # §23: criminal penalties for non-compliance. Error in both profiles.
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1197,7 +1165,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref=f"severity:analgesia:exp-{idx}",
                 )
             )
-            errors += 1
+            ctx.errors += 1
 
     # --- paralytic agents without concurrent anesthesia (law-critical) ---
     paralytic_keywords = [
@@ -1242,7 +1210,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             kw in anesthesia_txt or kw in timeline_txt for kw in anesthesia_keywords
         )
         if not has_general_anesthesia:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1256,9 +1224,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if profile == "strict_law":
-                errors += 1
+                ctx.errors += 1
             else:
-                warnings += 1
+                ctx.warnings += 1
 
     # --- pain/severity category consistency (law-critical) ---
     moderate_burden_keywords = invasive_keywords + [
@@ -1309,7 +1277,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             )
         if not underclassified:
             continue
-        checks.append(
+        ctx.checks.append(
             _rule(
                 False,
                 "",
@@ -1323,9 +1291,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             )
         )
         if profile == "strict_law":
-            errors += 1
+            ctx.errors += 1
         else:
-            warnings += 1
+            ctx.warnings += 1
 
     # --- alternatives search content ---
     alts = instance.get("alternatives_search") or {}
@@ -1335,7 +1303,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
 
     # alts:missing — entire block absent or all three fields empty
     if not alts or (not alts_engines and not alts_queries and not alts_conclusion):
-        checks.append(
+        ctx.checks.append(
             _rule(
                 False,
                 "",
@@ -1346,13 +1314,13 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             )
         )
         if profile == "strict_law":
-            errors += 1
+            ctx.errors += 1
         else:
-            warnings += 1
+            ctx.warnings += 1
     else:
         # alts:engines — databases listed (law-critical: proves systematic search)
         if not alts_engines:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1363,9 +1331,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if profile == "strict_law":
-                errors += 1
+                ctx.errors += 1
             else:
-                warnings += 1
+                ctx.warnings += 1
 
         # alts:queries — at least one search query present
         # Standardized search systems (e.g. EU "Good Search Practice") have
@@ -1375,7 +1343,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             e.strip().lower() in _STANDARDIZED_ENGINES for e in alts_engines
         )
         if not alts_queries and not _uses_standardized:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1385,11 +1353,11 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref="alts:queries",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
         # alts:conclusion — conclusion text present
         if not alts_conclusion:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1399,7 +1367,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref="alts:conclusion",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
     # --- cosmetics / cleaning-products testing ban (law-critical) ---
     cosmetics_keywords = [
@@ -1433,7 +1401,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         ]
     ).lower()
     if any(kw in protocol_text for kw in cosmetics_keywords):
-        checks.append(
+        ctx.checks.append(
             _rule(
                 False,
                 "",
@@ -1447,9 +1415,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             )
         )
         if profile == "strict_law":
-            errors += 1
+            ctx.errors += 1
         else:
-            warnings += 1
+            ctx.warnings += 1
 
     # --- humane endpoints heuristics (soft) ---
     for idx, e in enumerate(exps, start=1):
@@ -1472,7 +1440,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 "Replace generic 'consult veterinarian' endpoints with concrete, model-specific "
                 "criteria (e.g. tumor size/ulceration, weight-loss thresholds, clinical scores)."
             )
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1482,7 +1450,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref=f"endpoints:generic-consult:exp-{idx}",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
         # Flag endpoints that only mention 20% weight loss without other model-specific indices.
         has_20 = "20%" in text or "20 percent" in text
@@ -1497,7 +1465,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 "Weight loss of 20% alone is not a sufficient humane endpoint. "
                 "Add earlier and model-specific criteria (e.g. 10% weight loss plus tumor/wound/behavioral indices)."
             )
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1508,9 +1476,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if profile == "strict_law":
-                errors += 1
+                ctx.errors += 1
             else:
-                warnings += 1
+                ctx.warnings += 1
 
     # --- death-only endpoint check (law-critical) ---
     # Israeli law Schedule Item 3: euthanasia mandated for strong pain/suffering even if
@@ -1527,7 +1495,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         has_death_endpoint = any(kw in text for kw in death_keywords)
         has_other_criteria = any(kw in text for kw in clinical_score_keywords)
         if has_death_endpoint and not has_other_criteria:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1542,9 +1510,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if profile == "strict_law":
-                errors += 1
+                ctx.errors += 1
             else:
-                warnings += 1
+                ctx.warnings += 1
 
     # --- post-operative monitoring for survival surgeries (law-critical) ---
     # NRC Guide post-op standards have legal force in Israel via Council Rules §4-5.
@@ -1571,7 +1539,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             for kw in ["post", "recover", "daily", "hour", "analges", "pain", "wound"]
         )
         if not has_postop:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1586,9 +1554,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if profile == "strict_law":
-                errors += 1
+                ctx.errors += 1
             else:
-                warnings += 1
+                ctx.warnings += 1
 
     # --- multiple survival experiments (advisory) ---
     # Israeli Rules §§6-7 prohibit reuse for cost savings; cumulative suffering must be
@@ -1602,7 +1570,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         survival_exps_by_species.setdefault(species, []).append(idx)
     for species, exp_indices in survival_exps_by_species.items():
         if len(exp_indices) > 1:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1616,7 +1584,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref="surgery:multiple-survival",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
     # --- vet consultation for high-severity experiments (law-critical advisory) ---
     # Israeli Law §12(2): veterinary consultation required for severe procedures.
@@ -1630,7 +1598,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         mon_text = (mon.get("plan") or "") + " ".join(mon.get("parameters") or [])
         has_vet_consult = any(kw in mon_text.lower() for kw in vet_keywords)
         if not has_vet_consult:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1644,7 +1612,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref=f"vet:consultation:exp-{idx}",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
     # --- housing density and single housing justification (advisory) ---
     social_species = {
@@ -1693,7 +1661,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             if not density.get("breeding_with_litter"):
                 required_area = threshold_cm2 * animals_per_enclosure
             if cage_floor_area_cm2 < required_area:
-                checks.append(
+                ctx.checks.append(
                     _rule(
                         False,
                         "",
@@ -1708,14 +1676,14 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                         ref=f"housing:density:exp-{idx}",
                     )
                 )
-                warnings += 1
+                ctx.warnings += 1
 
         if (
             species_key in social_species
             and housing.get("group_housed") is False
             and not _nonempty(housing.get("single_housing_reason"))
         ):
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1729,7 +1697,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref=f"housing:density:exp-{idx}",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
     # --- restraint duration completeness (advisory) ---
     restraint_keywords = [
@@ -1771,7 +1739,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         if not _nonempty(restraint.get("monitoring")):
             missing_parts.append("restraint monitoring plan")
         if missing_parts:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1785,11 +1753,11 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref=f"restraint:duration:exp-{idx}",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
         max_duration = _coerce_float(restraint.get("max_duration_minutes"))
         if max_duration is not None and max_duration > 15 and not _nonempty(restraint.get("justification")):
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1802,9 +1770,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref=f"restraint:duration:exp-{idx}",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
         if max_duration is not None and max_duration > 360 and not _nonempty(restraint.get("food_water_plan")):
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1817,7 +1785,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref=f"restraint:duration:exp-{idx}",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
     # --- animal reuse justification (law-critical) ---
     allowed_prior_severity = {"mild", "moderate"}
@@ -1841,7 +1809,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         if review.get("vet_consulted") is not True:
             missing_or_invalid.append("veterinarian consultation")
         if missing_or_invalid:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1857,9 +1825,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if profile == "strict_law":
-                errors += 1
+                ctx.errors += 1
             else:
-                warnings += 1
+                ctx.warnings += 1
 
     # --- field-study permits (law-critical) ---
     field_keywords = [
@@ -1910,7 +1878,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         if not _nonempty(permits.get("field_euthanasia_method")):
             missing_docs.append("field euthanasia method")
         if missing_docs:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1925,9 +1893,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
             if profile == "strict_law":
-                errors += 1
+                ctx.errors += 1
             else:
-                warnings += 1
+                ctx.warnings += 1
 
     # --- food/water deprivation protocol (advisory) ---
     # NRC Guide p. 30: deprivation requires documented max duration, body-weight monitoring,
@@ -1947,7 +1915,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         mon_text = ((mon.get("plan") or "") + " " + " ".join(mon.get("parameters") or [])).lower()
         has_weight_criterion = any(kw in mon_text for kw in weight_keywords)
         if not has_weight_criterion:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1962,7 +1930,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref=f"deprivation:protocol:exp-{idx}",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
     # --- genetically modified animals — IBC check (advisory) ---
     # NRC Guide; Israeli Rules §4: GM animals may require Institutional Biosafety Committee
@@ -1975,7 +1943,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         genetic_status = ((e.get("animals") or {}).get("genetic_status") or "").lower()
         is_gm = any(kw in genetic_status for kw in gm_keywords)
         if is_gm:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -1989,7 +1957,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref=f"gma:ibc:exp-{idx}",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
     # --- ascites antibody production (advisory) ---
     # NRC 1999; OLAW guidance: ascites method requires documentation that in vitro
@@ -1999,7 +1967,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             (step.get("step") or "") for step in e.get("procedure_timeline") or []
         ).lower()
         if "ascites" in timeline_txt:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -2014,7 +1982,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref=f"ascites:in-vitro:exp-{idx}",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
     # --- colony breeding plan (advisory) ---
     # Israeli Rules §6-7: colony protocols require colony management plan including expected
@@ -2025,7 +1993,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         colony_plan_keywords = ["colony", "breeding", "surplus", "disposition"]
         has_colony_plan = any(kw in details_text_colony for kw in colony_plan_keywords)
         if not has_colony_plan:
-            checks.append(
+            ctx.checks.append(
                 _rule(
                     False,
                     "",
@@ -2040,7 +2008,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                     ref="colony:breeding-plan",
                 )
             )
-            warnings += 1
+            ctx.warnings += 1
 
     # --- specialty triggers based on text patterns ---
     for idx, e in enumerate(exps, start=1):
@@ -2065,8 +2033,8 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             ok_st = bool(st.get("implant_type") or st.get("craniotomy") is not None)
             severity = "warning" if not ok_st else "error"
             if not ok_st:
-                 warnings += 1
-            checks.append(
+                 ctx.warnings += 1
+            ctx.checks.append(
                 _rule(
                     ok_st,
                     f"Experiment {idx}: stereotaxic/implant details present.",
@@ -2098,8 +2066,8 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             ok_onc = bool(on.get("tumor_burden_cap")) and bool(on.get("ulceration_policy"))
             # Warn only
             severity = "warning" if not ok_onc else "error"
-            if not ok_onc: warnings += 1
-            checks.append(
+            if not ok_onc: ctx.warnings += 1
+            ctx.checks.append(
                 _rule(
                     ok_onc,
                     f"Experiment {idx}: oncology block has burden cap and ulceration policy.",
@@ -2129,8 +2097,8 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             ok_db = db.get("measurement") in ("fasted", "non_fasted")
             # Warn only
             severity = "warning" if not ok_db else "error"
-            if not ok_db: warnings += 1
-            checks.append(
+            if not ok_db: ctx.warnings += 1
+            ctx.checks.append(
                 _rule(
                     ok_db,
                     f"Experiment {idx}: diabetes block has measurement mode.",
@@ -2161,8 +2129,8 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             ok_bs = bool(bs.get("agent_name"))
             # Warn only
             severity = "warning" if not ok_bs else "error"
-            if not ok_bs: warnings += 1
-            checks.append(
+            if not ok_bs: ctx.warnings += 1
+            ctx.checks.append(
                 _rule(
                     ok_bs,
                     f"Experiment {idx}: biosafety agent documented.",
@@ -2194,8 +2162,8 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             ok_nm = bool(nm.get("particle_type"))
             # Warn only
             severity = "warning" if not ok_nm else "error"
-            if not ok_nm: warnings += 1
-            checks.append(
+            if not ok_nm: ctx.warnings += 1
+            ctx.checks.append(
                 _rule(
                     ok_nm,
                     f"Experiment {idx}: nanomaterials metadata present.",
@@ -2225,8 +2193,8 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             ok_oc = bool(oc.get("topical_anesthesia")) or bool(oc.get("ocular_lubrication"))
             # Warn only
             severity = "warning" if not ok_oc else "error"
-            if not ok_oc: warnings += 1
-            checks.append(
+            if not ok_oc: ctx.warnings += 1
+            ctx.checks.append(
                 _rule(
                     ok_oc,
                     f"Experiment {idx}: ocular procedures metadata present.",
@@ -2250,7 +2218,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             "Colony-only protocols may include breeding, identification, and genotyping steps only. "
             "Move invasive procedures into a separate non-colony protocol."
         )
-        checks.append(
+        ctx.checks.append(
             _rule(
                 ok_colony,
                 "Colony protocol contains no invasive steps.",
@@ -2262,7 +2230,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             )
         )
         if not ok_colony:
-            errors += 1
+            ctx.errors += 1
 
     # --- summaries word limits (simple word count) ---
     summaries = instance.get("summaries") or {}
@@ -2274,9 +2242,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
     # Relaxed for Council Exports which often dump full proposal (>1000 words)
     ok_sci = sci_wc <= 2500
     if not ok_sci:
-        warnings += 1
+        ctx.warnings += 1
 
-    checks.append(
+    ctx.checks.append(
         _rule(
             ok_sci,
             f"Scientific abstract within 2500 words ({sci_wc}).",
@@ -2287,7 +2255,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         )
     )
 
-    checks.append(
+    ctx.checks.append(
         _rule(
             lay_wc <= 150,
             f"Lay summary within 150 words ({lay_wc}).",
@@ -2298,9 +2266,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         )
     )
     if lay_wc > 150:
-        warnings += 1
+        ctx.warnings += 1
 
-    status = "pass" if errors == 0 else "fail"
+    status = "pass" if ctx.errors == 0 else "fail"
 
     # Feature extraction layer: high-level signals for LLM and dashboards.
     # These avoid re-walking the instance when building prompts or visualizations.
@@ -2349,7 +2317,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             return base_ref in ref_set
         return False
 
-    for c in checks:
+    for c in ctx.checks:
         if c.get("status") != "fail":
             continue
         ref = c.get("reference") or ""
@@ -2364,14 +2332,14 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
     report = {
         "status": status,
         "profile": profile,
-        "errors": errors,
-        "warnings": warnings,
+        "errors": ctx.errors,
+        "warnings": ctx.warnings,
         "structural_errors": structural_errors,
         "law_critical_errors": law_critical_errors,
         "advisory_warnings": advisory_warnings,
         "analysis": analysis,
         "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "checklist": checks,
+        "checklist": ctx.checks,
     }
     return apply_pack(annotate_report(report))
 
