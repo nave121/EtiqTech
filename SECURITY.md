@@ -45,6 +45,10 @@ auth layer (e.g., reverse proxy with basic auth or OAuth).
 - **No authentication**: By design for local use. See `server/app.py` header comment.
 - **Rate limiting**: 10 requests/minute on analysis endpoints, 60/minute global.
 - **Session expiry**: In-memory sessions expire after 1 hour.
-- **CSP headers**: Content Security Policy, X-Frame-Options, X-Content-Type-Options
-  are set on all responses.
+- **CSP headers**: Content Security Policy (per-request script nonces, no
+  `unsafe-inline` for scripts), X-Frame-Options, X-Content-Type-Options are set
+  on all responses.
+- **Supply chain**: CI fails on Bandit medium+ findings and on any known
+  vulnerability in pinned dependencies (`pip-audit --strict`); Dependabot
+  watches pip, GitHub Actions and the Docker base image.
 - **CSRF protection**: Origin header validation on POST requests.

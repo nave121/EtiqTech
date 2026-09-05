@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import logging
+import secrets
 import threading
 import uuid
 from datetime import datetime, timedelta
@@ -9,7 +10,7 @@ from datetime import datetime, timedelta
 # Add the parent directory to the path so we can import src modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flask import Flask, render_template, request, jsonify, Response, stream_with_context
+from flask import Flask, g, render_template, request, jsonify, Response, stream_with_context
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import requests as http_requests
@@ -99,11 +100,22 @@ limiter = Limiter(
 )
 
 
+@app.before_request
+def issue_csp_nonce():
+    g.csp_nonce = secrets.token_urlsafe(16)
+
+
+@app.context_processor
+def inject_csp_nonce():
+    return {'csp_nonce': g.get('csp_nonce', '')}
+
+
 @app.after_request
 def set_security_headers(response):
+    # Inline <script> blocks must carry nonce="{{ csp_nonce }}"; anything else inline is blocked.
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline'; "
+        f"script-src 'self' 'nonce-{g.get('csp_nonce', '')}'; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src https://fonts.gstatic.com; "
         "connect-src 'self'; "
@@ -284,6 +296,14 @@ def _get_session(session_id):
         return _analysis_cache.get(session_id)
 
 
+def _update_session(session_id, **fields):
+    """Write back into a session if it still exists; a no-op if it was evicted mid-stream."""
+    with _cache_lock:
+        entry = _analysis_cache.get(session_id)
+        if entry is not None:
+            entry.update(fields)
+
+
 @app.route('/api/ollama-models')
 def ollama_models():
     """Proxy Ollama /api/tags to list available models."""
@@ -392,7 +412,7 @@ def llm_verify_stream(session_id):
                 yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
                 # Save the final layer2 result so human-eye-stream can access it
                 if event.get("type") == "complete":
-                    cached["layer2_result"] = event.get("result")
+                    _update_session(session_id, layer2_result=event.get("result"))
         except Exception as e:
             logger.error("LLM verification streaming error", exc_info=True)
             yield f"data: {json.dumps({'type': 'error', 'message': 'Verification failed. Check server logs.'})}\n\n"

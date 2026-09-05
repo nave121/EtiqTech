@@ -48,10 +48,23 @@ jobs:
           name: bandit-report
           path: bandit-report.json
 
-      - name: Check for high-severity issues
+      - name: Bandit gate (medium+ severity fails the build)
+        run: bandit -r src/ server/ -ll -q
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: pip-audit pinned dependencies
         run: |
-          pip install bandit
-          bandit -r src/ server/ -ll -q
+          pip install pip-audit
+          pip-audit -r requirements.txt --strict --progress-spinner off
 
   docker:
     runs-on: ubuntu-latest
