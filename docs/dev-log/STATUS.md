@@ -43,10 +43,17 @@ permanent · auth stays at the reverse proxy.
 | P4 prepare-mapping, demo mode, README diagram, acknowledgements | done | 8449d66, 9ce976b |
 | Rule coverage fixtures (23 of 27 never-firing rules) | done, merged | 9a6648b |
 | P4 demo GIF, social preview, i18n toggle, public deploy | not done | — |
-| Design (non-tech-friendly UX) | spec done (`docs/design/spec.md`); 9 commits executing on branch `design-ux` (worktree ../EtiqTech-design) | 3af9372 |
+| Design (non-tech-friendly UX) | spec done; commits 1–6 merged to main (rename/counts, inline errors, rule title+kind, upload screen, plain status strings, finding card); 7–9 (summary node, landing copy, START-HERE) running on `design-ux` | 3af9372, 6c7e889, merge of 5a997dd+ec0ea8e |
+
+## Memos awaiting a decision
+- `docs/dev-log/statute-sources.md` — the statute and rules are not in the repo; sources, licences and a recommendation for `resources/law/`.
+- `docs/dev-log/layer3-context-options.md` — Layer 3 is ~27.7k tokens; three designs + num_ctx option, ranked.
+- `docs/design/spec.md` §8 — open wording/Hebrew questions; commit 8 (landing Hebrew drafts) needs Razy's Hebrew review before merge.
+- `docs/eu-directive-spike.md` — EU seed rules (decision #6).
+- `docs/benchmarks.md` — grounding stays off; rerun conditions.
 
 ## Open findings for the maintainer (do not fix without a decision)
-1. `the_law-english_translation.txt` is the Council's form guidance, not the 1994 statute (statute not in repo).
+1. `the_law-english_translation.txt` is the Council's form guidance, not the 1994 statute (statute not in repo; see statute-sources.md — no official English translation exists).
 2. Parser output validates against the schema on 0/94 fixtures (Hebrew enums, missing summary key) — normalize parser vs widen schema. `analysis.summary.single_sex_design` is always False on real exports as a consequence.
 3. Layer 3 pass-1 ≈ 27.7k real tokens vs 24.6k available at the 32k default window, on every protocol.
 4. `term:track` can increment `errors` without a failing checklist item; `title:pilot-label` is emitted as severity error but counted as a warning (pre-existing linter counting bugs, found by review of 6a173f9).
@@ -55,7 +62,7 @@ permanent · auth stays at the reverse proxy.
 7. `the_law.txt` is a word-reversed duplicate of the PDF text — candidate for deletion (rule: never delete without OK).
 
 ## Running jobs (as of step 25, resumed after the 21:00 limit reset)
-- Still running: `design-ux-implement` (commits 5–9 on branch design-ux), `research-statute-and-layer3` (7 agents), `review-split-and-merge-capped` (≤15). Stopped by Razy: `sprint-audit` (110 agents). Done: split, coverage, eval.
+- Still running: `design-ux-implement` (commits 7–9 on design-ux). Done: split, coverage, eval, research memos, capped split/merge review. Stopped by Razy: `sprint-audit` (110 agents).
 
 ## Branches / worktrees
 - `design-ux` at `../EtiqTech-design`: design commits land here; merge into main after the linter split finishes (files disjoint except src/rules.py additive fields).
@@ -71,7 +78,8 @@ python scripts/eval_grounding.py --report         # if output/eval_grounding.jso
 Long LLM jobs write resumable JSONL under `output/` (gitignored); relaunch the same command to continue.
 
 ## Next steps (in order)
-1. Merge the rest of `design-ux` (commits 5–9) when its workflow finishes; act on the audit report and the research memos.
+1. Merge design commits 7–9 when the workflow finishes (commit 8 held for Hebrew review); run START-HERE walk-through literally.
+2. Decide the memos (statute, Layer 3, grounding, EU rules); then implement the chosen options.
 2. Review follow-ups as they arrive.
 3. Design task (non-technical UX) — plan first, then build.
 4. Optional if time: P3.1 module split in small batches; i18n toggle.
