@@ -72,3 +72,10 @@ def test_packs_reference_known_things():
     for name, pack in PACKS.items():
         assert set(pack["rule_jurisdictions"]) <= {"IL-form", "generic"}
         assert set(pack["excluded_themes"]) <= set(llm_agent.THEME_SPECS), name
+
+
+def test_generic_pack_still_rejects_an_incomplete_submission(monkeypatch):
+    monkeypatch.setenv("ETIQTECH_JURISDICTION", "generic")
+    report = lint({})
+    assert report["status"] == "fail" and report["errors"] >= 3
+    assert {"header", "research", "pi"} <= {c["rule_id"] for c in report["checklist"] if c["status"] == "fail"}

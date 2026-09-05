@@ -997,7 +997,7 @@ def run_verification(
         try:
             raw_response = call_llm(prompt, provider=provider, model=model, temperature=temperature)
         except LLMError as exc:
-            raise RuntimeError(f"LLM verification call failed: {exc}") from exc
+            raise RuntimeError(f"LLM verification call failed: {type(exc).__name__}") from exc  # no provider text
         return parse_llm_json(raw_response)
 
     # Default: multi-theme, smaller prompts to reduce model load.

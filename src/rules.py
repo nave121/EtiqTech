@@ -36,11 +36,12 @@ def _r(rule_id: str, kind: str, jurisdiction: str, title: str) -> Rule:
 
 
 RULES: Dict[str, Rule] = {r.id: r for r in [
-    # --- structure of the request (Israeli Council export) ---
-    _r("required", "required", "IL-form", "Required fields present at a given path"),
-    _r("header", "structural", "IL-form", "Header block present"),
-    _r("research", "structural", "IL-form", "Research block present"),
-    _r("pi", "structural", "IL-form", "Principal-investigator block present"),
+    # --- structure of the request. Block/field presence is canonical-schema integrity (generic);
+    #     only the Israeli-form specifics (continuation, third-party, colony, track/term, labels) are IL-form.
+    _r("required", "required", "generic", "Required fields present at a given path"),
+    _r("header", "structural", "generic", "Header block present"),
+    _r("research", "structural", "generic", "Research block present"),
+    _r("pi", "structural", "generic", "Principal-investigator block present"),
     _r("pi:training", "structural", "generic", "PI has training entries"),
     _r("participant:training", "structural", "generic", "Every participant has training entries"),
     _r("participant:certified-without-training", "advisory", "generic", "Participant marked certified but lists no training"),

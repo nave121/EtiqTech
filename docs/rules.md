@@ -90,7 +90,7 @@ Versioning: `RULESET_VERSION` (in `src/rules.py`) is bumped whenever a rule is a
 
 | rule id | kind | jurisdiction | title | fixtures (fire / appear) |
 |---|---|---|---|---|
-| `header` | structural | IL-form | Header block present | 0 / 0 |
+| `header` | structural | generic | Header block present | 0 / 0 |
 
 ## housing
 
@@ -127,7 +127,7 @@ Versioning: `RULESET_VERSION` (in `src/rules.py`) is bumped whenever a rule is a
 
 | rule id | kind | jurisdiction | title | fixtures (fire / appear) |
 |---|---|---|---|---|
-| `pi` | structural | IL-form | Principal-investigator block present | 0 / 0 |
+| `pi` | structural | generic | Principal-investigator block present | 0 / 0 |
 | `pi:training` | structural | generic | PI has training entries | 0 / 94 |
 
 ## postop
@@ -140,13 +140,13 @@ Versioning: `RULESET_VERSION` (in `src/rules.py`) is bumped whenever a rule is a
 
 | rule id | kind | jurisdiction | title | fixtures (fire / appear) |
 |---|---|---|---|---|
-| `required` | required | IL-form | Required fields present at a given path | 0 / 0 |
+| `required` | required | generic | Required fields present at a given path | 0 / 0 |
 
 ## research
 
 | rule id | kind | jurisdiction | title | fixtures (fire / appear) |
 |---|---|---|---|---|
-| `research` | structural | IL-form | Research block present | 0 / 0 |
+| `research` | structural | generic | Research block present | 0 / 0 |
 
 ## restraint
 

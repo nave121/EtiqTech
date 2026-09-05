@@ -231,18 +231,26 @@ def test_provider_error_bodies_never_reach_logs(marker, monkeypatch, caplog, cap
     class _Body:
         status_code = 400
         text = f"validation error: prompt contained {marker}"
+        calls = 0
         def json(self):
-            return {"error": {"type": "invalid_request", "message": self.text}}
+            # Ollama sends a flat string; OpenAI-style gateways a dict. Both shapes carry the marker so
+            # either provider path that reads the body would trip the assertion.
+            return {"error": self.text if _Body.calls % 2 else {"type": "invalid_request", "message": self.text}}
         def iter_lines(self):
             return iter([f'data: {{"error": {{"type": "overflow", "message": "{marker}"}}}}'.encode()])
-    monkeypatch.setattr(requests, "post", lambda *a, **k: _Body())
+
+    def _body(*a, **k):
+        _Body.calls += 1
+        return _Body()
+    monkeypatch.setattr(requests, "post", _body)
     for call in (lambda: llm_clients.call_llm("p", provider="openai"),
                  lambda: list(llm_clients.call_llm_stream("p", provider="openai")),
                  lambda: llm_clients.call_llm("p", provider="ollama", model="m"),
                  lambda: list(llm_clients.call_llm_stream("p", provider="ollama", model="m"))):
-        with pytest.raises(Exception) as ei:
-            call()
-        assert marker not in str(ei.value)
+        for _ in range(2):  # flat-string and dict error bodies
+            with pytest.raises(Exception) as ei:
+                call()
+            assert marker not in str(ei.value)
 
     class _Ok:
         status_code = 200

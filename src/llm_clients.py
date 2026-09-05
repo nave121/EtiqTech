@@ -235,14 +235,10 @@ def call_llm(
 
 
 def _ollama_error_hint(response) -> str:
-    """Ollama's error JSON is a short operator message ('model not found'); keep that, never the raw body."""
-    if not 400 <= getattr(response, "status_code", 0) < 600:
-        return ""  # a 3xx (refused redirect) has no error body worth reading
-    try:
-        err = response.json().get("error")
-    except Exception:
-        return ""
-    return f": {str(err)[:120]}" if isinstance(err, str) and err else ""
+    """Kept for the call sites; deliberately returns nothing. Ollama's `error` string is usually a short
+    operator message, but a misconfigured or hostile Ollama-compatible server controls that field, and
+    LLMError text can reach the browser — status code only (PRIVACY.md guarantee 3)."""
+    return ""
 
 
 def _log_ollama_stats(body: Dict[str, Any], wall_secs: float, label: str = "") -> None:
