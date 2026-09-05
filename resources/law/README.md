@@ -8,5 +8,15 @@ startup when they are missing.
 | File | What |
 |------|------|
 | `the_law-english_translation.txt` | Prevention of Cruelty to Animals Law (Experiments on Animals), 5754-1994 — English translation used in prompts |
-| `the_law.txt` | Same law, Hebrew original |
-| `national-guidance-2025-he.pdf` | National Council general guidance for filling the request form, 2025 update (Hebrew) |
+| `the_law.txt` | Older text extraction of the same PDF with word order reversed per line (visual-order artifact). Not used by any code; kept until the maintainer removes it. |
+| `national-guidance-2025-he.pdf` | National Council general guidance for filling the request form, 2025 update (Hebrew original) |
+| `national-guidance-2025-he.txt` | Clean `pdftotext` extraction of the PDF (logical order). Source for the Hebrew half of `resources/corpus/guidance_il.jsonl`. |
+
+Note on naming: `the_law-english_translation.txt` is the English translation of the
+Council's *explanatory guidance for the request form*, not the text of the Prevention of
+Cruelty to Animals Law (Experiments on Animals), 5754-1994 itself. The statute is not in
+the repo; adding it (Hebrew + a vetted translation) is on the maintainer.
+
+The retrieval corpus is built deterministically from these files by
+`scripts/build_law_corpus.py` and committed at `resources/corpus/guidance_il.jsonl`
+(CI checks it is not stale).
