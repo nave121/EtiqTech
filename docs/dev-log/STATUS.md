@@ -10,7 +10,7 @@
 - Working alone: **study decisions online first**, then decide; record the reasoning in the log.
 - Keep a full step log (the session log) and this status file **updated with each commit**, so a
   compacted session can continue without loss.
-- Added 2026-09-05: **ULTRACODE** — substantive tasks run as Workflow orchestrations; model tiers: Opus for most agents, Fable for the biggest synthesis/implementation steps, Sonnet for small reviews.
+- Added 2026-09-05: **ULTRACODE** — substantive tasks run as Workflow orchestrations. **Hard cap: at most 15 agents per workflow, Sonnet for most of them** (Razy stopped a 110-agent audit: "wayyyy too much"); Opus for skeptic/verify roles, Fable only for the biggest synthesis/implementation steps.
 - Added 2026-09-05: **Design task** — near the end of the sprint, make the product super easy and
   self-explanatory for non-technical people (researchers, committee staff): onboarding copy,
   plain-language findings, guided first run. Not started; scheduled after the eval gate.
@@ -55,7 +55,7 @@ permanent · auth stays at the reverse proxy.
 7. `the_law.txt` is a word-reversed duplicate of the PDF text — candidate for deletion (rule: never delete without OK).
 
 ## Running jobs (as of step 25, resumed after the 21:00 limit reset)
-- Still running: `design-ux-implement` (commits 5–9 on branch design-ux), `sprint-audit`, `research-statute-and-layer3`. Done: split, coverage, eval.
+- Still running: `design-ux-implement` (commits 5–9 on branch design-ux), `research-statute-and-layer3` (7 agents), `review-split-and-merge-capped` (≤15). Stopped by Razy: `sprint-audit` (110 agents). Done: split, coverage, eval.
 
 ## Branches / worktrees
 - `design-ux` at `../EtiqTech-design`: design commits land here; merge into main after the linter split finishes (files disjoint except src/rules.py additive fields).
