@@ -43,7 +43,7 @@ permanent · auth stays at the reverse proxy.
 | P4 prepare-mapping, demo mode, README diagram, acknowledgements | done | 8449d66, 9ce976b |
 | Rule coverage fixtures (23 of 27 never-firing rules) | done, merged | 9a6648b |
 | P4 demo GIF, social preview, i18n toggle, public deploy | not done | — |
-| Design (non-tech-friendly UX) | spec done; commits 1–6 merged to main (rename/counts, inline errors, rule title+kind, upload screen, plain status strings, finding card); 7–9 (summary node, landing copy, START-HERE) running on `design-ux` | 3af9372, 6c7e889, merge of 5a997dd+ec0ea8e |
+| Design (non-tech-friendly UX) | commits 1–7 and 9 on main (rename/counts, inline errors, rule title+kind, upload screen, plain status strings, finding card, report summary, START-HERE); **commit 8 (landing copy, Hebrew drafts) held on `design-ux` for Razy's Hebrew review** | 3af9372 … a568df0, 3e5a90b, 55a2510 |
 
 ## Memos awaiting a decision
 - `docs/dev-log/statute-sources.md` — the statute and rules are not in the repo; sources, licences and a recommendation for `resources/law/`.
@@ -62,11 +62,11 @@ permanent · auth stays at the reverse proxy.
 7. `the_law.txt` is a word-reversed duplicate of the PDF text — candidate for deletion (rule: never delete without OK).
 
 ## Running jobs (as of step 25, resumed after the 21:00 limit reset)
-- Still running: `design-ux-implement` (commits 7–9 on design-ux). Done: split, coverage, eval, research memos, capped split/merge review. Stopped by Razy: `sprint-audit` (110 agents).
+- Nothing running. Done: split, coverage, eval, research memos, design 1–9 (8 held), reviews.
 
 ## Branches / worktrees
 - `design-ux` at `../EtiqTech-design`: design commits land here; merge into main after the linter split finishes (files disjoint except src/rules.py additive fields).
-- `rule-coverage` at `../EtiqTech-coverage`: coverage fixtures + test; merge after the split (touches examples/coverage, tests/, scripts/gen_rules_doc.py, docs/rules.md).
+- `rule-coverage`: merged and removed.
 
 ## How to resume
 ```bash
@@ -78,7 +78,7 @@ python scripts/eval_grounding.py --report         # if output/eval_grounding.jso
 Long LLM jobs write resumable JSONL under `output/` (gitignored); relaunch the same command to continue.
 
 ## Next steps (in order)
-1. Merge design commits 7–9 when the workflow finishes (commit 8 held for Hebrew review); run START-HERE walk-through literally.
+1. Razy: review the Hebrew drafts in design commit 8 (`git -C ../EtiqTech-design show 75dd5f0`), then merge `design-ux`.
 2. Decide the memos (statute, Layer 3, grounding, EU rules); then implement the chosen options.
 2. Review follow-ups as they arrive.
 3. Design task (non-technical UX) — plan first, then build.
