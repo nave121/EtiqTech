@@ -730,6 +730,41 @@
         });
     }
 
+    // Tier is a pure function of (severity, rule_kind); see docs/design/spec.md 3.1.
+    // 1 = fails the check, 2 = law-critical warning, 3 = everything else that failed.
+    function tierOf(item) {
+        if (item.severity === 'error') return 1;
+        if (item.rule_kind === 'law_critical') return 2;
+        return 3;
+    }
+    const TIER_CHIP = { 1: 'FAILS THE CHECK', 2: 'LEGAL REQUIREMENT', 3: 'WORTH FIXING' };
+    function tierChipHtml(tier) {
+        return `<span class="tier-chip tier-${tier}">${TIER_CHIP[tier]}</span>`;
+    }
+    // Four fixed strings, keyed on tier and kind (spec 3.2). Framing only; the linter's
+    // message and suggested_fix render verbatim next to them.
+    function whyItMatters(item) {
+        const tier = tierOf(item);
+        if (tier === 1) return 'This fails the automated check. Fix it before you submit.';
+        if (tier === 2) return 'Tied to a legal requirement. It does not fail the automated check under this profile, but committees send protocols back for it.';
+        if (item.rule_kind === 'advisory') return "Not required. Fixing it makes the committee's review faster.";
+        return 'The Council form is incomplete or inconsistent here.';
+    }
+    // Registry titles are satisfied conditions ("Alternatives search present"), so the label
+    // makes them read correctly on a failure. `required` is generic; its message already leads.
+    function findingHeadline(item) {
+        if (!item.rule_title || item.rule_id === 'required') return '';
+        return `Requirement not met: ${item.rule_title}`;
+    }
+    function findingMetaHtml(item) {
+        const ruleset = (currentReport && currentReport.ruleset_version) || '';
+        const profile = (currentReport && currentReport.profile) || '';
+        const id = item.rule_id || item.reference || 'general';
+        const ref = item.rule_id && item.reference && item.reference !== item.rule_id
+            ? ` <small>(${escapeHtml(item.reference)})</small>` : '';
+        return `<div class="detail-meta" title="rule id · ruleset ${escapeAttr(ruleset)}">${escapeHtml(id)} · ${escapeHtml(item.severity || '')} · ruleset ${escapeHtml(ruleset)} · profile ${escapeHtml(profile)}${ref}</div>`;
+    }
+
     // Show Lint Issue Details in Panel
     function showLintIssueDetails(issues, ref) {
         const allIssues = [...issues.errors, ...issues.warnings];
@@ -740,24 +775,25 @@
         detailTitle.textContent = `Issues in ${formatRefName(ref)}`;
 
         let html = '';
-        allIssues.forEach((issue, idx) => {
-            const isError = issue.severity === 'error';
+        allIssues.forEach((issue) => {
+            const headline = findingHeadline(issue);
             html += `
-                <div class="detail-issue" style="margin-bottom: 16px; padding-bottom: 16px; ${idx < allIssues.length - 1 ? 'border-bottom: 1px solid var(--border-light);' : ''}">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <span style="padding: 2px 8px; font-size: 0.6875rem; font-weight: 600; border-radius: 4px; background: ${isError ? 'var(--status-fail)' : 'var(--status-warning)'}; color: white;">
-                            ${isError ? 'ERROR' : 'WARNING'}
-                        </span>
-                        <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);" title="rule id · ruleset ${escapeAttr(currentReport && currentReport.ruleset_version || '')}">${escapeHtml(issue.rule_id || issue.reference || 'general')}${issue.rule_id && issue.reference !== issue.rule_id ? ` <small>(${escapeHtml(issue.reference)})</small>` : ''}</span>
-                    </div>
+                <div class="detail-issue">
+                    <div>${tierChipHtml(tierOf(issue))}</div>
+                    ${headline ? `<div class="detail-headline">${escapeHtml(headline)}</div>` : ''}
+                    <div class="detail-fix-label">What the check found</div>
                     <div class="detail-message">${escapeHtml(issue.message)}</div>
-                    ${feedbackHtml('lint', issue.rule_id)}
+                    <div class="detail-fix-label">Why it matters</div>
+                    <div class="detail-why">${escapeHtml(whyItMatters(issue))}</div>
                     ${issue.suggested_fix ? `
                         <div class="detail-fix">
-                            <div class="detail-fix-label">Suggested Fix</div>
+                            <div class="detail-fix-label">What to change</div>
                             <div class="detail-fix-text">${escapeHtml(issue.suggested_fix)}</div>
                         </div>
                     ` : ''}
+                    <div class="detail-where">Where: ${escapeHtml(formatRefName(ref))}</div>
+                    ${findingMetaHtml(issue)}
+                    ${feedbackHtml('lint', issue.rule_id)}
                 </div>
             `;
         });
@@ -780,7 +816,7 @@
         const subQuestions = Array.isArray(result.sub_questions) ? result.sub_questions : [];
         const subQuestionsHtml = subQuestions.length ? `
             <div style="margin-top: 16px;">
-                <div class="detail-fix-label">Sub-Questions</div>
+                <div class="detail-fix-label">What the model looked at</div>
                 <div style="display: grid; gap: 10px; margin-top: 8px;">
                     ${subQuestions.map((item) => {
                         const itemMeta = getThemeGradeMeta(item);
@@ -802,9 +838,10 @@
         let html = `
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
                 <span style="padding: 2px 10px; font-size: 0.6875rem; font-weight: 600; border-radius: 4px; background: ${meta.color}; color: white;">
-                    ${meta.short} ${escapeHtml(scoreLabel)}
+                    ${meta.score} of 3: ${escapeHtml(scoreLabel)}
                 </span>
             </div>
+            <div class="detail-meta">${escapeHtml(theme)} · advisory · ${TOTAL_LLM_THEMES} topics</div>
             <div class="detail-rationale">${escapeHtml(result.rationale || 'No rationale provided.')}</div>
             <div class="detail-confidence">Overall score: ${meta.short}</div>
             ${subQuestionsHtml}
