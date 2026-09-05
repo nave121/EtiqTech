@@ -939,6 +939,61 @@ body {
     color: var(--text-secondary);
 }
 
+/* Linter strings render verbatim; plaintext bidi keeps a Hebrew species name inside an
+   English sentence from dragging its brackets and punctuation around in the LTR panel. */
+.detail-message,
+.detail-fix-text {
+    unicode-bidi: plaintext;
+}
+
+/* Finding card (docs/design/spec.md section 3) */
+.detail-issue + .detail-issue {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-light);
+}
+
+.tier-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    border-radius: 4px;
+    color: #ffffff;
+}
+
+.tier-chip.tier-1 { background-color: var(--status-fail); }
+.tier-chip.tier-2 { background-color: #c2410c; }   /* amber-red: law-critical, not an error under this profile */
+.tier-chip.tier-3 { background-color: var(--status-warning); }
+
+.detail-headline {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: var(--space-2) 0 var(--space-3);
+}
+
+.detail-why {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--space-4);
+}
+
+.detail-where {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    margin-top: var(--space-3);
+}
+
+.detail-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    margin-top: var(--space-1);
+}
+
 .detail-rationale {
     font-size: 0.875rem;
     color: var(--text-secondary);
