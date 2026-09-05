@@ -229,6 +229,7 @@
         let html = '<div class="print-llm-box ok" style="border-left-color:#1a56db; background-color:#dbeafe;">';
         html += `<strong>EthicTech IACUC Protocol Review</strong><br>`;
         html += `<strong>File:</strong> ${escapeHtml(currentFileName_ || '')}`;
+        if (currentReport && currentReport.ruleset_version) html += ` &nbsp;|&nbsp; <strong>Ruleset:</strong> ${escapeHtml(currentReport.ruleset_version)}`;
 
         // Linter stats
         if (currentReport) {
@@ -603,14 +604,14 @@
             // ADD PRINT-ONLY DETAILS FOR LINTER ISSUES
             let printDetailsHtml = '';
             issues.errors.forEach(issue => {
-                printDetailsHtml += `<div class="print-issue-box error"><strong>Linter Error (${escapeHtml(issue.reference || 'general')}):</strong> ${escapeHtml(issue.message)}`;
+                printDetailsHtml += `<div class="print-issue-box error"><strong>Linter Error (${escapeHtml(issue.rule_id || issue.reference || 'general')}):</strong> ${escapeHtml(issue.message)}`;
                 if (issue.suggested_fix) {
                     printDetailsHtml += ` <em>(Fix: ${escapeHtml(issue.suggested_fix)})</em>`;
                 }
                 printDetailsHtml += `</div>`;
             });
             issues.warnings.forEach(issue => {
-                printDetailsHtml += `<div class="print-issue-box warning"><strong>Linter Warning (${escapeHtml(issue.reference || 'general')}):</strong> ${escapeHtml(issue.message)}`;
+                printDetailsHtml += `<div class="print-issue-box warning"><strong>Linter Warning (${escapeHtml(issue.rule_id || issue.reference || 'general')}):</strong> ${escapeHtml(issue.message)}`;
                 if (issue.suggested_fix) {
                     printDetailsHtml += ` <em>(Fix: ${escapeHtml(issue.suggested_fix)})</em>`;
                 }
@@ -688,7 +689,7 @@
                         <span style="padding: 2px 8px; font-size: 0.6875rem; font-weight: 600; border-radius: 4px; background: ${isError ? 'var(--status-fail)' : 'var(--status-warning)'}; color: white;">
                             ${isError ? 'ERROR' : 'WARNING'}
                         </span>
-                        <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">${escapeHtml(issue.reference || 'general')}</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);" title="rule id · ruleset ${escapeAttr(currentReport && currentReport.ruleset_version || '')}">${escapeHtml(issue.rule_id || issue.reference || 'general')}${issue.rule_id && issue.reference !== issue.rule_id ? ` <small>(${escapeHtml(issue.reference)})</small>` : ''}</span>
                     </div>
                     <div class="detail-message">${escapeHtml(issue.message)}</div>
                     ${issue.suggested_fix ? `

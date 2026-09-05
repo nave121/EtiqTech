@@ -30,6 +30,7 @@ class ChecklistItem(BaseModel):
     suggested_fix: Optional[str] = None
     severity: Literal["error", "warning", "advisory"]
     reference: str
+    rule_id: Optional[str] = None  # canonical registry id (src/rules.py); None only for unregistered refs
 
 
 class LintAnalysisSummary(BaseModel):
@@ -64,6 +65,7 @@ class LinterResult(BaseModel):
     analysis: LintAnalysis
     generated_at: str
     checklist: list[ChecklistItem]
+    ruleset_version: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------

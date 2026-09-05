@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 from .schema import IACUC_SCHEMA_V2  # not used for strict validation yet, but here for future use
+from .rules import annotate_report
 from .avma_matrix import (
     normalize_species,
     normalize_method,
@@ -2372,7 +2373,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
         "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "checklist": checks,
     }
-    return report
+    return annotate_report(report)
 
 
 def _row(cells: List[Any], even_idx: int = 0) -> str:
