@@ -55,6 +55,9 @@ def render():
         "**generic** = welfare/science checks any jurisdiction would keep; the maintainer should review these tags before they drive a pack split. "
         "`fixtures` = number of example HTML files (of the whole `examples/` tree, both profiles) on which the rule fires / appears at all.",
         "",
+        "Versioning: `RULESET_VERSION` (in `src/rules.py`) is bumped whenever a rule is added, removed, or its trigger changes, "
+        "so a report's `ruleset_version` says which rules it was reviewed under.",
+        "",
     ]
     for domain in sorted(by_domain):
         lines += [f"## {domain}", "", "| rule id | kind | jurisdiction | title | fixtures (fire / appear) |", "|---|---|---|---|---|"]

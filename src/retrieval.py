@@ -62,13 +62,6 @@ def _tokens(text: str) -> List[str]:
     return [t.lower() for t in _TOKEN.findall(text) if len(t) > 1]
 
 
-def _cosine(a: List[float], b: List[float]) -> float:
-    dot = sum(x * y for x, y in zip(a, b))
-    na = math.sqrt(sum(x * x for x in a)) or 1e-9
-    nb = math.sqrt(sum(x * x for x in b)) or 1e-9
-    return dot / (na * nb)
-
-
 def load_corpus(corpus_dir: Path = CORPUS_DIR) -> List[Dict[str, Any]]:
     records: List[Dict[str, Any]] = []
     for path in sorted(corpus_dir.glob("*.jsonl")):
@@ -151,15 +144,18 @@ class Retriever:
             try:
                 self.cache_dir.mkdir(parents=True, exist_ok=True)
                 tmp = path.with_suffix(f".{os.getpid()}.tmp")  # atomic replace: no reader ever sees a partial file
-                tmp.write_text(json.dumps(self._vectors))
-                os.replace(tmp, path)
+                try:
+                    tmp.write_text(json.dumps(self._vectors))
+                    os.replace(tmp, path)
+                finally:
+                    tmp.unlink(missing_ok=True)
             except OSError:
                 logger.info("retrieval: index cache not writable at %s (read-only FS?) — kept in memory", self.cache_dir)
             return True
 
     def _set_vectors(self, vectors: List[List[float]]) -> None:
-        if len(vectors) != len(self.records):
-            raise ValueError("cached vector count does not match corpus")
+        if not isinstance(vectors, list) or len(vectors) != len(self.records) or not all(isinstance(v, list) and v for v in vectors):
+            raise ValueError("cached vector shape does not match corpus")  # routes through the loader's fallback
         self._vectors = vectors
         self._norms = [math.sqrt(sum(x * x for x in v)) or 1e-9 for v in vectors]
 

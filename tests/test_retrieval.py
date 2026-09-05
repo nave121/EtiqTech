@@ -190,3 +190,13 @@ def test_species_helper_tolerates_malformed_shapes():
     from src.llm_agent import _instance_species
     assert _instance_species({"animals_total": {"species_standard": "mouse"}}) == []
     assert _instance_species({"animals_total": ["x", None, {"species_standard": "rat"}]}) == ["rat"]
+
+
+def test_wrong_shape_cache_falls_back_instead_of_raising(monkeypatch, tmp_path):
+    monkeypatch.setattr(retrieval, "embed_texts", _fake_embed)
+    r = Retriever(RECORDS, embed_model="fake", cache_dir=tmp_path)
+    r.build_index()
+    (path,) = tmp_path.glob("fake-*.json")
+    path.write_text(json.dumps({str(i): "x" for i in range(len(RECORDS))}))  # valid JSON, right length, wrong shape
+    fresh = Retriever(RECORDS, embed_model="fake", cache_dir=tmp_path)
+    assert fresh.build_index() is True and fresh.search("euthanasia", k=1)
