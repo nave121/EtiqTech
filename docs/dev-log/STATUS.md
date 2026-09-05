@@ -33,7 +33,7 @@ permanent · auth stays at the reverse proxy.
 | P1.4 advisory banner | done (wording = maintainer) | 737e831 |
 | P2 corpus (IL guidance EN+HE) | done | 72ce96e, 39f396f, b593a54 |
 | P2 retrieval layer + cited grounding | done, **off by default** | 3b67301, 64ca1ed |
-| P2 eval gate (grounded vs ungrounded) | harness ready (`scripts/eval_grounding.py`); **running subset** — see below | 342092b |
+| P2 eval gate (grounded vs ungrounded) | done (subset): **no gain, grounding stays off by default**; rerun conditions in docs/benchmarks.md | 342092b, bf331e4 |
 | P2 Norecopa ingest | **blocked on maintainer** (access path) | — |
 | P3.1 rule registry (ids, version, docs/rules.md) | done; **module split executing** per `linter-split-plan.md` (workflow, 8 batches, snapshot-checked) | 592aa81, 9e04573, bd2e383 |
 | P3.2 pack mechanism + EU spike | done (EU rules await review) | 6a173f9 |
@@ -53,8 +53,8 @@ permanent · auth stays at the reverse proxy.
 6. On the 27B test model the blind pass barely separates good from bad protocols (see docs/benchmarks.md).
 7. `the_law.txt` is a word-reversed duplicate of the PDF text — candidate for deletion (rule: never delete without OK).
 
-## Running jobs (as of step 24)
-- Workflows: `linter-module-split` (main), `design-ux-implement` (design-ux), `sprint-audit` (read-only), `rule-coverage-fixtures` (rule-coverage), `research-statute-and-layer3` (read-only). Grounding eval subset on the GPU (`output/eval_grounding.jsonl`).
+## Running jobs (as of step 25, resumed after the 21:00 limit reset)
+- Workflows resumed from cache: `linter-module-split` (batches 5–7 left), `design-ux-implement` (commits 4–9 left), `rule-coverage-fixtures` (verify + wire left), `sprint-audit` (all), `research-statute-and-layer3` (all). Eval finished.
 
 ## Branches / worktrees
 - `design-ux` at `../EtiqTech-design`: design commits land here; merge into main after the linter split finishes (files disjoint except src/rules.py additive fields).
@@ -70,7 +70,7 @@ python scripts/eval_grounding.py --report         # if output/eval_grounding.jso
 Long LLM jobs write resumable JSONL under `output/` (gitignored); relaunch the same command to continue.
 
 ## Next steps (in order)
-1. Finish the grounding eval subset; write results to docs/benchmarks.md; decide `ETIQTECH_GROUNDING` default from data.
+1. Merge `design-ux` and `rule-coverage` into main once the split finishes; run the full suite; review the merge.
 2. Review follow-ups as they arrive.
 3. Design task (non-technical UX) — plan first, then build.
 4. Optional if time: P3.1 module split in small batches; i18n toggle.
