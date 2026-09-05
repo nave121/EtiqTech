@@ -153,6 +153,14 @@ PYTHONPATH=. python scripts/batch_process.py examples/known-good/ --fail-on-erro
 
 ---
 
+## Integration contract
+
+The linter and LLM layers consume one JSON shape — the canonical protocol instance,
+documented field by field in [docs/schema.md](docs/schema.md) (generated from `src/schema.py`,
+with a measured conformance section). Institutions on other protocol systems write a small
+adapter that emits it and upload the result as `.json` or post `{"instance": {...}}`; see
+[docs/adapters.md](docs/adapters.md) and `examples/adapters/minimal_adapter.py`.
+
 ## Grounding (retrieval)
 
 With `ETIQTECH_GROUNDING=1`, each Layer 2 theme prompt replaces the fixed 1,200-character

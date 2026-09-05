@@ -15,6 +15,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import requests as http_requests
 
+from src.adapters import ADAPTERS, IngestError, ingest
 from src.html_to_json import parse_html
 from src.linter_renderer import lint, render_html_with_refs
 from src import feedback
@@ -65,7 +66,7 @@ app = Flask(__name__,
             static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 
 # Configure upload settings
-ALLOWED_EXTENSIONS = {'html', 'htm'}
+ALLOWED_EXTENSIONS = {ext for a in ADAPTERS.values() for ext in a.extensions}  # html, htm, json
 MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
 
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
@@ -197,9 +198,7 @@ def analyze():
     }
     """
     try:
-        html_content = None
-
-        # Handle file upload
+        # Handle file upload (HTML export or canonical JSON — see src/adapters.py)
         if 'file' in request.files:
             file = request.files['file']
             if file.filename == '':
@@ -211,29 +210,30 @@ def analyze():
             if not allowed_file(file.filename):
                 return jsonify({
                     'success': False,
-                    'error': 'Invalid file type. Please upload an HTML file.'
+                    'error': 'Invalid file type. Please upload an HTML export or a canonical JSON instance.'
                 }), 400
 
-            html_content = file.read().decode('utf-8')
+            instance, adapter = ingest(file.read(), file.filename)
 
-        # Handle JSON body with raw HTML
+        # Handle JSON body with raw HTML, or a canonical instance
         elif request.is_json:
             data = request.get_json()
-            html_content = data.get('html_content')
-            if not html_content:
-                return jsonify({
-                    'success': False,
-                    'error': 'Missing html_content in request body'
-                }), 400
+            if isinstance(data, dict) and isinstance(data.get('instance'), dict):
+                instance, adapter = ingest(json.dumps(data['instance']), 'instance.json')
+            else:
+                html_content = data.get('html_content') if isinstance(data, dict) else None
+                if not html_content:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Missing html_content in request body'
+                    }), 400
+                instance, adapter = ingest(html_content, 'upload.html')
 
         else:
             return jsonify({
                 'success': False,
                 'error': 'Please upload an HTML file or provide html_content in JSON body'
             }), 400
-
-        # Parse HTML to JSON instance
-        instance = parse_html(html_content)
 
         # Run linter
         lint_report = lint(instance, profile='default')
@@ -243,10 +243,13 @@ def analyze():
 
         return jsonify({
             'success': True,
+            'adapter': adapter,
             'rendered_html': rendered_html,
             'lint_report': lint_report
         })
 
+    except IngestError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
     except UnicodeDecodeError:
         return jsonify({
             'success': False,
@@ -392,24 +395,24 @@ def analyze_with_session():
     Returns a session_id to use with /api/llm-verify-stream.
     """
     try:
-        html_content = None
-
         if 'file' in request.files:
             file = request.files['file']
             if file.filename == '':
                 return jsonify({'success': False, 'error': 'No file selected'}), 400
             if not allowed_file(file.filename):
                 return jsonify({'success': False, 'error': 'Invalid file type'}), 400
-            html_content = file.read().decode('utf-8')
+            instance, adapter = ingest(file.read(), file.filename)
         elif request.is_json:
             data = request.get_json()
-            html_content = data.get('html_content')
-            if not html_content:
-                return jsonify({'success': False, 'error': 'Missing html_content'}), 400
+            if isinstance(data, dict) and isinstance(data.get('instance'), dict):
+                instance, adapter = ingest(json.dumps(data['instance']), 'instance.json')
+            else:
+                html_content = data.get('html_content') if isinstance(data, dict) else None
+                if not html_content:
+                    return jsonify({'success': False, 'error': 'Missing html_content'}), 400
+                instance, adapter = ingest(html_content, 'upload.html')
         else:
             return jsonify({'success': False, 'error': 'Please upload an HTML file'}), 400
-
-        instance = parse_html(html_content)
         lint_report = lint(instance, profile='default')
         rendered_html = render_html_with_refs(instance)
 
@@ -428,10 +431,13 @@ def analyze_with_session():
         return jsonify({
             'success': True,
             'session_id': session_id,
+            'adapter': adapter,
             'rendered_html': rendered_html,
             'lint_report': lint_report
         })
 
+    except IngestError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
         logger.error("Analysis with session failed", exc_info=True)
         return jsonify({'success': False, 'error': 'Analysis failed. Please try again.'}), 500
