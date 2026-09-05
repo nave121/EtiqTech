@@ -38,3 +38,59 @@ the cheapest alternative (0.0) was worse on the one metric the brief cared about
 discriminates known-good from known-bad protocols for the themes tested (gap ≤ 0.35 on a 0–3
 scale, and the sign is wrong at 0.0/0.5). Any grounding gain in the next section is measured
 against that weak baseline; the retrieval eval must be read with the same caution.
+## Grounded vs ungrounded Layer 2 — 2026-09-05
+
+Model: `qwen3.6:27b-mlx` · blind pass only · temperature 0.2 · cases: 6 golden pairs · themes: target_l2_themes per case · retrieval: k=5 over `resources/corpus/guidance_il.jsonl`
+
+| condition | pairs | pair_acc | bad_hit | good_clean | gap | json_ok | cited | sec/call |
+|---|---|---|---|---|---|---|---|---|
+| ungrounded | 18 | 6% | 94% | 6% | +0.06 | 100% | — | 150 |
+| grounded | 18 | 0% | 94% | 6% | +0.00 | 100% | 100% | 176 |
+
+Per theme:
+
+| theme | condition | pairs | pair_acc | bad_hit | good_clean | gap | cited |
+|---|---|---|---|---|---|---|---|
+| N_and_justification | ungrounded | 1 | 0% | 100% | 0% | +0.00 | — |
+| N_and_justification | grounded | 1 | 0% | 100% | 0% | +0.00 | 100% |
+| euthanasia_and_endpoints | ungrounded | 4 | 0% | 100% | 0% | +0.00 | — |
+| euthanasia_and_endpoints | grounded | 4 | 0% | 100% | 0% | +0.00 | 100% |
+| harm_benefit_analysis | ungrounded | 2 | 0% | 100% | 0% | +0.00 | — |
+| harm_benefit_analysis | grounded | 2 | 0% | 100% | 0% | +0.00 | 100% |
+| personnel_and_training | ungrounded | 1 | 0% | 100% | 0% | +0.00 | — |
+| personnel_and_training | grounded | 1 | 0% | 100% | 0% | +0.00 | 100% |
+| scientific_coherence | ungrounded | 3 | 33% | 100% | 0% | +0.33 | — |
+| scientific_coherence | grounded | 3 | 0% | 100% | 0% | +0.00 | 100% |
+| severity_monitoring_analgesia | ungrounded | 5 | 0% | 80% | 20% | +0.00 | — |
+| severity_monitoring_analgesia | grounded | 5 | 0% | 80% | 20% | +0.00 | 100% |
+| sex_and_reuse | ungrounded | 1 | 0% | 100% | 0% | +0.00 | — |
+| sex_and_reuse | grounded | 1 | 0% | 100% | 0% | +0.00 | 100% |
+| three_Rs_alternatives | ungrounded | 1 | 0% | 100% | 0% | +0.00 | — |
+| three_Rs_alternatives | grounded | 1 | 0% | 100% | 0% | +0.00 | 100% |
+
+pair_acc = bad variant scored strictly below good on the same theme; bad_hit = bad scored <= 1; good_clean = good scored >= 2; gap = mean(good) - mean(bad); cited = grounded rationales citing a [Gn] source.
+
+
+**Reading (subset: 6 of 20 testable golden pairs, 72 calls, ~4 h GPU).** Grounding did not beat the
+baseline. Every grounded rationale cited at least one retrieved guidance section (cited 100%), so
+the plumbing works end to end, but pair accuracy went from 6% to 0%, the good/bad gap from +0.06
+to +0.00, and latency rose 17%. The sharper finding is about the baseline itself: this model, on
+the blind pass, scores almost every theme on almost every protocol at 0 or 1 (bad_hit 94% but
+good_clean only 6%). It flags the known-bad variants because it flags everything. Under that
+regime no prompt change can show a gain; the eval is measuring the model's ceiling, not the
+grounding.
+
+**Decision (per the handoff's exit criterion: no gain, do not ship).** `ETIQTECH_GROUNDING`
+stays **off by default**. The retrieval layer, corpus and citation UI remain in the tree as an
+opt-in, because the citations are the visible attribution path NORINA content will need, and
+because the eval must be rerun before the decision is final:
+
+1. on the production model (`qwen3.5:35b`) or a stronger local model, all 20 testable pairs
+   (`python scripts/eval_grounding.py --model <m>`; ~9 h on this machine at 27B speeds);
+2. with the full two-pass flow (blind → reconcile with linter findings), which is what users get
+   and which this harness does not exercise (blind pass only, for cost);
+3. after the Layer 2 rubric/prompt is checked against a model that separates good from bad at
+   all: until `good_clean` is well above 6% ungrounded, grounding cannot register.
+
+Caveats: blind pass only; 6 pairs; `three_Rs_alternatives` (the theme the brief most wanted to
+improve) has one pair in the subset and three in the whole golden set.
