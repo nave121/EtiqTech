@@ -118,14 +118,14 @@ def _normalize_he(line: str) -> str:
     glued to the following word, digits glued to letters. Fix the common ones — but leave
     URLs and Latin spans (EURL ECVAM, e-mail addresses) untouched: the rules are for Hebrew."""
     keep: list = []
-    # visual ')(Latin' is logical '(Latin)': fix before protecting Latin spans
-    line = re.sub(r"\)\(([A-Za-z][A-Za-z0-9 ._'-]*[A-Za-z0-9])", r"(\1)", line)
+    line = line.translate(_SWAP_PARENS)
+    # after the swap, a visual ')(Latin' has become '()Latin'; the logical form is '(Latin)'
+    line = re.sub(r"\(\)([A-Za-z][A-Za-z0-9 ._'-]*[A-Za-z0-9])", r"(\1)", line)
 
     def _stash(m):
         keep.append(m.group(0))
         return f"\x00{len(keep) - 1}\x00"
     line = _PROTECT.sub(_stash, line)
-    line = line.translate(_SWAP_PARENS)
     line = re.sub(r"\s+([.,;:!?])", r"\1", line)           # 'בלבד ,והשיקול' -> 'בלבד,והשיקול'
     line = re.sub(r"([.,;:!?])(?=[^\s\d.,;:!?)\]\x00])", r"\1 ", line)  # then one space after
     line = re.sub(r"(\d)(?=[א-ת])", r"\1 ", line)            # '1994חוקקה' -> '1994 חוקקה'
