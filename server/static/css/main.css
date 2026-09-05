@@ -178,25 +178,7 @@ body {
     background-color: var(--brand-primary-dark);
 }
 
-.btn-layer3 {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-4);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    border: 1px solid #99f6e4;
-    border-radius: var(--radius-md);
-    background: #f0fdfa;
-    color: #0d9488;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-    margin-bottom: var(--space-3);
-}
 
-.btn-layer3:hover {
-    background: #ccfbf1;
-}
 
 .btn-export {
     display: flex;
@@ -1455,7 +1437,6 @@ body {
     .inline-badge,
     .llm-verdict-badge,
     .error-marker,
-    .btn-layer3,
     .back-to-home,
     .layer3-results-panel {
         display: none !important;

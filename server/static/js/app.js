@@ -24,6 +24,7 @@
     const currentFileName = document.getElementById('current-file-name');
     const newAnalysisBtn = document.getElementById('new-analysis-btn');
     const exportPdfBtn = document.getElementById('export-pdf-btn');
+    const exportPdfLabel = document.getElementById('export-pdf-label');
 
     // Summary Cards
     const statusCard = document.getElementById('status-card');
@@ -56,7 +57,6 @@
     const llmProgressBody = document.getElementById('llm-progress-body');
 
     // Layer 3 DOM elements
-    const layer3Btn             = document.getElementById('layer3-btn');
     const layer3Card            = document.getElementById('layer3-card');
     const layer3StatusText      = document.getElementById('layer3-status-text');
     const layer3ProgressFill    = document.getElementById('layer3-progress-fill');
@@ -107,6 +107,8 @@
                 llmEnabled = false;
                 const sel = document.getElementById('model-selection');
                 if (sel) sel.hidden = true;
+                const sub = document.getElementById('loading-subtext');
+                if (sub) sub.textContent = 'Checking the form against the rules. A few seconds.';
                 return;
             }
             if (!data.success || !Array.isArray(data.providers) || data.providers.length === 0) return;
@@ -181,7 +183,6 @@
         setupNewAnalysisButton();
         setupExportButton();
         setupLLMMinimize();
-        if (layer3Btn) layer3Btn.addEventListener('click', startLayer3Review);
         setupFeedback();
         providerSelect.addEventListener('change', fetchModels);
         fetchProviders().then(fetchModels);  // providers first, then the model list for the chosen one
@@ -314,9 +315,9 @@
 
     function setExportReady(ready) {
         exportPdfBtn.disabled = !ready;
-        exportPdfBtn.title = ready
-            ? 'Save full report as PDF'
-            : 'Waiting for LLM verification to complete…';
+        exportPdfLabel.textContent = ready
+            ? 'Export PDF'
+            : 'Export PDF (ready when the review finishes)';
     }
 
     // LLM Minimize Setup
@@ -340,7 +341,6 @@
         }
         if (layer3EventSource) { layer3EventSource.close(); layer3EventSource = null; }
         layer3Results = null;
-        if (layer3Btn) layer3Btn.hidden = true;
         if (layer3Card) layer3Card.hidden = true;
         if (layer3ResultsDiv) { layer3ResultsDiv.innerHTML = ''; layer3ResultsDiv.hidden = true; }
         if (layer3ResultsPanel) { layer3ResultsPanel.hidden = true; }
@@ -372,7 +372,7 @@
     function resetLLMPanel() {
         setLLMStatus('waiting', 'Waiting for analysis...');
         llmProgressFill.style.width = '0%';
-        llmProgressText.textContent = `0 / ${TOTAL_LLM_THEMES} themes`;
+        llmProgressText.textContent = `0 of ${TOTAL_LLM_THEMES} topics`;
         llmThinking.classList.remove('active');
         thinkingContent.textContent = '';
         llmResultsSummary.innerHTML = '';
@@ -890,7 +890,7 @@
     // Start LLM Verification via SSE
     function startLLMVerification(sessionId) {
         resetLLMPanel();
-        setLLMStatus('running', 'Starting LLM review...');
+        setLLMStatus('running', 'Step 2 of 3: reading your protocol the way a reviewer would. Usually a few minutes.');
 
         llmEventSource = new EventSource(`/api/llm-verify-stream/${sessionId}`);
 
@@ -905,7 +905,7 @@
 
         llmEventSource.onerror = (error) => {
             console.error('SSE error:', error);
-            setLLMStatus('error', 'Connection lost');
+            setLLMStatus('error', 'Lost the connection to the AI reviewer. The rule checks are complete and your report is ready to export.');
             setExportReady(true);  // Don't block export on connection loss
             llmEventSource.close();
             llmEventSource = null;
@@ -1023,12 +1023,12 @@
 
     // Handle Theme Start
     function handleThemeStart(data) {
-        setLLMStatus('running', `Analyzing: ${data.label}`);
+        setLLMStatus('running', `Reading: ${data.label}`);
 
         // Update progress
         const progress = (data.progress / data.total) * 100;
         llmProgressFill.style.width = `${progress}%`;
-        llmProgressText.textContent = `${data.progress} / ${data.total} themes`;
+        llmProgressText.textContent = `${data.progress} of ${data.total} topics`;
 
         // Show thinking area
         llmThinking.classList.add('active');
@@ -1183,9 +1183,9 @@
         llmSummary.textContent = `${averageScore}/3 avg`;
 
         if (acceptableCount === totalCount) {
-            setLLMStatus('done', `All ${totalCount} themes scored 2+`);
+            setLLMStatus('done', `All ${totalCount} topics look adequate.`);
         } else {
-            setLLMStatus('done', `${acceptableCount}/${totalCount} themes scored 2+`);
+            setLLMStatus('done', `${acceptableCount} of ${totalCount} topics look adequate. ${totalCount - acceptableCount} need work.`);
         }
 
         // Hide LLM progress card after delay (export stays disabled until Layer 3 finishes)
@@ -1203,13 +1203,13 @@
         // Update print summary with LLM results
         updatePrintSummary();
 
-        // Auto-run Layer 3 immediately after Layer 2
+        // Auto-run Layer 3 as soon as the theme review completes
         startLayer3Review();
     }
 
     // Handle LLM Error
     function handleLLMError(data) {
-        setLLMStatus('error', `Error: ${data.message}`);
+        setLLMStatus('error', `The AI review could not finish (${data.message}). The rule checks are unaffected and your report is ready to export.`);
         llmThinking.classList.remove('active');
         llmSummary.textContent = 'Error';
         setExportReady(true);  // Don't block export on LLM failure
@@ -1221,18 +1221,13 @@
     }
 
     // -----------------------------------------------------------------------
-    // Layer 3 "Human Eye" holistic review
+    // Layer 3 holistic review (the "second read")
     // -----------------------------------------------------------------------
-
-    function showLayer3Button() {
-        if (layer3Btn) layer3Btn.hidden = false;
-    }
 
     function startLayer3Review() {
         if (!currentSessionId) return;
-        layer3Btn.hidden = true;
         layer3Card.hidden = false;
-        layer3StatusText.textContent = 'Starting Human Eye review...';
+        layer3StatusText.textContent = 'Step 3 of 3: a second, deeper read of the whole protocol. Runs only when something needs it.';
         layer3ProgressFill.style.width = '10%';
 
         layer3EventSource = new EventSource(
@@ -1243,7 +1238,7 @@
             catch (e) { console.error('Layer3 SSE parse error:', e); }
         };
         layer3EventSource.onerror = () => {
-            layer3StatusText.textContent = 'Connection lost';
+            layer3StatusText.textContent = 'Lost the connection to the AI reviewer. The rule checks are complete and your report is ready to export.';
             setExportReady(true);
             if (layer3EventSource) { layer3EventSource.close(); layer3EventSource = null; }
         };
@@ -1252,17 +1247,17 @@
     function handleLayer3Event(data) {
         switch (data.type) {
             case 'layer3_trigger':
-                layer3StatusText.textContent = `Triggered: ${escapeHtml(data.reason || '')}`;
+                layer3StatusText.textContent = `Second read, because: ${escapeHtml(data.reason || '')}`;
                 layer3ProgressFill.style.width = '20%';
                 break;
             case 'layer3_skip':
-                layer3StatusText.textContent = 'Skipped — no critical issues detected';
+                layer3StatusText.textContent = 'Second read not needed. Nothing serious came up.';
                 layer3ProgressFill.style.width = '100%';
                 setExportReady(true);
                 if (layer3EventSource) { layer3EventSource.close(); layer3EventSource = null; }
                 break;
             case 'pass_start':
-                layer3StatusText.textContent = `Pass ${data.pass}: ${escapeHtml(data.label || '')}`;
+                layer3StatusText.textContent = `Second read, part ${data.pass}: ${escapeHtml(data.label || '')}`;
                 layer3ProgressFill.style.width = data.pass === 1 ? '40%' : '70%';
                 layer3Thinking.classList.add('active');
                 layer3ThinkingContent.textContent = '';
@@ -1286,7 +1281,7 @@
                 if (layer3EventSource) { layer3EventSource.close(); layer3EventSource = null; }
                 break;
             case 'error':
-                layer3StatusText.textContent = `Error: ${escapeHtml(data.message || '')}`;
+                layer3StatusText.textContent = `The AI review could not finish (${escapeHtml(data.message || '')}). The rule checks are unaffected and your report is ready to export.`;
                 layer3Thinking.classList.remove('active');
                 setExportReady(true);
                 if (layer3EventSource) { layer3EventSource.close(); layer3EventSource = null; }
@@ -1296,7 +1291,7 @@
 
     function showLayer3Results(result) {
         if (!result || result.skipped) {
-            layer3StatusText.textContent = 'Human Eye review skipped';
+            layer3StatusText.textContent = 'Second read not needed. Nothing serious came up.';
             return;
         }
         const verdict  = result.overall_verdict || 'unknown';
@@ -1308,8 +1303,8 @@
         // Update floating card status text
         const isOk = verdict === 'approve' || verdict === 'ok';
         layer3StatusText.textContent = isOk
-            ? 'Human Eye: No critical issues'
-            : 'Human Eye: Issues found';
+            ? 'Second read: nothing serious.'
+            : 'Second read: found things to fix. They are in the panel below.';
 
         // Hide the floating card after a short delay (results go to full panel)
         setTimeout(() => { if (layer3Card) layer3Card.hidden = true; }, 3000);
@@ -1337,7 +1332,7 @@
 
         // Section findings
         if (sections.length > 0) {
-            html += `<div class="layer3-sections-title">Section Findings</div>`;
+            html += `<div class="layer3-sections-title">What the deeper read found</div>`;
             html += `<div class="layer3-sections-grid">`;
             sections.forEach(sec => {
                 const sev = (sec.severity || '').toLowerCase();
@@ -1353,7 +1348,7 @@
                         </div>
                         <div class="layer3-finding-text">${escapeHtml(sec.finding || '')}</div>
                         ${sec.explanation ? `<div class="layer3-finding-detail">${escapeHtml(sec.explanation)}</div>` : ''}
-                        ${sec.action_required ? `<div class="layer3-finding-action"><strong>Action:</strong> ${escapeHtml(sec.action_required)}</div>` : ''}
+                        ${sec.action_required ? `<div class="layer3-finding-action"><strong>What to change:</strong> ${escapeHtml(sec.action_required)}</div>` : ''}
                         ${sec.regulatory_basis ? `<div class="layer3-finding-reg">${escapeHtml(sec.regulatory_basis)}</div>` : ''}
                     </div>`;
             });
@@ -1362,7 +1357,7 @@
 
         // Cross-reference issues
         if (issues.length > 0) {
-            html += `<div class="layer3-sections-title">Cross-Reference Issues</div>`;
+            html += `<div class="layer3-sections-title">Things that contradict each other</div>`;
             html += `<ul class="layer3-issues-list">`;
             issues.forEach(iss => {
                 const issText = typeof iss === 'string' ? iss
