@@ -53,8 +53,12 @@ permanent · auth stays at the reverse proxy.
 6. On the 27B test model the blind pass barely separates good from bad protocols (see docs/benchmarks.md).
 7. `the_law.txt` is a word-reversed duplicate of the PDF text — candidate for deletion (rule: never delete without OK).
 
+## Running jobs (as of step 24)
+- Workflows: `linter-module-split` (main), `design-ux-implement` (design-ux), `sprint-audit` (read-only), `rule-coverage-fixtures` (rule-coverage), `research-statute-and-layer3` (read-only). Grounding eval subset on the GPU (`output/eval_grounding.jsonl`).
+
 ## Branches / worktrees
 - `design-ux` at `../EtiqTech-design`: design commits land here; merge into main after the linter split finishes (files disjoint except src/rules.py additive fields).
+- `rule-coverage` at `../EtiqTech-coverage`: coverage fixtures + test; merge after the split (touches examples/coverage, tests/, scripts/gen_rules_doc.py, docs/rules.md).
 
 ## How to resume
 ```bash
