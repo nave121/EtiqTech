@@ -55,7 +55,7 @@ version, profile, timestamp. No protocol text. `ETIQTECH_FEEDBACK=0` turns it of
 
 ## What "checked with EtiqTech" means for committee staff
 
-Every report ends with a provenance line, on screen and in the PDF:
+Every report carries a provenance line as the last line of the summary block at the top, on screen and on page 1 of the PDF:
 
 ```
 Checked with EtiqTech · ruleset 1.0.0 · profile default · 3 findings on <file> · AI review: not run
@@ -110,11 +110,12 @@ Numbers below were observed on a linter-only instance built from this repo, rule
    `special:nanomaterials`.
 
 5. Press **Show me where** on the first entry. The protocol scrolls to Experiment 1 and the
-   detail panel opens with the finding: what the check found, why it matters, what to change,
-   and the grey line `endpoints:20%-only · warning · ruleset 1.0.0 · profile default`.
+   detail panel opens with the findings for that experiment; each shows what the check found, why
+   it matters, what to change, and the grey line `endpoints:20%-only · warning · ruleset 1.0.0 ·
+   profile default (endpoints:20%-only:exp-1)`.
 
 6. Press **Export PDF**. The report prints from your browser with the summary as page 1 and the
-   provenance line at the end:
+   provenance line at the end of the summary block:
    `Checked with EtiqTech · ruleset 1.0.0 · profile default · 3 findings on bad_IL-001-01-2000.html · AI review: not run`.
 
 For the failing case, repeat with `examples/known-bad/bad.html`. The first line becomes:

@@ -1437,7 +1437,7 @@
     function handleLayer3Event(data) {
         switch (data.type) {
             case 'layer3_trigger':
-                layer3StatusText.textContent = `Second read, because: ${escapeHtml(data.reason || '')}`;
+                layer3StatusText.textContent = `Second read, because: ${data.reason || ''}`;  // textContent: no HTML escaping needed
                 layer3ProgressFill.style.width = '20%';
                 break;
             case 'layer3_skip':
@@ -1448,7 +1448,7 @@
                 if (layer3EventSource) { layer3EventSource.close(); layer3EventSource = null; }
                 break;
             case 'pass_start':
-                layer3StatusText.textContent = `Second read, part ${data.pass}: ${escapeHtml(data.label || '')}`;
+                layer3StatusText.textContent = `Second read, part ${data.pass}: ${data.label || ''}`;
                 layer3ProgressFill.style.width = data.pass === 1 ? '40%' : '70%';
                 layer3Thinking.classList.add('active');
                 layer3ThinkingContent.textContent = '';
@@ -1473,7 +1473,7 @@
                 if (layer3EventSource) { layer3EventSource.close(); layer3EventSource = null; }
                 break;
             case 'error':
-                layer3StatusText.textContent = `The AI review could not finish (${escapeHtml(data.message || '')}). The rule checks are unaffected and your report is ready to export.`;
+                layer3StatusText.textContent = `The AI review could not finish (${data.message || ''}). The rule checks are unaffected and your report is ready to export.`;
                 layer3Thinking.classList.remove('active');
                 setExportReady(true);
                 if (layer3EventSource) { layer3EventSource.close(); layer3EventSource = null; }
