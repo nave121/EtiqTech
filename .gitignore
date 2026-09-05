@@ -43,7 +43,7 @@ htmlcov/
 .env
 .env.*
 *.local
-k8s/ollama.yaml
+k8s/overlays/remote-llm/ollama-cloud-secret.yaml
 
 ### Logs
 *.log

@@ -1,9 +1,11 @@
+import ipaddress
 import json
 import logging
 import os
 import re
 import time
 from typing import Any, Dict, Generator, Optional
+from urllib.parse import urlsplit
 
 import requests
 
@@ -41,6 +43,61 @@ def _ollama_headers() -> Dict[str, str]:
 
 class LLMError(RuntimeError):
     """Raised when an LLM provider call fails."""
+
+
+# ---------------------------------------------------------------------------
+# Local-first gate (invariant: protocol data never leaves the machine by default)
+# ---------------------------------------------------------------------------
+_LOCAL_HOSTS = {"localhost", "host.docker.internal", "host.containers.internal", "gateway.docker.internal"}
+_LOCAL_SUFFIXES = (".svc", ".svc.cluster.local", ".cluster.local", ".internal", ".local", ".localhost", ".lan", ".home.arpa")
+REMOTE_LLM_FLAG = "ETIQTECH_ALLOW_REMOTE_LLM"
+
+
+def is_remote_llm_url(url: str) -> bool:
+    """True when the host is not loopback / private network / cluster-internal.
+
+    Local (no opt-in needed): localhost, 127.0.0.1, ::1, docker/podman host aliases,
+    RFC1918 / link-local / ULA IPs, single-label hostnames (k8s service names such as
+    `ollama`), and *.svc / *.cluster.local / *.internal / *.local names.
+    Everything else — public DNS names (ollama.com, api.openai.com) or public IPs — is remote.
+    """
+    host = (urlsplit(url).hostname or "").strip("[]").lower()
+    if not host:
+        return True  # unparsable -> treat as remote, fail closed
+    if host in _LOCAL_HOSTS or host.endswith(_LOCAL_SUFFIXES):
+        return False
+    try:
+        ip = ipaddress.ip_address(host)
+        return not (ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_reserved or ip.is_unspecified)
+    except ValueError:
+        pass
+    return "." in host  # single-label hostname = cluster/LAN service name
+
+
+def remote_llm_allowed() -> bool:
+    return os.getenv(REMOTE_LLM_FLAG, "").strip().lower() in ("1", "true", "yes")
+
+
+def ollama_base_url() -> str:
+    """Resolve OLLAMA_BASE_URL and enforce the local-first gate before any request is built.
+
+    Raises LLMError (nothing is sent) when the endpoint is remote and the operator has
+    not set ETIQTECH_ALLOW_REMOTE_LLM=1. The flag is the explicit, informed opt-in.
+    """
+    url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+    if is_remote_llm_url(url) and not remote_llm_allowed():
+        raise LLMError(
+            f"OLLAMA_BASE_URL={url} is not a local/cluster-internal endpoint. Protocol text would leave "
+            f"this machine. Refusing to send. Set {REMOTE_LLM_FLAG}=1 only if that is an informed decision."
+        )
+    return url
+
+
+def local_first_status() -> Dict[str, Any]:
+    """For startup logging and /api/health: where would protocol text go?"""
+    url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+    remote = is_remote_llm_url(url)
+    return {"ollama_host": urlsplit(url).hostname, "remote": remote, "remote_allowed": remote_llm_allowed()}
 
 
 def estimate_tokens(text: str) -> int:
@@ -148,7 +205,7 @@ def _call_ollama(
     temperature: Optional[float],
     max_tokens: Optional[int],
 ) -> str:
-    base_url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+    base_url = ollama_base_url()
     endpoint = f"{base_url}/api/generate"
     timeout = _env_float("OLLAMA_TIMEOUT_SECONDS", 120)
 
@@ -217,7 +274,7 @@ def call_llm_two_step(
         return call_llm(prompt, model=model, temperature=temperature, max_tokens=max_tokens)
 
     resolved_model = model or os.getenv("OLLAMA_MODEL", "qwen3.5:35b")
-    base_url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+    base_url = ollama_base_url()
     endpoint = f"{base_url}/api/chat"
     timeout = _env_float("OLLAMA_TIMEOUT_SECONDS", 300)
 
@@ -331,7 +388,7 @@ def _call_ollama_stream(
     max_tokens: Optional[int],
 ) -> Generator[str, None, None]:
     """Stream tokens from Ollama API."""
-    base_url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+    base_url = ollama_base_url()
     endpoint = f"{base_url}/api/generate"
     timeout = _env_float("OLLAMA_TIMEOUT_SECONDS", 300)
 

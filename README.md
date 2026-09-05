@@ -114,6 +114,7 @@ EtiqTech reviews protocols in three layers:
 |----------|---------|-------------|
 | `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | Ollama server URL |
 | `OLLAMA_MODEL` | `qwen3.5:35b` | Model for verification |
+| `ETIQTECH_ALLOW_REMOTE_LLM` | unset | `1` to permit a non-local `OLLAMA_BASE_URL` (protocol text leaves the machine) |
 | `LLM_TEMPERATURE` | `0.2` | Sampling temperature |
 | `LLM_MAX_TOKENS` | `8192` | Max output tokens |
 | `OLLAMA_NUM_CTX` | `32768` | Context window size |
@@ -173,7 +174,12 @@ The aim is to keep the deterministic linter as the backbone, while making the LL
 ## Security
 
 EtiqTech runs **locally** with no authentication. Do not expose to the public
-internet without an auth layer. No data is sent to external services.
+internet without an auth layer (Cloudflare Access is the reference pattern).
+No data is sent to external services **when configured with local Ollama (the
+default)**: the app refuses to talk to a non-local LLM endpoint unless
+`ETIQTECH_ALLOW_REMOTE_LLM=1` is set explicitly, and logs a warning when it is.
+Protocols are held in memory only (~1 hour) and never written to disk or logs —
+see [PRIVACY.md](PRIVACY.md).
 
 See [SECURITY.md](SECURITY.md) for the full policy and threat model.
 

@@ -17,6 +17,7 @@ import requests as http_requests
 from src.html_to_json import parse_html
 from src.linter_renderer import lint, render_html_with_refs
 from src.llm_agent import law_loaded, run_verification_stream
+from src.llm_clients import LLMError, local_first_status, ollama_base_url
 from src.llm_layer3 import run_human_eye_stream
 
 # ── Security note ──────────────────────────────────────────────────
@@ -33,6 +34,20 @@ logging.basicConfig(
     format='%(asctime)s [%(name)s] %(levelname)s %(message)s',
 )
 logger = logging.getLogger(__name__)
+
+_llm_target = local_first_status()
+if _llm_target["remote"] and not _llm_target["remote_allowed"]:
+    logger.error(
+        "OLLAMA_BASE_URL points at a REMOTE host (%s) and ETIQTECH_ALLOW_REMOTE_LLM is not set. "
+        "LLM calls will be refused so no protocol text leaves this machine; the linter still works.",
+        _llm_target["ollama_host"],
+    )
+elif _llm_target["remote"]:
+    logger.warning(
+        "REMOTE LLM ENABLED: protocol text will be sent to %s (ETIQTECH_ALLOW_REMOTE_LLM=1). "
+        "This deployment is NOT local-first. Make sure your privacy notice says so.",
+        _llm_target["ollama_host"],
+    )
 
 if not law_loaded():
     logger.warning(
@@ -224,7 +239,13 @@ def analyze():
 @app.route('/api/health', methods=['GET'])
 def health():
     """Health check. law_loaded=false means the runtime law corpus is missing (see resources/law/)."""
-    return jsonify({'status': 'ok', 'law_loaded': law_loaded()})
+    target = local_first_status()
+    return jsonify({
+        'status': 'ok',
+        'law_loaded': law_loaded(),
+        'llm_local': not target['remote'],
+        'llm_remote_allowed': target['remote_allowed'],
+    })
 
 
 # Store analysis results temporarily for LLM verification.
@@ -266,8 +287,8 @@ def _get_session(session_id):
 @app.route('/api/ollama-models')
 def ollama_models():
     """Proxy Ollama /api/tags to list available models."""
-    base_url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
     try:
+        base_url = ollama_base_url()  # same local-first gate as the LLM calls
         resp = http_requests.get(f"{base_url}/api/tags", timeout=5)
         resp.raise_for_status()
         data = resp.json()

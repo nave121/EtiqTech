@@ -1,0 +1,41 @@
+# =============================================================================
+#  !! REMOTE LLM VARIANT — READ BEFORE APPLYING !!
+#
+#  This patch points EtiqTech at Ollama Cloud. Every protocol a researcher
+#  uploads — unpublished, unsubmitted research — is sent to a third party.
+#  That contradicts the project's default privacy promise ("your protocols
+#  never leave your machine"), needs its own privacy notice to users, and in
+#  the EU is a GDPR / institutional data-processing conversation.
+#
+#  The app enforces this: without ETIQTECH_ALLOW_REMOTE_LLM=1 it refuses to
+#  send anything to a non-local host. Setting the flag is your informed opt-in
+#  and is logged as a WARNING at startup. Remove the NetworkPolicy egress
+#  restriction (k8s/network-policy.yaml) or add an egress rule for the
+#  provider, or the connection will be blocked anyway.
+#
+#  Apply as a strategic-merge patch on top of the base:
+#    kubectl create secret generic ollama-cloud --from-literal=api-key=<key>
+#    kubectl apply -f k8s/ethicchecker.yaml
+#    kubectl patch deployment ethicchecker --patch-file k8s/overlays/remote-llm/ethicchecker-remote-llm.yaml
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ethicchecker
+spec:
+  template:
+    spec:
+      containers:
+        - name: ethicchecker
+          env:
+            - name: OLLAMA_BASE_URL
+              value: "https://ollama.com"
+            - name: OLLAMA_MODEL
+              value: "qwen3.5:397b-cloud"
+            - name: OLLAMA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ollama-cloud
+                  key: api-key
+            - name: ETIQTECH_ALLOW_REMOTE_LLM
+              value: "1"
