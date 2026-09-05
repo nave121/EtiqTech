@@ -4,6 +4,9 @@ AI-powered ethics review pipeline for animal research protocols (IACUC).
 Parses institutional HTML exports into structured JSON, lints against
 Israeli animal welfare law, and optionally verifies with a local LLM.
 
+Evaluating it for your institution? Read [docs/START-HERE.md](docs/START-HERE.md): one page on
+what it is, where the data goes, what it costs to run, and a five-minute linter-only walk-through.
+
 > **Disclaimer**: This tool is provided **as-is** for research and educational
 > purposes only. It is **not** a substitute for professional legal, veterinary,
 > or regulatory advice. The authors accept no responsibility for decisions made
