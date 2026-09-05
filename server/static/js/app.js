@@ -876,7 +876,8 @@
     // so the UI has exactly one wording.
     function advisoryNotice() {
         const el = document.querySelector('[data-advisory]');
-        return el ? el.textContent.trim() : 'Advisory only: LLM findings do not replace committee review.';
+        if (!el) console.error('advisory notice missing from template');  // no second wording lives in JS
+        return el ? el.textContent.trim() : '';
     }
 
     // Context-budget (and future) warnings from the server: visible, not dismissable, escaped.

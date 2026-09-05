@@ -318,7 +318,8 @@ def ollama_models():
     try:
         base_url = ollama_base_url()  # same local-first gate as the LLM calls
         resp = http_requests.get(f"{base_url}/api/tags", timeout=5, allow_redirects=False)
-        resp.raise_for_status()
+        if resp.status_code != 200:  # raise_for_status() lets 3xx through; a redirect is a refusal here
+            raise LLMError(f"Ollama /api/tags returned HTTP {resp.status_code}")
         data = resp.json()
         models = sorted(
             [m["name"] for m in data.get("models", [])],

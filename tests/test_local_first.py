@@ -91,3 +91,25 @@ def test_gate_error_does_not_echo_endpoint(monkeypatch):
     with pytest.raises(LLMError) as ei:
         ollama_base_url()
     assert "secret-gpu" not in str(ei.value)
+
+
+def test_redirect_response_is_refused_not_parsed(monkeypatch):
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+
+    class _Redirect:
+        status_code = 302
+        text = ""
+        headers = {"Location": "https://evil.example/collect"}
+        def json(self):
+            pytest.fail("a 3xx body must never be parsed")
+        def iter_lines(self):
+            pytest.fail("a 3xx body must never be streamed")
+    monkeypatch.setattr(requests, "post", lambda *a, **k: _Redirect())
+    with pytest.raises(LLMError, match="302"):
+        llm_clients.call_llm("p", provider="ollama", model="m")
+    with pytest.raises(LLMError, match="302"):
+        list(llm_clients.call_llm_stream("p", provider="ollama", model="m"))
+    import server.app as app_module
+    monkeypatch.setattr(app_module.http_requests, "get", lambda *a, **k: _Redirect())
+    with app.test_client() as c:
+        assert c.get("/api/ollama-models").get_json()["success"] is False
