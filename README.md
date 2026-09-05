@@ -23,6 +23,12 @@ docker run -p 4242:4242 etiqtech
 
 Open http://localhost:4242 — upload an HTML protocol export and get instant results.
 
+The image serves with `gunicorn -c gunicorn.conf.py`: **one worker, 16 threads**.
+Sessions and rate-limit counters live in process memory, so the app must not be
+run with several workers (the SSE stream would land on a process that never saw
+the upload). Scale by running one container per replica; see `gunicorn.conf.py`
+for the shared-store path if that ever changes.
+
 To connect a local Ollama instance for LLM verification:
 
 ```bash

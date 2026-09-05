@@ -42,6 +42,12 @@ if not _secret and os.getenv('FLASK_ENV') == 'production':
     raise ValueError("SECRET_KEY environment variable must be set in production")
 app.config['SECRET_KEY'] = _secret or os.urandom(32).hex()
 
+# RATELIMIT_ENABLED=false disables limiting (load tests, tests/test_gunicorn_sessions.py).
+app.config['RATELIMIT_ENABLED'] = os.getenv('RATELIMIT_ENABLED', 'true').lower() not in ('0', 'false', 'no')
+
+# NOTE: memory:// storage is per-process. With gunicorn.conf.py (1 worker) that is
+# one shared counter; if the app is ever run with several workers or replicas,
+# point storage_uri at a shared store (e.g. redis://) or limits become per-process.
 limiter = Limiter(
     get_remote_address,
     app=app,
