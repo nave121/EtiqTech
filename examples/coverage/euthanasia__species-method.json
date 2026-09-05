@@ -1,0 +1,114 @@
+{
+  "header": {
+    "protocol_id": "90001",
+    "institution": "Example Institute"
+  },
+  "research": {
+    "title_he": "פרוטוקול דוגמה",
+    "title_en": "Coverage fixture: cervical dislocation in guinea pigs",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 1,
+    "sites": [
+      {
+        "name": "Example Institute animal facility"
+      }
+    ]
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "000000000",
+    "last_name_he": "אקסמפל",
+    "first_name_he": "עדה",
+    "last_name_en": "Example",
+    "first_name_en": "Ada",
+    "email": "ada.example@example.edu",
+    "phone_primary": "000-0000000",
+    "institutional_cert_no": "EX-0001"
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Synthetic protocol used to exercise one linter rule on the euthanasia block.",
+    "lay_he_≤150w": "פרוטוקול סינתטי לבדיקת כלל אחד."
+  },
+  "alternatives_search": {
+    "engines": [
+      "PubMed"
+    ],
+    "date": "2026-09-01",
+    "queries": [
+      "synthetic coverage query"
+    ],
+    "conclusion": "No in vitro replacement identified."
+  },
+  "animals_total": [
+    {
+      "species": "guinea pig",
+      "strain": "Dunkin Hartley",
+      "sex": "both",
+      "genetic_status": "wild type",
+      "source": "vendor",
+      "n_total": 8
+    }
+  ],
+  "n_justification": {
+    "method": "power",
+    "details": "Power analysis: alpha 0.05, power 0.8, effect size from pilot data; two groups of equal size."
+  },
+  "experiments": [
+    {
+      "label": "Guinea pig auditory study",
+      "animals": {
+        "species": "guinea pig",
+        "strain": "Dunkin Hartley",
+        "genetic_status": "wild type",
+        "sex": "both",
+        "n": 8,
+        "age": {
+          "value": 12,
+          "unit": "weeks"
+        },
+        "source": "vendor",
+        "species_standard": "guinea_pig"
+      },
+      "housing": {
+        "group_housed": false,
+        "enrichment": "standard"
+      },
+      "rationale_species_strain_sex": "Standard model for this endpoint; both sexes included.",
+      "procedure_timeline": [
+        {
+          "day_or_timepoint": "Day 0",
+          "step": "Auditory brainstem response recording under anesthesia"
+        }
+      ],
+      "severity_level_1_to_5": 1,
+      "monitoring": {
+        "initial_72h_daily": true,
+        "ongoing_per_week": 3,
+        "parameters": [
+          "weight",
+          "posture"
+        ],
+        "documentation": "Cage card and monitoring sheet"
+      },
+      "humane_endpoints": {
+        "general": [
+          "Weight loss above 20%"
+        ]
+      },
+      "euthanasia": {
+        "primary": "cervical dislocation",
+        "method_standard": "cervical_dislocation",
+        "parameters": "Performed by trained personnel",
+        "confirmation": "Absence of heartbeat"
+      },
+      "fate": "euthanasia"
+    }
+  ],
+  "pi_declaration": {
+    "name": "Ada Example",
+    "date": "2026-09-01"
+  }
+}

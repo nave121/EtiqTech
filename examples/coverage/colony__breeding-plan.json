@@ -1,0 +1,117 @@
+{
+  "header": {
+    "protocol_id": "90001",
+    "institution": "Example Institute"
+  },
+  "research": {
+    "title_he": "פרוטוקול לדוגמה",
+    "title_en": "Maintenance of an inbred mouse line",
+    "request_type": "colony",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 1,
+    "sites": [
+      {
+        "name": "Example Institute animal facility"
+      }
+    ]
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "000000000",
+    "last_name_he": "אקסמפל",
+    "first_name_he": "עדה",
+    "last_name_en": "Example",
+    "first_name_en": "Ada",
+    "email": "ada.example@example.edu",
+    "phone_primary": "000-0000000",
+    "institutional_cert_no": "EX-0001"
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Synthetic protocol used only to exercise one linter rule.",
+    "lay_he_≤150w": "פרוטוקול סינתטי לבדיקת כלל בודק אחד."
+  },
+  "alternatives_search": {
+    "engines": [
+      "PubMed"
+    ],
+    "date": "2026-09-01",
+    "queries": [
+      "synthetic coverage query"
+    ],
+    "conclusion": "No replacement found."
+  },
+  "animals_total": [
+    {
+      "species": "mouse",
+      "strain": "C57BL/6",
+      "sex": "M",
+      "genetic_status": "wild type",
+      "source": "vendor",
+      "n_total": 20
+    }
+  ],
+  "n_justification": {
+    "method": "power",
+    "details": "Group size from prior effect size, alpha 0.05, power 0.8."
+  },
+  "experiments": [
+    {
+      "label": "Line maintenance",
+      "animals": {
+        "species": "mouse",
+        "strain": "C57BL/6",
+        "genetic_status": "wild type",
+        "sex": "M",
+        "n": 20,
+        "age": {
+          "value": 8.0,
+          "unit": "weeks"
+        },
+        "source": "vendor"
+      },
+      "housing": {
+        "group_housed": false,
+        "enrichment": "standard"
+      },
+      "rationale_species_strain_sex": "Standard inbred mouse model.",
+      "procedure_timeline": [
+        {
+          "day_or_timepoint": "Day 0",
+          "step": "Ear notch for identification"
+        },
+        {
+          "day_or_timepoint": "Day 1",
+          "step": "Tail-tip genotyping"
+        }
+      ],
+      "severity_level_1_to_5": 1,
+      "monitoring": {
+        "initial_72h_daily": true,
+        "ongoing_per_week": 3,
+        "parameters": [
+          "weight",
+          "posture"
+        ],
+        "documentation": "Cage card"
+      },
+      "humane_endpoints": {
+        "general": [
+          "Weight loss over 20%"
+        ]
+      },
+      "euthanasia": {
+        "primary": "CO2",
+        "parameters": "30% chamber volume per minute",
+        "confirmation": "Cervical dislocation"
+      },
+      "fate": "euthanasia"
+    }
+  ],
+  "pi_declaration": {
+    "name": "Ada Example",
+    "date": "2026-09-01"
+  },
+  "is_colony": true
+}

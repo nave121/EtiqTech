@@ -12,6 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from src.adapters import parse_canonical_json  # noqa: E402
 from src.html_to_json import parse_html  # noqa: E402
 from src.linter_renderer import lint  # noqa: E402
 from src.rules import RULES, RULESET_VERSION, rule_id_from_ref  # noqa: E402
@@ -22,8 +23,11 @@ OUT = ROOT / "docs" / "rules.md"
 def coverage():
     """Per rule: number of fixture files on which the check fires (fail) and appears at all, under either profile."""
     fires, appears, unregistered = Counter(), Counter(), Counter()
-    for path in sorted(set(glob.glob(str(ROOT / "examples" / "**" / "*.html"), recursive=True))):
-        instance = parse_html(Path(path).read_text(encoding="utf-8"))
+    paths = set(glob.glob(str(ROOT / "examples" / "**" / "*.html"), recursive=True))
+    paths |= set(glob.glob(str(ROOT / "examples" / "coverage" / "*.json")))
+    for path in sorted(paths):
+        text = Path(path).read_text(encoding="utf-8")
+        instance = parse_canonical_json(text) if path.endswith(".json") else parse_html(text)
         seen_fire, seen_any = set(), set()
         for profile in ("default", "strict_law"):
             for item in lint(instance, profile=profile)["checklist"]:
@@ -53,7 +57,7 @@ def render():
         "`kind` follows the linter's severity classes (structural / law_critical / advisory; `required` is the missing-field family). "
         "`jurisdiction` is a first-pass tag for Phase 3.2 — **IL-form** = specific to the Israeli Council request form or Israeli law, "
         "**generic** = welfare/science checks any jurisdiction would keep; the maintainer should review these tags before they drive a pack split. "
-        "`fixtures` = number of example HTML files (of the whole `examples/` tree, both profiles) on which the rule fires / appears at all.",
+        "`fixtures` = number of example files (every HTML file under `examples/` plus the synthetic canonical-JSON fixtures in `examples/coverage/`, both profiles) on which the rule fires / appears at all.",
         "",
         "Versioning: `RULESET_VERSION` (in `src/rules.py`) is bumped whenever a rule is added, removed, or its trigger changes, "
         "so a report's `ruleset_version` says which rules it was reviewed under.",
@@ -68,6 +72,7 @@ def render():
     lines += ["## Coverage gaps", "",
               f"{len(never)} rules never appear on any fixture (they only emit a checklist item when they fire, and no fixture trips them): "
               + ", ".join(f"`{i}`" for i in never) + ".", "",
+              "Rules that cannot be reached from canonical JSON (the schema rejects the instance before the linter runs) are documented in `examples/coverage/README.md`.", "",
               "Unregistered references seen on fixtures: " + (", ".join(f"`{k}`" for k in sorted(unregistered)) if unregistered else "none") + ".", ""]
     return "\n".join(lines)
 
