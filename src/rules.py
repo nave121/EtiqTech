@@ -116,9 +116,12 @@ def rule_id_from_ref(ref: Optional[str]) -> Optional[str]:
 
 
 def annotate_report(report: Dict[str, Any]) -> Dict[str, Any]:
-    """Add `rule_id` to every checklist item and `ruleset_version` to the report. In place."""
+    """Add `rule_id`, `rule_title`, `rule_kind` to every checklist item and `ruleset_version` to the report. In place."""
     for item in report.get("checklist") or []:
         item["rule_id"] = rule_id_from_ref(item.get("reference"))
+        rule = RULES.get(item["rule_id"]) if item["rule_id"] else None
+        item["rule_title"] = rule.title if rule else None
+        item["rule_kind"] = rule.kind if rule else None
     report["ruleset_version"] = RULESET_VERSION
     return report
 
