@@ -52,3 +52,23 @@ jobs:
         run: |
           pip install bandit
           bandit -r src/ server/ -ll -q
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t etiqtech:ci .
+
+      - name: Run image and assert the law corpus is inside it
+        run: |
+          docker run -d --name etiqtech -p 4242:4242 etiqtech:ci
+          for i in $(seq 1 30); do
+            if curl -fs localhost:4242/api/health >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fs localhost:4242/api/health | tee health.json
+          python3 -c "import json; h=json.load(open('health.json')); assert h['law_loaded'] is True, h"
+          docker logs etiqtech 2>&1 | grep -q "LAW TEXT NOT FOUND" && { echo 'law warning present in logs'; exit 1; } || true
+          docker rm -f etiqtech

@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 from pathlib import Path
@@ -9,8 +10,18 @@ from .schema import IACUC_SCHEMA_V2
 from .xmeta_catalog import load_high_leverage_catalog
 
 PROMPTS_DIR = Path(__file__).parent.parent / "llm"
-LAW_PATH = Path(__file__).parent.parent / "examples" / "general-concepts" / "the_law-english_translation.txt"
+LAW_PATH = Path(__file__).parent.parent / "resources" / "law" / "the_law-english_translation.txt"
 HEAD_TO_HEAD_DIR = Path(__file__).parent.parent / "examples" / "head-to-head"
+
+logger = logging.getLogger(__name__)
+
+
+def law_loaded() -> bool:
+    """True when the law text is present and non-empty (surfaced in /api/health)."""
+    try:
+        return LAW_PATH.stat().st_size > 0
+    except OSError:
+        return False
 
 GRADE_LABELS = {
     0: "not_addressed",
@@ -251,10 +262,17 @@ def load_prompt(filename: str) -> str:
     return (PROMPTS_DIR / filename).read_text(encoding="utf-8")
 
 
+_law_missing_warned = False
+
+
 def _load_law_text(max_chars: int = 1200) -> str:
-    if LAW_PATH.exists():
+    global _law_missing_warned
+    if law_loaded():
         text = LAW_PATH.read_text(encoding="utf-8")
         return text[:max_chars]
+    if not _law_missing_warned:
+        logger.warning("Law text missing at %s — LLM review runs WITHOUT law grounding", LAW_PATH)
+        _law_missing_warned = True
     return ""
 
 

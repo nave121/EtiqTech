@@ -16,6 +16,7 @@ COPY gunicorn.conf.py .
 COPY src/ src/
 COPY server/ server/
 COPY llm/ llm/
+COPY resources/ resources/
 COPY examples/known-good/ examples/known-good/
 COPY examples/head-to-head/ examples/head-to-head/
 

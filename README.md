@@ -136,13 +136,16 @@ PYTHONPATH=. python scripts/batch_process.py examples/known-good/ --fail-on-erro
 
 ---
 
+## Runtime resources
+
+- `resources/law/` — Israeli animal welfare law (Hebrew + English translation) and the 2025 national guidance PDF. Loaded at runtime; `/api/health` reports `law_loaded`.
+
 ## Examples
 
 - `examples/known-good/` — approved fixtures for regression testing
 - `examples/known-bad/` — fixtures with known issues
 - `examples/head-to-head/` — paired bad/good versions with committee reasoning
 - `examples/golden-dataset/` — 28 canonical test pairs (synthetic + adversarial)
-- `examples/general-concepts/` — Israeli animal welfare law (English translation)
 
 ---
 

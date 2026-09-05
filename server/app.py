@@ -14,7 +14,7 @@ import requests as http_requests
 
 from src.html_to_json import parse_html
 from src.linter_renderer import lint, render_html_with_refs
-from src.llm_agent import run_verification_stream
+from src.llm_agent import law_loaded, run_verification_stream
 from src.llm_layer3 import run_human_eye_stream
 
 # ── Security note ──────────────────────────────────────────────────
@@ -24,6 +24,12 @@ from src.llm_layer3 import run_human_eye_stream
 # ───────────────────────────────────────────────────────────────────
 
 logger = logging.getLogger(__name__)
+
+if not law_loaded():
+    logger.warning(
+        "LAW TEXT NOT FOUND — resources/law/ is missing from this deployment; "
+        "LLM review will run without law grounding. /api/health reports law_loaded=false."
+    )
 
 app = Flask(__name__,
             template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
@@ -195,8 +201,8 @@ def analyze():
 
 @app.route('/api/health', methods=['GET'])
 def health():
-    """Health check endpoint."""
-    return jsonify({'status': 'ok'})
+    """Health check. law_loaded=false means the runtime law corpus is missing (see resources/law/)."""
+    return jsonify({'status': 'ok', 'law_loaded': law_loaded()})
 
 
 # Store analysis results temporarily for LLM verification

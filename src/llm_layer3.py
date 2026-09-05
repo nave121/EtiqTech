@@ -24,11 +24,11 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
+from .llm_agent import LAW_PATH
 from .llm_clients import call_llm, call_llm_stream
 from .xmeta_catalog import load_high_leverage_catalog
 
 PROMPTS_DIR = Path(__file__).parent.parent / "llm"
-LAW_PATH = Path(__file__).parent.parent / "examples" / "general-concepts" / "the_law-english_translation.txt"
 HEAD_TO_HEAD_DIR = Path(__file__).parent.parent / "examples" / "head-to-head"
 
 # ---------------------------------------------------------------------------
