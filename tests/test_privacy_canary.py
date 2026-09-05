@@ -7,6 +7,7 @@ marker back, at DEBUG level, while everything the process emits is captured.
 If the marker shows up anywhere, a new code path is leaking protocol content.
 """
 import json
+import re
 import types
 import logging
 import uuid
@@ -159,7 +160,11 @@ def test_invalid_llm_json_path_never_logs_response(marker, monkeypatch, caplog, 
     # (findings are findings, not a dump of whatever the model said); only the error type may appear
     assert marker not in json.dumps(events[-1]["result"], ensure_ascii=False)
     assert marker not in json.dumps([e for e in l3 if e["type"] != "token"], ensure_ascii=False)
-    assert not any(marker in e.get("token", "") and "error" in e.get("token", "") for e in l3 if e["type"] == "token")
+    error_tokens = [e["token"] for e in l3 if e["type"] == "token" and e["token"].startswith("\n[Layer 3 Pass")]
+    assert error_tokens, "fixture must trigger the fallback error token on both passes"
+    for tok in error_tokens:
+        assert marker not in tok
+        assert re.fullmatch(r"\n\[Layer 3 Pass \d+ error: \w+\]", tok), tok  # only an exception class name may appear
     _assert_clean(marker, caplog, capfd)
 
 
