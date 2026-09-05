@@ -234,6 +234,17 @@ def call_llm(
     return _call_anthropic(prompt, model=resolved_model, max_tokens=max_tokens)
 
 
+def _ollama_error_hint(response) -> str:
+    """Ollama's error JSON is a short operator message ('model not found'); keep that, never the raw body."""
+    if not 400 <= getattr(response, "status_code", 0) < 600:
+        return ""  # a 3xx (refused redirect) has no error body worth reading
+    try:
+        err = response.json().get("error")
+    except Exception:
+        return ""
+    return f": {str(err)[:120]}" if isinstance(err, str) and err else ""
+
+
 def _log_ollama_stats(body: Dict[str, Any], wall_secs: float, label: str = "") -> None:
     """Log Ollama timing stats. Durations in body are nanoseconds."""
     ns = 1_000_000_000
@@ -288,7 +299,7 @@ def _call_ollama(
     response = requests.post(endpoint, json=payload, headers=_ollama_headers(), timeout=timeout, allow_redirects=False)
     elapsed = time.time() - t0
     if response.status_code != 200:
-        raise LLMError(f"Ollama responded with HTTP {response.status_code}: {response.text}")
+        raise LLMError(f"Ollama responded with HTTP {response.status_code}{_ollama_error_hint(response)}")
 
     try:
         body = response.json()
@@ -300,7 +311,7 @@ def _call_ollama(
     text = body.get("response")
     if not isinstance(text, str) or not text.strip():
         # Surface the full body so callers can debug provider-side issues.
-        raise LLMError(f"Ollama response missing or empty 'response' text payload: {body!r}")
+        raise LLMError("Ollama response missing or empty 'response' text payload")
 
     return text.strip()
 
@@ -356,7 +367,7 @@ def call_llm_two_step(
     resp1 = requests.post(endpoint, json=step1_payload, headers=_ollama_headers(), timeout=timeout, allow_redirects=False)
     elapsed1 = time.time() - t0
     if resp1.status_code != 200:
-        raise LLMError(f"Ollama (step 1) responded with HTTP {resp1.status_code}: {resp1.text}")
+        raise LLMError(f"Ollama (step 1) responded with HTTP {resp1.status_code}{_ollama_error_hint(resp1)}")
 
     try:
         body1 = resp1.json()
@@ -392,7 +403,7 @@ def call_llm_two_step(
     resp2 = requests.post(endpoint, json=step2_payload, headers=_ollama_headers(), timeout=timeout, allow_redirects=False)
     elapsed2 = time.time() - t2
     if resp2.status_code != 200:
-        raise LLMError(f"Ollama (step 2) responded with HTTP {resp2.status_code}: {resp2.text}")
+        raise LLMError(f"Ollama (step 2) responded with HTTP {resp2.status_code}{_ollama_error_hint(resp2)}")
 
     try:
         body2 = resp2.json()
@@ -403,7 +414,7 @@ def call_llm_two_step(
 
     text = (body2.get("message") or {}).get("content")
     if not isinstance(text, str) or not text.strip():
-        raise LLMError(f"Ollama two-step step-2 returned empty content: {body2!r}")
+        raise LLMError("Ollama two-step step-2 returned empty content")
 
     return text.strip()
 
@@ -467,7 +478,7 @@ def _call_ollama_stream(
     t0 = time.time()
     response = requests.post(endpoint, json=payload, headers=_ollama_headers(), timeout=timeout, allow_redirects=False, stream=True)
     if response.status_code != 200:
-        raise LLMError(f"Ollama responded with HTTP {response.status_code}: {response.text}")
+        raise LLMError(f"Ollama responded with HTTP {response.status_code}{_ollama_error_hint(response)}")
 
     first_token = True
     for line in response.iter_lines():
@@ -518,7 +529,7 @@ def _call_openai_compat(prompt: str, *, model: str, temperature: Optional[float]
     resp = requests.post(endpoint, json=_openai_payload(prompt, model, temperature, max_tokens, False),
                          headers=_openai_headers(), timeout=timeout, allow_redirects=False)
     if resp.status_code != 200:
-        logger.warning("openai-compat HTTP %s: %s", resp.status_code, resp.text[:300])  # body stays in the server log
+        logger.warning("openai-compat HTTP %s (%d-byte body not logged)", resp.status_code, len(resp.text or ""))
         raise LLMError(f"OpenAI-compatible endpoint responded with HTTP {resp.status_code}")
     try:
         body = resp.json()
@@ -539,7 +550,7 @@ def _call_openai_compat_stream(prompt: str, *, model: str, temperature: Optional
     resp = requests.post(endpoint, json=_openai_payload(prompt, model, temperature, max_tokens, True),
                          headers=_openai_headers(), timeout=timeout, stream=True, allow_redirects=False)
     if resp.status_code != 200:
-        logger.warning("openai-compat/stream HTTP %s: %s", resp.status_code, resp.text[:300])
+        logger.warning("openai-compat/stream HTTP %s (body not logged)", resp.status_code)
         raise LLMError(f"OpenAI-compatible endpoint responded with HTTP {resp.status_code}")
     for line in resp.iter_lines():
         if not line:
@@ -556,9 +567,10 @@ def _call_openai_compat_stream(prompt: str, *, model: str, temperature: Optional
             continue
         if isinstance(chunk, dict) and chunk.get("error"):
             # gateways report rate limits / overflow mid-stream without closing; never pass that off as "done"
-            err = chunk["error"] if isinstance(chunk["error"], dict) else {"message": str(chunk["error"])}
-            logger.warning("openai-compat/stream error event: %s", json.dumps(err)[:300])
-            raise LLMError(f"OpenAI-compatible stream reported an error ({err.get('type') or err.get('code') or 'error'})")
+            err = chunk["error"] if isinstance(chunk["error"], dict) else {}
+            kind = str(err.get("type") or err.get("code") or "error")[:60]  # a category token, never the message
+            logger.warning("openai-compat/stream error event: %s", kind)
+            raise LLMError(f"OpenAI-compatible stream reported an error ({kind})")
         try:
             token = ((chunk.get("choices") or [{}])[0].get("delta") or {}).get("content")
         except (AttributeError, IndexError, TypeError):
@@ -601,7 +613,7 @@ def _call_anthropic(prompt: str, *, model: str, max_tokens: Optional[int]) -> st
     try:
         message = client.messages.create(**_anthropic_kwargs(prompt, model, max_tokens))
     except Exception as exc:  # SDK error classes are only importable when the SDK is
-        logger.warning("anthropic call failed: %s: %s", type(exc).__name__, str(exc)[:300])  # detail stays server-side
+        logger.warning("anthropic call failed: %s (message not logged: SDK errors can carry response bodies)", type(exc).__name__)
         raise LLMError(f"Anthropic API call failed: {type(exc).__name__}") from exc
     if getattr(message, "stop_reason", None) == "refusal":
         raise LLMError("Anthropic model refused the request (stop_reason=refusal)")
@@ -624,7 +636,7 @@ def _call_anthropic_stream(prompt: str, *, model: str, max_tokens: Optional[int]
     except LLMError:
         raise
     except Exception as exc:
-        logger.warning("anthropic stream failed: %s: %s", type(exc).__name__, str(exc)[:300])
+        logger.warning("anthropic stream failed: %s", type(exc).__name__)
         raise LLMError(f"Anthropic API stream failed: {type(exc).__name__}") from exc
     if getattr(final, "stop_reason", None) == "refusal":
         raise LLMError("Anthropic model refused the request (stop_reason=refusal)")

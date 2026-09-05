@@ -7,6 +7,7 @@ marker back, at DEBUG level, while everything the process emits is captured.
 If the marker shows up anywhere, a new code path is leaking protocol content.
 """
 import json
+import types
 import logging
 import uuid
 from pathlib import Path
@@ -214,4 +215,52 @@ def test_feedback_store_never_contains_protocol_text(marker, quiet_llm, monkeypa
     assert db_file.exists()
     assert marker.encode() not in db_file.read_bytes()
     assert "CANARY" not in db_file.read_bytes().decode(errors="ignore")
+    _assert_clean(marker, caplog, capfd)
+
+
+def test_provider_error_bodies_never_reach_logs(marker, monkeypatch, caplog, capfd):
+    """A gateway that echoes the request into its error body must not get that echo into our logs,
+    for any provider path — patched at the HTTP layer, below call_llm."""
+    import requests
+    from src import llm_clients
+    caplog.set_level(logging.DEBUG)
+    monkeypatch.setenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+    monkeypatch.setenv("OPENAI_MODEL", "m")
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+
+    class _Body:
+        status_code = 400
+        text = f"validation error: prompt contained {marker}"
+        def json(self):
+            return {"error": {"type": "invalid_request", "message": self.text}}
+        def iter_lines(self):
+            return iter([f'data: {{"error": {{"type": "overflow", "message": "{marker}"}}}}'.encode()])
+    monkeypatch.setattr(requests, "post", lambda *a, **k: _Body())
+    for call in (lambda: llm_clients.call_llm("p", provider="openai"),
+                 lambda: list(llm_clients.call_llm_stream("p", provider="openai")),
+                 lambda: llm_clients.call_llm("p", provider="ollama", model="m"),
+                 lambda: list(llm_clients.call_llm_stream("p", provider="ollama", model="m"))):
+        with pytest.raises(Exception) as ei:
+            call()
+        assert marker not in str(ei.value)
+
+    class _Ok:
+        status_code = 200
+        text = ""
+        def json(self):
+            return {"response": ""}
+        def iter_lines(self):
+            return iter([f'data: {{"error": {{"type": "overflow", "message": "{marker}"}}}}'.encode()])
+    monkeypatch.setattr(requests, "post", lambda *a, **k: _Ok())
+    with pytest.raises(Exception):
+        list(llm_clients.call_llm_stream("p", provider="openai"))
+
+    class _Boom:
+        messages = types.SimpleNamespace(create=lambda **kw: (_ for _ in ()).throw(RuntimeError(f"SDK saw {marker}")))
+    monkeypatch.setenv("ETIQTECH_ALLOW_REMOTE_LLM", "1")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "k")
+    monkeypatch.setattr(llm_clients, "_anthropic_client", lambda: _Boom())
+    with pytest.raises(Exception) as ei:
+        llm_clients.call_llm("p", provider="anthropic")
+    assert marker not in str(ei.value)
     _assert_clean(marker, caplog, capfd)

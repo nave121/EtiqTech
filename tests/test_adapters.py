@@ -91,3 +91,30 @@ def test_schema_doc_is_generated_and_current():
 def test_registry_extensions_drive_allowed_uploads():
     from server.app import ALLOWED_EXTENSIONS
     assert ALLOWED_EXTENSIONS == {e for a in ADAPTERS.values() for e in a.extensions} == {"html", "htm", "json"}
+
+
+def test_schema_error_messages_never_embed_values_for_any_validator():
+    """Future-proof: run a synthetic schema through the keywords jsonschema would echo values for."""
+    import jsonschema
+    from src import adapters
+    marker = "SECRET-VALUE-9f8e"
+    schema = {"type": "object", "additionalProperties": False, "properties": {
+        "a": {"type": "array", "minItems": 3, "uniqueItems": True},
+        "b": {"anyOf": [{"type": "integer"}, {"const": "x"}]},
+        "c": {"type": "string", "pattern": "^ok$", "maxLength": 3},
+    }}
+    v = jsonschema.validators.validator_for(schema)(schema)
+    inst = {"a": [marker, marker], "b": marker, "c": marker, marker: 1}
+    orig = adapters._validator
+    adapters._validator = v
+    try:
+        msgs = adapters.schema_errors(inst, limit=50)
+    finally:
+        adapters._validator = orig
+    assert msgs and all(marker not in m for m in msgs), msgs
+
+
+def test_deeply_nested_json_is_a_400_not_a_500():
+    from src.adapters import parse_canonical_json
+    with pytest.raises(IngestError, match="Invalid JSON"):
+        parse_canonical_json("[" * 20000 + "]" * 20000)

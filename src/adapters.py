@@ -51,16 +51,30 @@ def _text(content: Content) -> str:
 _validator = jsonschema.validators.validator_for(IACUC_SCHEMA_V2)(IACUC_SCHEMA_V2)
 
 
+_SAFE_MESSAGES = {
+    # validator -> message built ONLY from schema-side data (never the offending instance value)
+    "required": lambda e: e.message,  # names a missing key, which is schema vocabulary
+    "enum": lambda e: f"must be one of {e.validator_value}",
+    "type": lambda e: f"must be of type {e.validator_value}",
+    "minimum": lambda e: f"must be >= {e.validator_value}",
+    "maximum": lambda e: f"must be <= {e.validator_value}",
+    "minLength": lambda e: f"must be at least {e.validator_value} characters",
+    "maxLength": lambda e: f"must be at most {e.validator_value} characters",
+    "minItems": lambda e: f"must have at least {e.validator_value} items",
+    "maxItems": lambda e: f"must have at most {e.validator_value} items",
+    "pattern": lambda e: "does not match the required pattern",
+}
+
+
 def schema_errors(instance: Any, limit: int = 20) -> List[str]:
-    """Human-readable schema violations as 'path: message' (paths only — no values echoed)."""
+    """Human-readable schema violations as 'path: message'. Messages are built from the schema
+    side only; an unknown validator gets a generic message rather than jsonschema's default,
+    which embeds the instance value."""
     out = []
     for err in sorted(_validator.iter_errors(instance), key=lambda e: list(map(str, e.absolute_path))):
         path = "/".join(str(p) for p in err.absolute_path) or "<root>"
-        msg = err.message
-        if err.validator == "enum":  # do not echo the offending value; name the allowed set
-            msg = f"must be one of {err.validator_value}"
-        elif err.validator in ("type", "required", "minimum", "maximum", "minLength", "maxLength", "pattern"):
-            msg = err.message if err.validator == "required" else f"failed '{err.validator}' ({err.validator_value})"
+        build = _SAFE_MESSAGES.get(err.validator)
+        msg = build(err) if build else f"failed '{err.validator}' validation"
         out.append(f"{path}: {msg}")
         if len(out) >= limit:
             break
@@ -111,7 +125,7 @@ def item_skeleton(*path: str) -> Any:
 def parse_canonical_json(content: str) -> Dict[str, Any]:
     try:
         instance = json.loads(content)
-    except ValueError as exc:
+    except (ValueError, RecursionError) as exc:  # RecursionError: ~10k nesting levels in a few KB
         raise IngestError("Invalid JSON.") from exc
     if not isinstance(instance, dict):
         raise IngestError("Canonical JSON must be an object.")
