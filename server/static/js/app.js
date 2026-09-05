@@ -170,6 +170,7 @@
         setupExportButton();
         setupLLMMinimize();
         if (layer3Btn) layer3Btn.addEventListener('click', startLayer3Review);
+        setupFeedback();
         providerSelect.addEventListener('change', fetchModels);
         fetchProviders().then(fetchModels);  // providers first, then the model list for the chosen one
     }
@@ -723,6 +724,7 @@
                         <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);" title="rule id · ruleset ${escapeAttr(currentReport && currentReport.ruleset_version || '')}">${escapeHtml(issue.rule_id || issue.reference || 'general')}${issue.rule_id && issue.reference !== issue.rule_id ? ` <small>(${escapeHtml(issue.reference)})</small>` : ''}</span>
                     </div>
                     <div class="detail-message">${escapeHtml(issue.message)}</div>
+                    ${feedbackHtml('lint', issue.rule_id)}
                     ${issue.suggested_fix ? `
                         <div class="detail-fix">
                             <div class="detail-fix-label">Suggested Fix</div>
@@ -780,6 +782,7 @@
             <div class="detail-confidence">Overall score: ${meta.short}</div>
             ${subQuestionsHtml}
             ${groundingHtml(result.grounding)}
+            ${feedbackHtml('llm', theme)}
             <p class="advisory-banner">${escapeHtml(advisoryNotice())}</p>
         `;
 
@@ -903,6 +906,47 @@
                 handleLLMError(data);
                 break;
         }
+    }
+
+    // Feedback (P3.5): thumbs up/down keyed to a rule id or theme. Only that key and the
+    // verdict are sent — no text, no session — see src/feedback.py. Rendered without inline
+    // handlers (CSP); clicks are handled by delegation in setupFeedback().
+    const feedbackGiven = {};
+    function feedbackHtml(kind, key) {
+        if (!key) return '';
+        const id = `${kind}:${key}`;
+        const given = feedbackGiven[id];
+        return `<div class="finding-feedback" data-fb-kind="${escapeAttr(kind)}" data-fb-key="${escapeAttr(key)}">
+            <span class="finding-feedback-label">Was this finding useful?</span>
+            <button type="button" class="fb-btn ${given === 'up' ? 'chosen' : ''}" data-fb-verdict="up" aria-label="useful" ${given ? 'disabled' : ''}>&#128077;</button>
+            <button type="button" class="fb-btn ${given === 'down' ? 'chosen' : ''}" data-fb-verdict="down" aria-label="not useful" ${given ? 'disabled' : ''}>&#128078;</button>
+            <span class="finding-feedback-status">${given ? 'thanks' : ''}</span>
+        </div>`;
+    }
+    function setupFeedback() {
+        if (!detailContent) return;
+        detailContent.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.fb-btn');
+            if (!btn) return;
+            const box = btn.closest('.finding-feedback');
+            const kind = box.dataset.fbKind, key = box.dataset.fbKey, verdict = btn.dataset.fbVerdict;
+            const status = box.querySelector('.finding-feedback-status');
+            box.querySelectorAll('.fb-btn').forEach((b) => { b.disabled = true; });
+            try {
+                const r = await fetch('/api/feedback', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ kind, key, verdict, ruleset_version: (currentReport && currentReport.ruleset_version) || undefined,
+                                           profile: (currentReport && currentReport.profile) || undefined }),
+                });
+                if (!r.ok) throw new Error('feedback rejected');
+                feedbackGiven[`${kind}:${key}`] = verdict;
+                btn.classList.add('chosen');
+                status.textContent = 'thanks';
+            } catch (err) {
+                box.querySelectorAll('.fb-btn').forEach((b) => { b.disabled = false; });
+                status.textContent = 'could not save';
+            }
+        });
     }
 
     // escapeHtml() is a text-node escaper (no quotes); attribute values need this one.

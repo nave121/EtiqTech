@@ -183,3 +183,33 @@ def test_canary_detects_stdout_and_stderr_leaks(marker, capfd, caplog):
     sys.stderr.write(marker + "\n")
     with pytest.raises(AssertionError, match="stderr"):
         _assert_clean(marker, caplog, capfd)
+
+
+def test_feedback_store_never_contains_protocol_text(marker, quiet_llm, monkeypatch, tmp_path, caplog, capfd):
+    """The only persistence path in the app: after a marked review plus feedback on its findings,
+    the database file must not contain the marker."""
+    caplog.set_level(logging.DEBUG)
+    db_file = tmp_path / "fb.sqlite"
+    monkeypatch.setenv("FEEDBACK_DB", str(db_file))
+    monkeypatch.setenv("RATELIMIT_ENABLED", "false")
+    app.config["RATELIMIT_ENABLED"] = False
+    html = FIXTURE.read_text(encoding="utf-8").replace(INSTITUTION, marker)
+    _analysis_cache.clear()
+    try:
+        with app.test_client() as client:
+            r = client.post("/api/analyze-with-session", json={"html_content": html})
+            report = r.get_json()["lint_report"]
+            for item in report["checklist"]:
+                if item["status"] == "fail" and item["rule_id"]:
+                    client.post("/api/feedback", json={"kind": "lint", "key": item["rule_id"], "verdict": "down",
+                                                       "ruleset_version": report["ruleset_version"], "profile": report["profile"]})
+            client.post("/api/feedback", json={"kind": "llm", "key": "three_Rs_alternatives", "verdict": "up"})
+            # an attempt to smuggle text in must be refused, not stored
+            assert client.post("/api/feedback", json={"kind": "llm", "key": "three_Rs_alternatives", "verdict": "up", "note": marker}).status_code == 400
+    finally:
+        app.config["RATELIMIT_ENABLED"] = True
+        _analysis_cache.clear()
+    assert db_file.exists()
+    assert marker.encode() not in db_file.read_bytes()
+    assert "CANARY" not in db_file.read_bytes().decode(errors="ignore")
+    _assert_clean(marker, caplog, capfd)

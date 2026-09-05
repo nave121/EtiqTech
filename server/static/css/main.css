@@ -1528,3 +1528,11 @@ body {
 .grounding-sources li { margin-bottom: 6px; word-break: break-all; }
 .grounding-anchor { opacity: 0.75; font-family: ui-monospace, monospace; font-size: 0.75rem; }
 .grounding-license { opacity: 0.7; }
+
+/* Finding feedback (P3.5) */
+.finding-feedback { display: flex; align-items: center; gap: 6px; margin: 8px 0 4px; font-size: 0.75rem; color: var(--text-muted, #666); }
+.fb-btn { border: 1px solid var(--border-subtle, #ccc); background: transparent; border-radius: 6px; padding: 2px 8px; cursor: pointer; font-size: 0.9rem; }
+.fb-btn:hover:not(:disabled) { background: rgba(0,0,0,0.05); }
+.fb-btn.chosen { border-color: #2f7d32; background: rgba(47,125,50,0.12); }
+.fb-btn:disabled { cursor: default; opacity: 0.7; }
+@media print { .finding-feedback { display: none !important; } }

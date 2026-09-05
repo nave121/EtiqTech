@@ -45,18 +45,21 @@ the source.
 
 | Guarantee | Enforcement |
 |-----------|-------------|
-| 1, 2 | No persistence code path exists; `tests/test_privacy_canary.py` runs the full pipeline and the HTTP API on a protocol carrying a unique marker string and fails if the marker reaches any log, stdout or stderr. Adding persistence would have to add code that this test then has to be taught to ignore — a deliberate act, not an accident. |
+| 1, 2 | The only persistence path is the metadata-only feedback store (below), covered by the canary; `tests/test_privacy_canary.py` runs the full pipeline and the HTTP API on a protocol carrying a unique marker string and fails if the marker reaches any log, stdout or stderr. Adding persistence would have to add code that this test then has to be taught to ignore — a deliberate act, not an accident. |
 | 3 | Logging is configured once in `server/app.py` (default INFO); the canary runs at DEBUG. |
 | 4 | `src/llm_clients.ollama_base_url()` gate + `tests/test_local_first.py`; k8s NetworkPolicy. |
 | 5 | Documented design decision; see SECURITY.md. |
 
-## What a future feature may store
+## The one thing that is stored: finding feedback (metadata only)
 
-The roadmap includes a metadata-only feedback loop (thumbs up/down per finding).
-It will store rule identifiers, verdicts and timestamps — never protocol text,
-never free-text comments. The canary test above will be extended to cover that
-store before it ships. Any change to these guarantees is a documented,
-maintainer-approved decision, not an implementation detail.
+Thumbs up/down on a finding writes one row to a SQLite file (`FEEDBACK_DB`,
+default `output/feedback.sqlite`; `ETIQTECH_FEEDBACK=0` disables the feature):
+kind (`lint`/`llm`), the rule id or theme key, the verdict, the ruleset version,
+the linter profile, and a UTC timestamp. The server rejects any other field
+(a comment, a session id, protocol text) with 400 — the schema is an allowlist,
+not a filter. The privacy canary writes feedback during a marked run and asserts
+the marker never reaches the database file. Adding free-text comments would be
+a separate, maintainer-approved privacy decision.
 
 ## Verify it yourself
 

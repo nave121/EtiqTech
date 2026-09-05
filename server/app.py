@@ -17,7 +17,9 @@ import requests as http_requests
 
 from src.html_to_json import parse_html
 from src.linter_renderer import lint, render_html_with_refs
-from src.llm_agent import law_loaded, run_verification_stream
+from src import feedback
+from src.llm_agent import THEME_SPECS, law_loaded, run_verification_stream
+from src.rules import RULES
 from src.llm_clients import (
     LLMError, PROVIDERS, local_first_status, ollama_base_url, provider_configured, provider_default_model,
 )
@@ -312,6 +314,32 @@ def _update_session(session_id, **fields):
         entry = _analysis_cache.get(session_id)
         if entry is not None:
             entry.update(fields)
+
+
+@app.route('/api/feedback', methods=['POST'])
+@limiter.limit("30 per minute")
+def post_feedback():
+    """Thumbs up/down on a finding. Metadata only: kind, key (rule id / theme), verdict.
+    Any other field — a comment, a session id, protocol text — is rejected with 400."""
+    if not feedback.feedback_enabled():
+        return jsonify({'success': False, 'error': 'Feedback is disabled on this deployment'}), 404
+    try:
+        row = feedback.validate(request.get_json(silent=True), rule_ids=list(RULES), theme_keys=list(THEME_SPECS))
+        feedback.record(row)
+    except ValueError as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 400
+    except Exception:
+        logger.error("Feedback store write failed", exc_info=True)
+        return jsonify({'success': False, 'error': 'Feedback store unavailable'}), 503
+    return jsonify({'success': True})
+
+
+@app.route('/api/feedback/report')
+def feedback_report():
+    """Per-rule noise report (counts only)."""
+    if not feedback.feedback_enabled():
+        return jsonify({'success': False, 'error': 'Feedback is disabled on this deployment'}), 404
+    return jsonify({'success': True, 'rows': feedback.noise_report(since=request.args.get('since'))})
 
 
 @app.route('/api/llm-providers')
