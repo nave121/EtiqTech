@@ -60,3 +60,34 @@ def test_model_list_proxy_goes_through_gate(monkeypatch):
     with app.test_client() as c:
         body = c.get("/api/ollama-models").get_json()
     assert body["success"] is False and body["models"] == []
+
+
+def test_ollama_calls_never_follow_redirects(monkeypatch):
+    """A 3xx from a 'local' Ollama must not carry the protocol (and API key) elsewhere."""
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    seen = []
+
+    class _Resp:
+        status_code = 200
+        text = ""
+        def json(self):
+            return {"response": "ok", "message": {"content": "ok"}}
+        def iter_lines(self):
+            return iter([b'{"response": "ok", "done": true}'])
+
+    def fake_post(url, **kwargs):
+        seen.append(kwargs.get("allow_redirects"))
+        return _Resp()
+    monkeypatch.setattr(requests, "post", fake_post)
+    llm_clients.call_llm("p", provider="ollama", model="m")
+    list(llm_clients.call_llm_stream("p", provider="ollama", model="m"))
+    llm_clients.call_llm_two_step("p", model="m")
+    assert seen and all(v is False for v in seen), seen
+
+
+def test_gate_error_does_not_echo_endpoint(monkeypatch):
+    monkeypatch.setenv("OLLAMA_BASE_URL", "https://secret-gpu.example.org:11434")
+    monkeypatch.delenv("ETIQTECH_ALLOW_REMOTE_LLM", raising=False)
+    with pytest.raises(LLMError) as ei:
+        ollama_base_url()
+    assert "secret-gpu" not in str(ei.value)

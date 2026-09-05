@@ -49,6 +49,8 @@ class LLMError(RuntimeError):
 # Local-first gate (invariant: protocol data never leaves the machine by default)
 # ---------------------------------------------------------------------------
 _LOCAL_HOSTS = {"localhost", "host.docker.internal", "host.containers.internal", "gateway.docker.internal"}
+# .local/.localhost/.home.arpa are IANA special-use; .svc/.cluster.local are Kubernetes; .internal and
+# .lan are private-use *conventions* (not IANA-reserved) — revisit if a gTLD round ever delegates them.
 _LOCAL_SUFFIXES = (".svc", ".svc.cluster.local", ".cluster.local", ".internal", ".local", ".localhost", ".lan", ".home.arpa")
 REMOTE_LLM_FLAG = "ETIQTECH_ALLOW_REMOTE_LLM"
 
@@ -86,9 +88,12 @@ def ollama_base_url() -> str:
     """
     url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
     if is_remote_llm_url(url) and not remote_llm_allowed():
+        # The URL goes to the server log only; LLMError text can reach the browser.
+        logger.error("Refusing LLM call: OLLAMA_BASE_URL host %r is not local and %s is not set",
+                     urlsplit(url).hostname, REMOTE_LLM_FLAG)
         raise LLMError(
-            f"OLLAMA_BASE_URL={url} is not a local/cluster-internal endpoint. Protocol text would leave "
-            f"this machine. Refusing to send. Set {REMOTE_LLM_FLAG}=1 only if that is an informed decision."
+            f"LLM endpoint is not local/cluster-internal and {REMOTE_LLM_FLAG} is not set; "
+            "refusing to send protocol text off this machine."
         )
     return url
 
@@ -232,7 +237,7 @@ def _call_ollama(
 
     logger.info("→ ollama model=%s prompt_chars=%d keep_alive=%s think=%s", model, len(prompt), payload["keep_alive"], payload["think"])
     t0 = time.time()
-    response = requests.post(endpoint, json=payload, headers=_ollama_headers(), timeout=timeout)
+    response = requests.post(endpoint, json=payload, headers=_ollama_headers(), timeout=timeout, allow_redirects=False)
     elapsed = time.time() - t0
     if response.status_code != 200:
         raise LLMError(f"Ollama responded with HTTP {response.status_code}: {response.text}")
@@ -300,7 +305,7 @@ def call_llm_two_step(
 
     logger.info("→ ollama/two-step[1] model=%s prompt_chars=%d keep_alive=%s", resolved_model, len(prompt), step1_payload["keep_alive"])
     t0 = time.time()
-    resp1 = requests.post(endpoint, json=step1_payload, headers=_ollama_headers(), timeout=timeout)
+    resp1 = requests.post(endpoint, json=step1_payload, headers=_ollama_headers(), timeout=timeout, allow_redirects=False)
     elapsed1 = time.time() - t0
     if resp1.status_code != 200:
         raise LLMError(f"Ollama (step 1) responded with HTTP {resp1.status_code}: {resp1.text}")
@@ -336,7 +341,7 @@ def call_llm_two_step(
 
     logger.info("→ ollama/two-step[2] model=%s", resolved_model)
     t2 = time.time()
-    resp2 = requests.post(endpoint, json=step2_payload, headers=_ollama_headers(), timeout=timeout)
+    resp2 = requests.post(endpoint, json=step2_payload, headers=_ollama_headers(), timeout=timeout, allow_redirects=False)
     elapsed2 = time.time() - t2
     if resp2.status_code != 200:
         raise LLMError(f"Ollama (step 2) responded with HTTP {resp2.status_code}: {resp2.text}")
@@ -414,7 +419,7 @@ def _call_ollama_stream(
 
     logger.info("→ ollama/stream model=%s prompt_chars=%d keep_alive=%s think=%s", model, len(prompt), payload["keep_alive"], payload["think"])
     t0 = time.time()
-    response = requests.post(endpoint, json=payload, headers=_ollama_headers(), timeout=timeout, stream=True)
+    response = requests.post(endpoint, json=payload, headers=_ollama_headers(), timeout=timeout, allow_redirects=False, stream=True)
     if response.status_code != 200:
         raise LLMError(f"Ollama responded with HTTP {response.status_code}: {response.text}")
 

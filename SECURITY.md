@@ -40,6 +40,9 @@ auth layer (e.g., reverse proxy with basic auth or OAuth).
   Ollama and no protocol data is sent to external services. The app refuses to
   send to a non-local/non-cluster host unless `ETIQTECH_ALLOW_REMOTE_LLM=1` is set,
   and logs a startup warning when it is. `/api/health` exposes `llm_local`.
+  Known limit: the check is syntactic (hostname shape), not a DNS or socket
+  check, and HTTP redirects are never followed. In Kubernetes the NetworkPolicy
+  is the real backstop; a bare-VM or Docker deployment has none beyond this gate.
 - **No persistence**: protocols live in process memory (~1 h TTL), never on disk
   or in logs. See [PRIVACY.md](PRIVACY.md).
 - **No authentication**: By design for local use. See `server/app.py` header comment.

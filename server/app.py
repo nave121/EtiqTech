@@ -309,7 +309,7 @@ def ollama_models():
     """Proxy Ollama /api/tags to list available models."""
     try:
         base_url = ollama_base_url()  # same local-first gate as the LLM calls
-        resp = http_requests.get(f"{base_url}/api/tags", timeout=5)
+        resp = http_requests.get(f"{base_url}/api/tags", timeout=5, allow_redirects=False)
         resp.raise_for_status()
         data = resp.json()
         models = sorted(
