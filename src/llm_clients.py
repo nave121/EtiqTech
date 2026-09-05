@@ -234,13 +234,6 @@ def call_llm(
     return _call_anthropic(prompt, model=resolved_model, max_tokens=max_tokens)
 
 
-def _ollama_error_hint(response) -> str:
-    """Kept for the call sites; deliberately returns nothing. Ollama's `error` string is usually a short
-    operator message, but a misconfigured or hostile Ollama-compatible server controls that field, and
-    LLMError text can reach the browser — status code only (PRIVACY.md guarantee 3)."""
-    return ""
-
-
 def _log_ollama_stats(body: Dict[str, Any], wall_secs: float, label: str = "") -> None:
     """Log Ollama timing stats. Durations in body are nanoseconds."""
     ns = 1_000_000_000
@@ -295,7 +288,7 @@ def _call_ollama(
     response = requests.post(endpoint, json=payload, headers=_ollama_headers(), timeout=timeout, allow_redirects=False)
     elapsed = time.time() - t0
     if response.status_code != 200:
-        raise LLMError(f"Ollama responded with HTTP {response.status_code}{_ollama_error_hint(response)}")
+        raise LLMError(f"Ollama responded with HTTP {response.status_code}")  # status only, never the body (PRIVACY.md guarantee 3)
 
     try:
         body = response.json()
@@ -363,7 +356,7 @@ def call_llm_two_step(
     resp1 = requests.post(endpoint, json=step1_payload, headers=_ollama_headers(), timeout=timeout, allow_redirects=False)
     elapsed1 = time.time() - t0
     if resp1.status_code != 200:
-        raise LLMError(f"Ollama (step 1) responded with HTTP {resp1.status_code}{_ollama_error_hint(resp1)}")
+        raise LLMError(f"Ollama (step 1) responded with HTTP {resp1.status_code}")  # status only, never the body (PRIVACY.md guarantee 3)
 
     try:
         body1 = resp1.json()
@@ -399,7 +392,7 @@ def call_llm_two_step(
     resp2 = requests.post(endpoint, json=step2_payload, headers=_ollama_headers(), timeout=timeout, allow_redirects=False)
     elapsed2 = time.time() - t2
     if resp2.status_code != 200:
-        raise LLMError(f"Ollama (step 2) responded with HTTP {resp2.status_code}{_ollama_error_hint(resp2)}")
+        raise LLMError(f"Ollama (step 2) responded with HTTP {resp2.status_code}")  # status only, never the body (PRIVACY.md guarantee 3)
 
     try:
         body2 = resp2.json()
@@ -474,7 +467,7 @@ def _call_ollama_stream(
     t0 = time.time()
     response = requests.post(endpoint, json=payload, headers=_ollama_headers(), timeout=timeout, allow_redirects=False, stream=True)
     if response.status_code != 200:
-        raise LLMError(f"Ollama responded with HTTP {response.status_code}{_ollama_error_hint(response)}")
+        raise LLMError(f"Ollama responded with HTTP {response.status_code}")  # status only, never the body (PRIVACY.md guarantee 3)
 
     first_token = True
     for line in response.iter_lines():

@@ -229,28 +229,22 @@ def test_provider_error_bodies_never_reach_logs(marker, monkeypatch, caplog, cap
     monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
 
     class _Body:
+        # A 4xx/5xx from any provider: the code must raise from the status code alone and never read
+        # the body (which a gateway may fill with an echo of the request).
         status_code = 400
         text = f"validation error: prompt contained {marker}"
-        calls = 0
         def json(self):
-            # Ollama sends a flat string; OpenAI-style gateways a dict. Both shapes carry the marker so
-            # either provider path that reads the body would trip the assertion.
-            return {"error": self.text if _Body.calls % 2 else {"type": "invalid_request", "message": self.text}}
+            pytest.fail("an error body must never be parsed")
         def iter_lines(self):
-            return iter([f'data: {{"error": {{"type": "overflow", "message": "{marker}"}}}}'.encode()])
-
-    def _body(*a, **k):
-        _Body.calls += 1
-        return _Body()
-    monkeypatch.setattr(requests, "post", _body)
+            pytest.fail("an error body must never be streamed")
+    monkeypatch.setattr(requests, "post", lambda *a, **k: _Body())
     for call in (lambda: llm_clients.call_llm("p", provider="openai"),
                  lambda: list(llm_clients.call_llm_stream("p", provider="openai")),
                  lambda: llm_clients.call_llm("p", provider="ollama", model="m"),
                  lambda: list(llm_clients.call_llm_stream("p", provider="ollama", model="m"))):
-        for _ in range(2):  # flat-string and dict error bodies
-            with pytest.raises(Exception) as ei:
-                call()
-            assert marker not in str(ei.value)
+        with pytest.raises(Exception) as ei:
+            call()
+        assert marker not in str(ei.value)
 
     class _Ok:
         status_code = 200
