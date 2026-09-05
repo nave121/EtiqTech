@@ -157,6 +157,9 @@
                 </div>
             </div>
 
+            <!-- Printed-report footer: advisory statement on every exported PDF -->
+            <div class="print-only-details advisory-print-footer" data-advisory-print>{{ advisory_notice }}</div>
+
             <!-- Reviewer Notes Panel -->
             <div class="reviewer-notes-panel" id="reviewer-notes-panel">
                 <div class="notes-header">
@@ -180,6 +183,7 @@
                     <span class="layer3-verdict-badge" id="layer3-verdict-badge"></span>
                     <span class="layer3-risk-label" id="layer3-risk-label"></span>
                 </div>
+                <p class="advisory-banner" role="note" data-advisory>{{ advisory_notice }}</p>
                 <div class="layer3-results-body" id="layer3-results-body">
                     <!-- Populated by JS -->
                 </div>
@@ -220,6 +224,7 @@
                         </svg>
                     </button>
                 </div>
+                <p class="advisory-banner" role="note" data-advisory>{{ advisory_notice }}</p>
                 <div class="llm-progress-body" id="llm-progress-body">
                     <div class="progress-bar-container">
                         <div class="progress-bar">
@@ -260,6 +265,7 @@
                         <span class="status-text" id="layer3-status-text">Starting Human Eye review...</span>
                     </div>
                 </div>
+                <p class="advisory-banner" role="note" data-advisory>{{ advisory_notice }}</p>
                 <div class="llm-progress-body">
                     <div class="progress-bar-container">
                         <div class="progress-bar">

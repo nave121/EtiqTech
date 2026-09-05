@@ -1497,3 +1497,27 @@ body {
     font-size: 0.85rem;
     border-radius: 4px;
 }
+
+/* Advisory framing for LLM output — permanent (invariant 5). No close button, never [hidden]. */
+.advisory-banner {
+    margin: 0.5rem 0 0.25rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: #5b4a00;
+    background: #fff8e1;
+    border-left: 3px solid #d9a400;
+    border-radius: 4px;
+}
+.advisory-banner[hidden] { display: block !important; }
+@media print {
+    .advisory-banner { color: #000; background: none; border-left: 2px solid #000; }
+    .advisory-print-footer {
+        display: block !important;
+        margin-top: 1.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid #000;
+        font-size: 10pt;
+        color: #000;
+    }
+}

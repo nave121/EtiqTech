@@ -747,6 +747,7 @@
             <div class="detail-rationale">${escapeHtml(result.rationale || 'No rationale provided.')}</div>
             <div class="detail-confidence">Overall score: ${meta.short}</div>
             ${subQuestionsHtml}
+            <p class="advisory-banner">${escapeHtml(advisoryNotice())}</p>
         `;
 
         detailContent.innerHTML = html;
@@ -869,6 +870,13 @@
                 handleLLMError(data);
                 break;
         }
+    }
+
+    // The advisory statement is rendered server-side into the template; read it from there
+    // so the UI has exactly one wording.
+    function advisoryNotice() {
+        const el = document.querySelector('[data-advisory]');
+        return el ? el.textContent.trim() : 'Advisory only: LLM findings do not replace committee review.';
     }
 
     // Context-budget (and future) warnings from the server: visible, not dismissable, escaped.
