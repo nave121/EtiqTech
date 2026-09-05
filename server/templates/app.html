@@ -104,6 +104,19 @@
 
         <!-- Results Section -->
         <section id="results-section" class="results-section" hidden>
+            <!-- One-page summary: first on screen and first in print (docs/design/spec.md section 4).
+                 Everything JS writes here goes through textContent or escapeHtml/escapeAttr. -->
+            <section id="report-summary" class="report-summary" aria-labelledby="summary-verdict">
+                <p class="summary-verdict" id="summary-verdict"></p>
+                <p class="summary-scope">This is a pre-submission check against the Council form and Israeli animal-welfare rules. It is not an approval. The ethics committee reviews every protocol.</p>
+                <div class="summary-start" id="summary-start" hidden>
+                    <h2 class="summary-heading">Start with these</h2>
+                    <ol class="summary-start-list" id="summary-start-list"></ol>
+                </div>
+                <div class="summary-ai" id="summary-ai" hidden></div>
+                <p class="summary-provenance" id="summary-provenance"></p>
+            </section>
+
             <!-- Summary Cards -->
             <div class="summary-cards" id="summary-cards">
                 <div class="summary-card status-card" id="status-card">
@@ -114,8 +127,8 @@
                         </svg>
                     </div>
                     <div class="card-content">
-                        <span class="card-label">Status</span>
-                        <span class="card-value" id="summary-status">PASS</span>
+                        <span class="card-label">Automated check</span>
+                        <span class="card-value" id="summary-status">PASSED</span>
                     </div>
                 </div>
                 <div class="summary-card errors-card" id="errors-card">
@@ -128,7 +141,7 @@
                     </div>
                     <div class="card-content">
                         <span class="card-value" id="error-count">0</span>
-                        <span class="card-label">Errors</span>
+                        <span class="card-label">Fail the check</span>
                     </div>
                 </div>
                 <div class="summary-card warnings-card" id="warnings-card">
@@ -141,7 +154,7 @@
                     </div>
                     <div class="card-content">
                         <span class="card-value" id="warning-count">0</span>
-                        <span class="card-label">Warnings</span>
+                        <span class="card-label">Other findings</span>
                     </div>
                 </div>
                 <div class="summary-card llm-card" id="llm-card">
@@ -153,7 +166,7 @@
                     </div>
                     <div class="card-content">
                         <span class="card-value" id="llm-summary">--</span>
-                        <span class="card-label">LLM Review</span>
+                        <span class="card-label">AI review (advisory)</span>
                     </div>
                 </div>
             </div>

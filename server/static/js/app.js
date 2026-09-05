@@ -33,6 +33,14 @@
     const warningCount = document.getElementById('warning-count');
     const llmSummary = document.getElementById('llm-summary');
 
+    // Report summary (docs/design/spec.md section 4)
+    const reportSummary = document.getElementById('report-summary');
+    const summaryVerdict = document.getElementById('summary-verdict');
+    const summaryStart = document.getElementById('summary-start');
+    const summaryStartList = document.getElementById('summary-start-list');
+    const summaryAi = document.getElementById('summary-ai');
+    const summaryProvenance = document.getElementById('summary-provenance');
+
     // Document
     const documentContent = document.getElementById('document-content');
 
@@ -184,6 +192,7 @@
         setupExportButton();
         setupLLMMinimize();
         setupFeedback();
+        setupReportSummary();
         providerSelect.addEventListener('change', fetchModels);
         fetchProviders().then(fetchModels);  // providers first, then the model list for the chosen one
     }
@@ -359,6 +368,7 @@
         currentFileName_ = null;
         llmResults = {};
         lintIssuesMap = {};
+        renderReportSummary();  // currentReport is null: clears the node
 
         setExportReady(false);
         const llmExportCta = document.getElementById('llm-export-cta');
@@ -491,7 +501,7 @@
 
         // Update summary cards
         const status = lintReport.status;
-        summaryStatus.textContent = status.toUpperCase();
+        summaryStatus.textContent = status === 'pass' ? 'PASSED' : 'FAILED';
         statusCard.className = 'summary-card status-card ' + status;
 
         errorCount.textContent = lintReport.errors;
@@ -502,6 +512,7 @@
 
         // Add print summary (linter stats only at this point)
         updatePrintSummary();
+        renderReportSummary();
     }
 
     // Render Document with Inline Badges
@@ -765,6 +776,145 @@
         return `<div class="detail-meta" title="rule id · ruleset ${escapeAttr(ruleset)}">${escapeHtml(id)} · ${escapeHtml(item.severity || '')} · ruleset ${escapeHtml(ruleset)} · profile ${escapeHtml(profile)}${ref}</div>`;
     }
 
+    // -----------------------------------------------------------------------
+    // One-page summary (docs/design/spec.md section 4). One node, rendered for screen
+    // and print, rebuilt on every call from lintReport.checklist (not lintIssuesMap, so
+    // findings the data-ref map drops are still counted and listed).
+    // -----------------------------------------------------------------------
+    function failingItems() {
+        const checklist = (currentReport && currentReport.checklist) || [];
+        return checklist.filter((item) => item.status === 'fail');
+    }
+    function findingWord(n) { return n === 1 ? 'finding' : 'findings'; }
+    function verdictSentence(b, l, o) {
+        let text;
+        if (b > 0) {
+            text = `${b} ${findingWord(b)} ${b === 1 ? 'fails' : 'fail'} the automated check. Fix ${b === 1 ? 'it' : 'them'} before you submit.`;
+            if (l > 0) text += ` ${l} more ${l === 1 ? 'is' : 'are'} tied to a legal requirement.`;
+            if (o > 0) text += ` ${o} more ${o === 1 ? 'is' : 'are'} worth fixing.`;
+        } else if (l > 0) {
+            text = `Nothing fails the automated check, but ${l} ${findingWord(l)} ${l === 1 ? 'is' : 'are'} tied to a legal requirement. Committees send protocols back for these.`;
+            if (o > 0) text += ` ${o} more ${o === 1 ? 'is' : 'are'} worth fixing.`;
+        } else if (o > 0) {
+            text = `Nothing fails the automated check. ${o} ${findingWord(o)} ${o === 1 ? 'is' : 'are'} worth fixing before you submit.`;
+        } else {
+            text = 'The automated check found nothing to fix.';
+        }
+        return text;
+    }
+    // Group failing items by rule id, keep checklist order, rank by tier. One entry per rule.
+    function rankedRuleGroups(items) {
+        const groups = [];
+        const byId = {};
+        items.forEach((item) => {
+            const id = item.rule_id || item.reference || 'general';
+            if (!byId[id]) {
+                byId[id] = { id, tier: tierOf(item), items: [] };
+                groups.push(byId[id]);
+            }
+            byId[id].items.push(item);
+        });
+        return groups.sort((a, b) => a.tier - b.tier);  // Array.prototype.sort is stable
+    }
+    function startEntryHtml(group) {
+        const first = group.items[0];
+        const headline = findingHeadline(first) || first.message || '';
+        let body = '';
+        if (group.items.length > 1) {
+            const exps = group.items
+                .map((item) => (String(item.reference || '').match(/:exp-(\d+)$/) || [])[1])
+                .filter(Boolean);
+            body = `${group.items.length} places` + (exps.length ? `: Experiments ${exps.join(', ')}` : '');
+        } else if (headline !== first.message) {
+            body = first.message || '';
+        }
+        return `<li class="summary-start-item">
+            <div>${tierChipHtml(group.tier)} <span class="summary-start-headline">${escapeHtml(headline)}</span></div>
+            ${body ? `<div class="summary-start-body">${escapeHtml(body)}</div>` : ''}
+            <div class="summary-start-meta"><code>${escapeHtml(group.id)}</code>
+                <button type="button" class="summary-link-btn" data-summary-rule="${escapeAttr(group.id)}">Show me where</button></div>
+        </li>`;
+    }
+    function renderReportSummary() {
+        if (!reportSummary) return;
+        if (!currentReport) {
+            summaryVerdict.textContent = '';
+            summaryStartList.innerHTML = '';
+            summaryStart.hidden = true;
+            summaryAi.innerHTML = '';
+            summaryAi.hidden = true;
+            summaryProvenance.textContent = '';
+            return;
+        }
+        const items = failingItems();
+        const tiers = items.map(tierOf);
+        const b = tiers.filter((t) => t === 1).length;
+        const l = tiers.filter((t) => t === 2).length;
+        const o = tiers.filter((t) => t === 3).length;
+
+        // 1. Verdict
+        summaryVerdict.textContent = verdictSentence(b, l, o);
+
+        // 3. Start with these (2. is static template text)
+        const top = rankedRuleGroups(items).slice(0, 3);
+        summaryStartList.innerHTML = top.map(startEntryHtml).join('');
+        summaryStart.hidden = top.length === 0;
+
+        // 4. AI review, only once a theme has finished
+        const themes = Object.keys(llmResults);
+        if (themes.length > 0) {
+            const adequate = themes.filter((t) => normalizeThemeScore(llmResults[t]) >= 2).length;
+            const weak = themes.filter((t) => normalizeThemeScore(llmResults[t]) < 2);
+            let html = `<p class="summary-ai-line">AI review (advisory): ${adequate} of ${themes.length} topics look adequate.</p>`;
+            if (weak.length) {
+                html += '<ul class="summary-ai-list">' + weak.map((t) => {
+                    const score = getThemeGradeMeta(llmResults[t]).score;
+                    return `<li><button type="button" class="summary-link-btn" data-summary-theme="${escapeAttr(t)}">${escapeHtml(formatThemeName(t))} (${score} of 3)</button></li>`;
+                }).join('') + '</ul>';
+            }
+            if (layer3Results && !layer3Results.skipped) {
+                html += `<p class="summary-ai-line">Second read: ${escapeHtml(layer3Results.overall_verdict || 'unknown')}, risk ${escapeHtml(layer3Results.risk_profile || 'unknown')}.</p>`;
+            }
+            html += `<p class="advisory-banner">${escapeHtml(advisoryNotice())}</p>`;
+            summaryAi.innerHTML = html;
+            summaryAi.hidden = false;
+        } else {
+            summaryAi.innerHTML = '';
+            summaryAi.hidden = true;
+        }
+
+        // 5. Provenance
+        let prov = `Checked with EtiqTech · ruleset ${currentReport.ruleset_version || ''} · profile ${currentReport.profile || ''} · ${items.length} ${findingWord(items.length)} on ${currentFileName_ || ''}`;
+        if (!llmEnabled) prov += ' · AI review: not run';
+        summaryProvenance.textContent = prov;
+    }
+    // "Show me where" and theme buttons: one delegated listener, no inline handlers.
+    function setupReportSummary() {
+        if (!reportSummary) return;
+        reportSummary.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-summary-rule], [data-summary-theme]');
+            if (!btn) return;
+            if (btn.dataset.summaryTheme !== undefined) {
+                const theme = btn.dataset.summaryTheme;
+                if (llmResults[theme]) showLLMDetails(theme, llmResults[theme]);
+                return;
+            }
+            const ruleId = btn.dataset.summaryRule;
+            const mine = failingItems().filter((item) => (item.rule_id || item.reference || 'general') === ruleId);
+            if (!mine.length) return;
+            const dataRef = mapReferenceToDataRef(mine[0].reference || '');
+            if (dataRef && lintIssuesMap[dataRef]) {
+                showLintIssueDetails(lintIssuesMap[dataRef], dataRef);  // highlights dataRef itself
+                return;
+            }
+            // No section on screen for this reference: panel with just this rule's items, no highlight.
+            showLintIssueDetails({
+                errors: mine.filter((item) => item.severity === 'error'),
+                warnings: mine.filter((item) => item.severity !== 'error'),
+            }, null);
+        });
+    }
+
     // Show Lint Issue Details in Panel
     function showLintIssueDetails(issues, ref) {
         const allIssues = [...issues.errors, ...issues.warnings];
@@ -772,7 +922,8 @@
 
         detailBadge.textContent = hasErrors ? 'Error' : 'Warning';
         detailBadge.className = 'detail-badge ' + (hasErrors ? 'error' : 'warning');
-        detailTitle.textContent = `Issues in ${formatRefName(ref)}`;
+        // ref is null for a finding whose reference has no section on screen (spec 4.3)
+        detailTitle.textContent = ref ? `Issues in ${formatRefName(ref)}` : 'Finding';
 
         let html = '';
         allIssues.forEach((issue) => {
@@ -791,7 +942,7 @@
                             <div class="detail-fix-text">${escapeHtml(issue.suggested_fix)}</div>
                         </div>
                     ` : ''}
-                    <div class="detail-where">Where: ${escapeHtml(formatRefName(ref))}</div>
+                    ${ref ? `<div class="detail-where">Where: ${escapeHtml(formatRefName(ref))}</div>` : ''}
                     ${findingMetaHtml(issue)}
                     ${feedbackHtml('lint', issue.rule_id)}
                 </div>
@@ -802,7 +953,7 @@
         openDetailPanel();
 
         // Highlight section
-        highlightSection(ref);
+        if (ref) highlightSection(ref);
     }
 
     // Show LLM Details in Panel
@@ -1090,6 +1241,7 @@
 
         // Add chip to results summary
         addResultChip(theme, result);
+        renderReportSummary();
 
         // Clear thinking for next theme
         thinkingContent.textContent = '';
@@ -1239,6 +1391,7 @@
 
         // Update print summary with LLM results
         updatePrintSummary();
+        renderReportSummary();
 
         // Auto-run Layer 3 as soon as the theme review completes
         startLayer3Review();
@@ -1290,6 +1443,7 @@
             case 'layer3_skip':
                 layer3StatusText.textContent = 'Second read not needed. Nothing serious came up.';
                 layer3ProgressFill.style.width = '100%';
+                renderReportSummary();
                 setExportReady(true);
                 if (layer3EventSource) { layer3EventSource.close(); layer3EventSource = null; }
                 break;
@@ -1314,6 +1468,7 @@
                 layer3Thinking.classList.remove('active');
                 layer3Results = data.result;
                 showLayer3Results(data.result);
+                renderReportSummary();
                 setExportReady(true);
                 if (layer3EventSource) { layer3EventSource.close(); layer3EventSource = null; }
                 break;
