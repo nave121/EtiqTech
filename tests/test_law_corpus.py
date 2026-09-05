@@ -51,3 +51,21 @@ def test_key_topics_are_retrievable_units(records):
     en_ids = [r["id"] for r in records if r["lang"] == "en"]
     for needle in ("search-for-alternatives", "severity-level-classification", "euthanasia", "reasoning-for-number-of-animals", "analgesia"):
         assert any(needle in i for i in en_ids), needle
+
+
+def test_subheadings_are_not_swallowed_by_part_headings(records):
+    paths = [tuple(r["section_path"]) for r in records if r["lang"] == "en"]
+    assert any(p[0].startswith("Part C") and p[-1] == "The Principal Investigator" and len(p) == 2 for p in paths)
+    assert not any("part-c-in-the-request-form-the-principal" in r["id"] for r in records)
+
+
+def test_urls_and_latin_spans_survive_hebrew_normalization(records):
+    he = " ".join(r["text"] for r in records if r["lang"] == "he")
+    assert "https://eurl-ecvam.jrc.ec.europa.eu" in he
+    assert "https: //" not in he and "()EURL" not in he and "(EURL ECVAM)" in he
+
+
+def test_hebrew_ids_are_content_hashes_with_provenance(records):
+    he = [r for r in records if r["lang"] == "he"]
+    assert all(len(r["id"].split("-")[-1]) == 8 or r["id"].split("-")[-2].__len__() == 8 for r in he)
+    assert all(len(r["source_sha256"]) == 12 for r in records)

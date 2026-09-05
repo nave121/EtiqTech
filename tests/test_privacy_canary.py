@@ -168,10 +168,11 @@ def test_server_error_path_never_logs_body(marker, monkeypatch, caplog, capfd):
     app.config["TESTING"] = True
     with app.test_client() as client:
         for route in ("/api/analyze", "/api/analyze-with-session"):
+            caplog.clear()
             r = client.post(route, json={"html_content": f"<html><body>{marker}</body></html>"})
             assert r.status_code == 500
-    assert any("Analysis" in rec.message and rec.exc_info for rec in caplog.records)
-    _assert_clean(marker, caplog, capfd)
+            assert any("Analysis" in rec.message and rec.exc_info for rec in caplog.records), route
+            _assert_clean(marker, caplog, capfd)
 
 
 def test_canary_detects_stdout_and_stderr_leaks(marker, capfd, caplog):

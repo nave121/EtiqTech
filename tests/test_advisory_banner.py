@@ -30,7 +30,12 @@ def test_no_close_button_and_css_defeats_hidden():
     css = open("server/static/css/main.css", encoding="utf-8").read()
     assert ".advisory-banner[hidden] { display: block !important; }" in css
     js = open("server/static/js/app.js", encoding="utf-8").read()
-    # no line of JS that mentions the banner may also remove or hide it
-    offenders = [l for l in js.splitlines() if re.search(r"advisory", l, re.I) and re.search(r"\.remove\(|\.hidden\s*=|style\.display|classList\.add\(['\"]hidden", l)]
+    hide = r"\.remove\(|\.hidden\s*=|style\.display|classList\.add\(['\"]hidden"
+    # (a) no line that mentions the banner may also remove or hide it
+    offenders = [l for l in js.splitlines() if re.search(r"advisory", l, re.I) and re.search(hide, l)]
+    # (b) nor may any identifier assigned from an advisory selector be hidden anywhere in the file
+    names = re.findall(r"(?:const|let|var)\s+(\w+)\s*=\s*document\.querySelector(?:All)?\([^)]*advisory", js, re.I)
+    for name in names:
+        offenders += re.findall(rf"\b{name}\b\s*\.\s*(?:{hide})", js)
     assert offenders == [], offenders
     assert "'Advisory only" not in js  # the wording lives in server/app.py only

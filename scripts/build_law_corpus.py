@@ -12,6 +12,7 @@ Hebrew comes from `pdftotext` on the guidance PDF (logical order). The older
 resources/law/the_law.txt is a word-reversed extraction of the same PDF and is not used.
 """
 import argparse
+import hashlib
 import json
 import re
 import shutil
@@ -82,6 +83,8 @@ def sectionize_en(text: str):
                     j += 1
                 if j >= len(lines) or not lines[j].startswith("#"):
                     break
+                if len(lines[j]) - len(lines[j].lstrip("#")) != level:
+                    break  # a sub-heading is a new section, never a continuation
                 tail = lines[j].lstrip("#").strip()
                 dangling = title.rstrip().endswith((" in", " and", " of", " -", " –", ",", " for", " the"))
                 short_tail = len(tail.split()) <= 3 and not tail.startswith(("Part", "Subsection", "[")) and not tail.endswith(":")
@@ -107,13 +110,26 @@ def sectionize_en(text: str):
 _SWAP_PARENS = str.maketrans("()", ")(")
 
 
+_PROTECT = re.compile(r"https?://\S+|[A-Za-z][A-Za-z0-9@._/'-]*(?:\s+[A-Za-z][A-Za-z0-9@._/'-]*)*")
+
+
 def _normalize_he(line: str) -> str:
     """pdftotext emits visual-order artifacts in RTL text: mirrored parentheses, punctuation
-    glued to the following word, digits glued to letters. Fix the common ones."""
+    glued to the following word, digits glued to letters. Fix the common ones — but leave
+    URLs and Latin spans (EURL ECVAM, e-mail addresses) untouched: the rules are for Hebrew."""
+    keep: list = []
+    # visual ')(Latin' is logical '(Latin)': fix before protecting Latin spans
+    line = re.sub(r"\)\(([A-Za-z][A-Za-z0-9 ._'-]*[A-Za-z0-9])", r"(\1)", line)
+
+    def _stash(m):
+        keep.append(m.group(0))
+        return f"\x00{len(keep) - 1}\x00"
+    line = _PROTECT.sub(_stash, line)
     line = line.translate(_SWAP_PARENS)
     line = re.sub(r"\s+([.,;:!?])", r"\1", line)           # 'בלבד ,והשיקול' -> 'בלבד,והשיקול'
-    line = re.sub(r"([.,;:!?])(?=[^\s\d.,;:!?)\]])", r"\1 ", line)  # then one space after
+    line = re.sub(r"([.,;:!?])(?=[^\s\d.,;:!?)\]\x00])", r"\1 ", line)  # then one space after
     line = re.sub(r"(\d)(?=[א-ת])", r"\1 ", line)            # '1994חוקקה' -> '1994 חוקקה'
+    line = re.sub(r"\x00(\d+)\x00", lambda m: keep[int(m.group(1))], line)
     return re.sub(r"\s{2,}", " ", line).strip()
 
 
@@ -146,6 +162,7 @@ def sectionize_he(text: str):
 def _records(sections, lang, doc_title, source):
     recs = []
     used = set()
+    source_sha = hashlib.sha256((LAW_DIR / source).read_bytes()).hexdigest()[:12]
     for parents, heading, buf in sections:
         paragraphs, cur = [], []
         for l in buf:
@@ -163,7 +180,7 @@ def _records(sections, lang, doc_title, source):
             if lang == "en":
                 base = _slug(" ".join(parents)) if len(parents) > 1 and heading.lower() == "general" else _slug(heading)
             else:
-                base = f"{len(recs):03d}"
+                base = hashlib.sha1(chunk.encode("utf-8")).hexdigest()[:8]  # stable unless this chunk's text changes
             rid = f"il-guidance-{lang}-{base}" + (f"-{n}" if len(chunks) > 1 else "")
             k = 2
             while rid in used:  # repeated headings ("General") get a stable ordinal suffix
@@ -182,7 +199,8 @@ def _records(sections, lang, doc_title, source):
                 "text": chunk,
                 "license": LICENSE,
                 "source": source,
-                "retrieved_at": "2026-09-05",
+                "source_sha256": source_sha,  # provenance that moves with the file, unlike a hand-bumped date
+                "retrieved_at": "2026-09-05",  # date the source files were last (re)obtained; bump when they are
             })
     return recs
 

@@ -109,6 +109,8 @@ def test_redirect_response_is_refused_not_parsed(monkeypatch):
         llm_clients.call_llm("p", provider="ollama", model="m")
     with pytest.raises(LLMError, match="302"):
         list(llm_clients.call_llm_stream("p", provider="ollama", model="m"))
+    with pytest.raises(LLMError, match="302"):
+        llm_clients.call_llm_two_step("p", model="m")
     import server.app as app_module
     monkeypatch.setattr(app_module.http_requests, "get", lambda *a, **k: _Redirect())
     with app.test_client() as c:
