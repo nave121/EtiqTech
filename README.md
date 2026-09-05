@@ -114,6 +114,9 @@ EtiqTech reviews protocols in three layers:
 |----------|---------|-------------|
 | `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | Ollama server URL |
 | `OLLAMA_MODEL` | `qwen3.5:35b` | Model for verification |
+| `LLM_PROVIDER` | `ollama` | `ollama` (local), `openai` (any OpenAI-compatible server), `anthropic` — see [docs/providers.md](docs/providers.md) |
+| `OPENAI_BASE_URL` / `OPENAI_API_KEY` / `OPENAI_MODEL` | — | OpenAI-compatible provider; a `localhost` base URL (vLLM, LM Studio, llama.cpp) stays local-first |
+| `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` | — / `claude-opus-5` | Anthropic provider (remote; requires the opt-in flag and `pip install etiqtech[anthropic]`) |
 | `ETIQTECH_ALLOW_REMOTE_LLM` | unset | `1` to permit a non-local `OLLAMA_BASE_URL` (protocol text leaves the machine) |
 | `ETIQTECH_GROUNDING` | unset | `1` to ground Layer 2 prompts in retrieved guidance sections with source refs (see Grounding) |
 | `EMBED_MODEL` | `qwen3-embedding` | Ollama embedding model for retrieval (multilingual) |

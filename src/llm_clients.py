@@ -80,17 +80,48 @@ def remote_llm_allowed() -> bool:
     return os.getenv(REMOTE_LLM_FLAG, "").strip().lower() in ("1", "true", "yes")
 
 
-def ollama_base_url() -> str:
-    """Resolve OLLAMA_BASE_URL and enforce the local-first gate before any request is built.
+# Provider registry: env var holding the base URL, its default, and a capability matrix
+# (rendered in docs/providers.md). Every provider's base URL goes through the same gate.
+PROVIDERS: Dict[str, Dict[str, Any]] = {
+    "ollama": {
+        "base_url_env": "OLLAMA_BASE_URL", "base_url_default": "http://127.0.0.1:11434",
+        "model_env": "OLLAMA_MODEL", "model_default": "qwen3.5:35b", "key_env": "OLLAMA_API_KEY",
+        "streaming": True, "json_mode": True, "thinking": True, "two_step": True, "local_capable": True,
+    },
+    "openai": {  # any OpenAI-compatible /v1/chat/completions server: OpenAI, vLLM, LM Studio, llama.cpp, OpenRouter, Azure (via base URL)
+        "base_url_env": "OPENAI_BASE_URL", "base_url_default": "https://api.openai.com/v1",
+        "model_env": "OPENAI_MODEL", "model_default": None, "key_env": "OPENAI_API_KEY",
+        "streaming": True, "json_mode": True, "thinking": False, "two_step": False, "local_capable": True,
+    },
+    "anthropic": {  # official SDK; always a remote service
+        "base_url_env": "ANTHROPIC_BASE_URL", "base_url_default": "https://api.anthropic.com",
+        "model_env": "ANTHROPIC_MODEL", "model_default": "claude-opus-5", "key_env": "ANTHROPIC_API_KEY",
+        "streaming": True, "json_mode": False, "thinking": True, "two_step": False, "local_capable": False,
+    },
+}
+
+
+def provider_name(provider: Optional[str] = None) -> str:
+    name = (provider or os.getenv("LLM_PROVIDER", "ollama")).strip().lower()
+    if name in ("openai-compatible", "openai_compatible", "vllm", "lmstudio", "openrouter"):
+        name = "openai"
+    if name not in PROVIDERS:
+        raise LLMError(f"Unsupported LLM provider '{name}'. Known: {', '.join(PROVIDERS)}.")
+    return name
+
+
+def gated_base_url(provider: str) -> str:
+    """Resolve the provider's base URL and enforce the local-first gate before any request is built.
 
     Raises LLMError (nothing is sent) when the endpoint is remote and the operator has
     not set ETIQTECH_ALLOW_REMOTE_LLM=1. The flag is the explicit, informed opt-in.
     """
-    url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+    spec = PROVIDERS[provider]
+    url = os.getenv(spec["base_url_env"], spec["base_url_default"]).rstrip("/")
     if is_remote_llm_url(url) and not remote_llm_allowed():
         # The URL goes to the server log only; LLMError text can reach the browser.
-        logger.error("Refusing LLM call: OLLAMA_BASE_URL host %r is not local and %s is not set",
-                     urlsplit(url).hostname, REMOTE_LLM_FLAG)
+        logger.error("Refusing LLM call: %s host %r is not local and %s is not set",
+                     spec["base_url_env"], urlsplit(url).hostname, REMOTE_LLM_FLAG)
         raise LLMError(
             f"LLM endpoint is not local/cluster-internal and {REMOTE_LLM_FLAG} is not set; "
             "refusing to send protocol text off this machine."
@@ -98,11 +129,36 @@ def ollama_base_url() -> str:
     return url
 
 
-def local_first_status() -> Dict[str, Any]:
+def ollama_base_url() -> str:
+    return gated_base_url("ollama")
+
+
+def local_first_status(provider: Optional[str] = None) -> Dict[str, Any]:
     """For startup logging and /api/health: where would protocol text go?"""
-    url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+    try:
+        name = provider_name(provider)
+    except LLMError:
+        name = "ollama"
+    spec = PROVIDERS[name]
+    url = os.getenv(spec["base_url_env"], spec["base_url_default"]).rstrip("/")
     remote = is_remote_llm_url(url)
-    return {"ollama_host": urlsplit(url).hostname, "remote": remote, "remote_allowed": remote_llm_allowed()}
+    return {"provider": name, "ollama_host": urlsplit(url).hostname, "host": urlsplit(url).hostname,
+            "remote": remote, "remote_allowed": remote_llm_allowed()}
+
+
+def provider_configured(name: str) -> bool:
+    """A provider is offered in the UI when its credentials/base URL are configured."""
+    spec = PROVIDERS[name]
+    if name == "ollama":
+        return True
+    if name == "anthropic":
+        return bool(os.getenv("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_AUTH_TOKEN"))
+    return bool(os.getenv(spec["key_env"]) or os.getenv(spec["base_url_env"]))
+
+
+def provider_default_model(name: str) -> Optional[str]:
+    spec = PROVIDERS[name]
+    return os.getenv(spec["model_env"]) or spec["model_default"]
 
 
 def estimate_tokens(text: str) -> int:
@@ -167,23 +223,15 @@ def call_llm(
     """
     Dispatch the prompt to the configured LLM provider and return the raw text response.
     """
-    provider_name = (provider or os.getenv("LLM_PROVIDER", "ollama")).strip().lower()
-
-    if provider_name == "ollama":
-        return _call_ollama(
-            prompt,
-            model=model or os.getenv("OLLAMA_MODEL", "qwen3.5:35b"),
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-
-    if provider_name == "openai":
-        raise LLMError(
-            "LLM_PROVIDER=openai not yet implemented. "
-            "Set LLM_PROVIDER=ollama until OpenAI support is wired up."
-        )
-
-    raise LLMError(f"Unsupported LLM provider '{provider_name}'.")
+    name = provider_name(provider)
+    resolved_model = model or provider_default_model(name)
+    if not resolved_model:
+        raise LLMError(f"No model configured for provider '{name}' (set {PROVIDERS[name]['model_env']}).")
+    if name == "ollama":
+        return _call_ollama(prompt, model=resolved_model, temperature=temperature, max_tokens=max_tokens)
+    if name == "openai":
+        return _call_openai_compat(prompt, model=resolved_model, temperature=temperature, max_tokens=max_tokens)
+    return _call_anthropic(prompt, model=resolved_model, max_tokens=max_tokens)
 
 
 def _log_ollama_stats(body: Dict[str, Any], wall_secs: float, label: str = "") -> None:
@@ -273,8 +321,7 @@ def call_llm_two_step(
     Uses Ollama /api/chat for multi-turn conversation.
     Falls back to call_llm() if provider is not ollama.
     """
-    provider_name = os.getenv("LLM_PROVIDER", "ollama").strip().lower()
-    if provider_name != "ollama":
+    if provider_name() != "ollama":
         # Two-step is Ollama-specific; fall back gracefully.
         return call_llm(prompt, model=model, temperature=temperature, max_tokens=max_tokens)
 
@@ -371,18 +418,16 @@ def call_llm_stream(
     """
     Dispatch the prompt to the configured LLM provider and yield tokens as they stream.
     """
-    provider_name = (provider or os.getenv("LLM_PROVIDER", "ollama")).strip().lower()
-
-    if provider_name == "ollama":
-        yield from _call_ollama_stream(
-            prompt,
-            model=model or os.getenv("OLLAMA_MODEL", "qwen3.5:35b"),
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        return
-
-    raise LLMError(f"Streaming not supported for provider '{provider_name}'.")
+    name = provider_name(provider)
+    resolved_model = model or provider_default_model(name)
+    if not resolved_model:
+        raise LLMError(f"No model configured for provider '{name}' (set {PROVIDERS[name]['model_env']}).")
+    if name == "ollama":
+        yield from _call_ollama_stream(prompt, model=resolved_model, temperature=temperature, max_tokens=max_tokens)
+    elif name == "openai":
+        yield from _call_openai_compat_stream(prompt, model=resolved_model, temperature=temperature, max_tokens=max_tokens)
+    else:
+        yield from _call_anthropic_stream(prompt, model=resolved_model, max_tokens=max_tokens)
 
 
 def _call_ollama_stream(
@@ -439,3 +484,129 @@ def _call_ollama_stream(
                     break
             except json.JSONDecodeError:
                 continue
+
+
+# ---------------------------------------------------------------------------
+# OpenAI-compatible adapter (/v1/chat/completions). Covers OpenAI, Azure (via base URL),
+# OpenRouter, and local servers such as vLLM, LM Studio and llama.cpp — the local ones
+# pass the gate without the opt-in flag.
+# ---------------------------------------------------------------------------
+def _openai_headers() -> Dict[str, str]:
+    key = os.getenv("OPENAI_API_KEY", "").strip()
+    return {"Authorization": f"Bearer {key}"} if key else {}
+
+
+def _openai_payload(prompt: str, model: str, temperature: Optional[float], max_tokens: Optional[int], stream: bool) -> Dict[str, Any]:
+    payload: Dict[str, Any] = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": temperature if temperature is not None else _env_float("LLM_TEMPERATURE", 0.2),
+        "max_tokens": max_tokens if max_tokens is not None else _env_int("LLM_MAX_TOKENS", 8192),
+        "stream": stream,
+    }
+    if os.getenv("OPENAI_JSON_MODE", "").strip().lower() in ("1", "true", "yes"):
+        payload["response_format"] = {"type": "json_object"}
+    return payload
+
+
+def _call_openai_compat(prompt: str, *, model: str, temperature: Optional[float], max_tokens: Optional[int]) -> str:
+    endpoint = f"{gated_base_url('openai')}/chat/completions"
+    timeout = _env_float("OLLAMA_TIMEOUT_SECONDS", 300)
+    logger.info("→ openai-compat model=%s prompt_chars=%d", model, len(prompt))
+    t0 = time.time()
+    resp = requests.post(endpoint, json=_openai_payload(prompt, model, temperature, max_tokens, False),
+                         headers=_openai_headers(), timeout=timeout, allow_redirects=False)
+    if resp.status_code != 200:
+        raise LLMError(f"OpenAI-compatible endpoint responded with HTTP {resp.status_code}: {resp.text[:300]}")
+    try:
+        body = resp.json()
+        text = body["choices"][0]["message"]["content"]
+    except (ValueError, KeyError, IndexError, TypeError) as exc:
+        raise LLMError(f"OpenAI-compatible response had an unexpected shape: {type(exc).__name__}") from exc
+    usage = body.get("usage") or {}
+    logger.info("← openai-compat wall=%.2fs | %s tokens", time.time() - t0, usage.get("completion_tokens", "?"))
+    if not isinstance(text, str) or not text.strip():
+        raise LLMError("OpenAI-compatible response contained no text")
+    return text.strip()
+
+
+def _call_openai_compat_stream(prompt: str, *, model: str, temperature: Optional[float], max_tokens: Optional[int]) -> Generator[str, None, None]:
+    endpoint = f"{gated_base_url('openai')}/chat/completions"
+    timeout = _env_float("OLLAMA_TIMEOUT_SECONDS", 300)
+    logger.info("→ openai-compat/stream model=%s prompt_chars=%d", model, len(prompt))
+    resp = requests.post(endpoint, json=_openai_payload(prompt, model, temperature, max_tokens, True),
+                         headers=_openai_headers(), timeout=timeout, stream=True, allow_redirects=False)
+    if resp.status_code != 200:
+        raise LLMError(f"OpenAI-compatible endpoint responded with HTTP {resp.status_code}: {resp.text[:300]}")
+    for line in resp.iter_lines():
+        if not line:
+            continue
+        line = line.decode("utf-8", errors="replace") if isinstance(line, bytes) else line
+        if not line.startswith("data:"):
+            continue
+        data = line[5:].strip()
+        if data == "[DONE]":
+            break
+        try:
+            chunk = json.loads(data)
+            token = ((chunk.get("choices") or [{}])[0].get("delta") or {}).get("content")
+        except (ValueError, AttributeError, IndexError):
+            continue
+        if token:
+            yield token
+
+
+# ---------------------------------------------------------------------------
+# Anthropic adapter — official SDK (optional dependency: pip install etiqtech[anthropic]).
+# Always remote, so it only runs with ETIQTECH_ALLOW_REMOTE_LLM=1. Sampling parameters are
+# not sent (rejected by current Claude models); adaptive thinking is the model default.
+# ---------------------------------------------------------------------------
+def _anthropic_client():
+    try:
+        import anthropic  # noqa: WPS433 — optional dependency
+    except ImportError as exc:
+        raise LLMError("LLM_PROVIDER=anthropic needs the 'anthropic' package: pip install 'etiqtech[anthropic]'") from exc
+    base_url = gated_base_url("anthropic")
+    return anthropic.Anthropic(base_url=base_url, timeout=_env_float("OLLAMA_TIMEOUT_SECONDS", 300))
+
+
+def _anthropic_kwargs(prompt: str, model: str, max_tokens: Optional[int]) -> Dict[str, Any]:
+    return {
+        "model": model,
+        "max_tokens": max_tokens if max_tokens is not None else _env_int("LLM_MAX_TOKENS", 8192),
+        "messages": [{"role": "user", "content": prompt}],
+    }
+
+
+def _call_anthropic(prompt: str, *, model: str, max_tokens: Optional[int]) -> str:
+    client = _anthropic_client()
+    logger.info("→ anthropic model=%s prompt_chars=%d", model, len(prompt))
+    t0 = time.time()
+    try:
+        message = client.messages.create(**_anthropic_kwargs(prompt, model, max_tokens))
+    except Exception as exc:  # SDK error classes are only importable when the SDK is
+        raise LLMError(f"Anthropic API call failed: {type(exc).__name__}") from exc
+    if getattr(message, "stop_reason", None) == "refusal":
+        raise LLMError("Anthropic model refused the request (stop_reason=refusal)")
+    text = "".join(getattr(b, "text", "") for b in message.content if getattr(b, "type", "") == "text")
+    logger.info("← anthropic wall=%.2fs | stop=%s", time.time() - t0, getattr(message, "stop_reason", None))
+    if not text.strip():
+        raise LLMError("Anthropic response contained no text")
+    return text.strip()
+
+
+def _call_anthropic_stream(prompt: str, *, model: str, max_tokens: Optional[int]) -> Generator[str, None, None]:
+    client = _anthropic_client()
+    logger.info("→ anthropic/stream model=%s prompt_chars=%d", model, len(prompt))
+    try:
+        with client.messages.stream(**_anthropic_kwargs(prompt, model, max_tokens)) as stream:
+            for text in stream.text_stream:
+                if text:
+                    yield text
+            final = stream.get_final_message()
+    except LLMError:
+        raise
+    except Exception as exc:
+        raise LLMError(f"Anthropic API stream failed: {type(exc).__name__}") from exc
+    if getattr(final, "stop_reason", None) == "refusal":
+        raise LLMError("Anthropic model refused the request (stop_reason=refusal)")

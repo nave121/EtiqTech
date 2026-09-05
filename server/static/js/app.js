@@ -96,11 +96,42 @@
     };
 
     // Fetch available models from Ollama
+    // Providers offered = those configured on the server (see /api/llm-providers).
+    let providerInfo = {};
+    async function fetchProviders() {
+        try {
+            const data = await (await fetch('/api/llm-providers')).json();
+            if (!data.success || !Array.isArray(data.providers) || data.providers.length === 0) return;
+            providerInfo = {};
+            providerSelect.innerHTML = data.providers.map((p) => {
+                providerInfo[p.name] = p;
+                const label = p.name === 'ollama' ? 'Ollama (local)' : p.name === 'openai' ? 'OpenAI-compatible' : 'Anthropic';
+                const tag = p.local ? '' : (p.usable ? ' — remote' : ' — remote, blocked');
+                return `<option value="${escapeAttr(p.name)}" ${p.usable ? '' : 'disabled'}>${escapeHtml(label + tag)}</option>`;
+            }).join('');
+            if (providerInfo[data.default] && providerInfo[data.default].usable) providerSelect.value = data.default;
+        } catch (e) {
+            // keep the static Ollama option
+        }
+    }
+
     async function fetchModels() {
         modelSelect.disabled = true;
         modelSelect.innerHTML = '<option value="">Loading models...</option>';
         modelStatus.textContent = '';
         modelStatus.className = 'model-status';
+
+        const provider = providerSelect.value;
+        if (provider !== 'ollama') {
+            // Non-Ollama providers: the model is configured server-side (OPENAI_MODEL / ANTHROPIC_MODEL).
+            const info = providerInfo[provider] || {};
+            const m = info.default_model || '';
+            modelSelect.innerHTML = m ? `<option value="${escapeAttr(m)}">${escapeHtml(m)}</option>` : '<option value="">(no model configured)</option>';
+            modelSelect.disabled = true;
+            modelStatus.textContent = info.local ? '' : 'Remote provider: protocol text leaves this machine';
+            modelStatus.className = info.local ? 'model-status' : 'model-status error';
+            return;
+        }
 
         try {
             const response = await fetch('/api/ollama-models');
@@ -139,8 +170,8 @@
         setupExportButton();
         setupLLMMinimize();
         if (layer3Btn) layer3Btn.addEventListener('click', startLayer3Review);
-        fetchModels();
         providerSelect.addEventListener('change', fetchModels);
+        fetchProviders().then(fetchModels);  // providers first, then the model list for the chosen one
     }
 
     // Upload Zone Setup

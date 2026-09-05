@@ -18,7 +18,9 @@ import requests as http_requests
 from src.html_to_json import parse_html
 from src.linter_renderer import lint, render_html_with_refs
 from src.llm_agent import law_loaded, run_verification_stream
-from src.llm_clients import LLMError, local_first_status, ollama_base_url
+from src.llm_clients import (
+    LLMError, PROVIDERS, local_first_status, ollama_base_url, provider_configured, provider_default_model,
+)
 from src.llm_layer3 import run_human_eye_stream
 
 # ── Security note ──────────────────────────────────────────────────
@@ -39,15 +41,15 @@ logger = logging.getLogger(__name__)
 _llm_target = local_first_status()
 if _llm_target["remote"] and not _llm_target["remote_allowed"]:
     logger.error(
-        "OLLAMA_BASE_URL points at a REMOTE host (%s) and ETIQTECH_ALLOW_REMOTE_LLM is not set. "
+        "LLM provider %s points at a REMOTE host (%s) and ETIQTECH_ALLOW_REMOTE_LLM is not set. "
         "LLM calls will be refused so no protocol text leaves this machine; the linter still works.",
-        _llm_target["ollama_host"],
+        _llm_target["provider"], _llm_target["host"],
     )
 elif _llm_target["remote"]:
     logger.warning(
-        "REMOTE LLM ENABLED: protocol text will be sent to %s (ETIQTECH_ALLOW_REMOTE_LLM=1). "
+        "REMOTE LLM ENABLED: protocol text will be sent to %s via provider %s (ETIQTECH_ALLOW_REMOTE_LLM=1). "
         "This deployment is NOT local-first. Make sure your privacy notice says so.",
-        _llm_target["ollama_host"],
+        _llm_target["host"], _llm_target["provider"],
     )
 
 if not law_loaded():
@@ -310,6 +312,25 @@ def _update_session(session_id, **fields):
         entry = _analysis_cache.get(session_id)
         if entry is not None:
             entry.update(fields)
+
+
+@app.route('/api/llm-providers')
+def llm_providers():
+    """Providers the UI may offer: those with credentials/base URL configured, plus their default model."""
+    default = os.getenv("LLM_PROVIDER", "ollama").strip().lower()
+    out = []
+    for name, spec in PROVIDERS.items():
+        if not provider_configured(name):
+            continue
+        status = local_first_status(name)
+        out.append({
+            "name": name,
+            "default_model": provider_default_model(name),
+            "streaming": spec["streaming"],
+            "local": not status["remote"],
+            "usable": (not status["remote"]) or status["remote_allowed"],
+        })
+    return jsonify({"success": True, "default": default if default in PROVIDERS else "ollama", "providers": out})
 
 
 @app.route('/api/ollama-models')

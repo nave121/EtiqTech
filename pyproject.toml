@@ -31,6 +31,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+anthropic = ["anthropic>=1.0"]  # LLM_PROVIDER=anthropic (remote; needs ETIQTECH_ALLOW_REMOTE_LLM=1)
 dev = [
     "pytest>=8",
     "pytest-mock>=3.14",
