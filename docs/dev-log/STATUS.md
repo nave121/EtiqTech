@@ -10,6 +10,7 @@
 - Working alone: **study decisions online first**, then decide; record the reasoning in the log.
 - Keep a full step log (the session log) and this status file **updated with each commit**, so a
   compacted session can continue without loss.
+- Added 2026-09-05: **ULTRACODE** — substantive tasks run as Workflow orchestrations; model tiers: Opus for most agents, Fable for the biggest synthesis/implementation steps, Sonnet for small reviews.
 - Added 2026-09-05: **Design task** — near the end of the sprint, make the product super easy and
   self-explanatory for non-technical people (researchers, committee staff): onboarding copy,
   plain-language findings, guided first run. Not started; scheduled after the eval gate.
