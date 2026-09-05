@@ -23,11 +23,15 @@ docker run -p 4242:4242 etiqtech
 
 Open http://localhost:4242 — upload an HTML protocol export and get instant results.
 
-The image serves with `gunicorn -c gunicorn.conf.py`: **one worker, 16 threads**.
+The image serves with `gunicorn -c gunicorn.conf.py`: **one worker, 64 threads**.
 Sessions and rate-limit counters live in process memory, so the app must not be
 run with several workers (the SSE stream would land on a process that never saw
-the upload). Scale by running one container per replica; see `gunicorn.conf.py`
-for the shared-store path if that ever changes.
+the upload). Each LLM stream holds a thread, so `GUNICORN_THREADS` is the ceiling
+on concurrent streams. Scale by running one container per replica; see
+`gunicorn.conf.py` for the shared-store path if that ever changes.
+
+Behind a reverse proxy (the recommended deployment: Cloudflare Access in front),
+set `PROXY_FIX=1` so rate limits apply per client IP instead of per proxy.
 
 To connect a local Ollama instance for LLM verification:
 
@@ -118,6 +122,10 @@ EtiqTech reviews protocols in three layers:
 | `LAYER3_SAMPLING_RATE` | `0.10` | Fraction of clean protocols to spot-check |
 | `FLASK_DEBUG` | `false` | Enable Flask debug mode |
 | `SECRET_KEY` | (random) | Required in production |
+| `PORT` | `4242` | Listen port (gunicorn.conf.py) |
+| `GUNICORN_THREADS` | `64` | Thread pool = max concurrent LLM streams |
+| `PROXY_FIX` | unset | `1` to trust one X-Forwarded-For hop behind a reverse proxy |
+| `RATELIMIT_ENABLED` | `true` | `false` only for load tests; refused in production |
 
 ---
 

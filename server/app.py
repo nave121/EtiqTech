@@ -49,7 +49,20 @@ if not _secret and os.getenv('FLASK_ENV') == 'production':
 app.config['SECRET_KEY'] = _secret or os.urandom(32).hex()
 
 # RATELIMIT_ENABLED=false disables limiting (load tests, tests/test_gunicorn_sessions.py).
+# It is the app's only DoS control, so it is refused in production and loud elsewhere.
 app.config['RATELIMIT_ENABLED'] = os.getenv('RATELIMIT_ENABLED', 'true').lower() not in ('0', 'false', 'no')
+if not app.config['RATELIMIT_ENABLED']:
+    if os.getenv('FLASK_ENV') == 'production':
+        raise ValueError("RATELIMIT_ENABLED=false is not allowed in production")
+    logger.warning("Rate limiting DISABLED via RATELIMIT_ENABLED — never run like this in production")
+
+# Behind a reverse proxy (Cloudflare Access, nginx) remote_addr is the proxy, so every
+# user would share one rate-limit bucket. Set PROXY_FIX=1 to trust ONE hop of
+# X-Forwarded-For. Leave it unset when clients reach gunicorn directly, or they can
+# spoof the header to dodge the limiter.
+if os.getenv('PROXY_FIX', '').lower() in ('1', 'true', 'yes'):
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 # NOTE: memory:// storage is per-process. With gunicorn.conf.py (1 worker) that is
 # one shared counter; if the app is ever run with several workers or replicas,

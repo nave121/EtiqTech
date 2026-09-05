@@ -12,9 +12,12 @@ answers "Session not found". Threads share memory, processes do not, so we
 scale with gthread threads inside one worker instead.
 
 Threads are sized generously: every SSE stream (Layer 2 / Layer 3) occupies a
-thread for the whole LLM run. gthread's poll loop keeps heart-beating the
-arbiter while request threads are busy, so long streams are not killed by
-`timeout`.
+thread for the whole LLM run, and `threads` is therefore a hard ceiling on
+concurrent streams — when all are busy, new requests (including the Docker
+HEALTHCHECK on /api/health) queue in the socket backlog until one frees up.
+64 threads ≈ 60 simultaneous LLM streams, far above what a single Ollama
+backend can serve anyway. gthread's poll loop keeps heart-beating the arbiter
+while request threads are busy, so long streams are not killed by `timeout`.
 
 Scale-out path (not built; not needed at current scale)
 ------------------------------------------------------
@@ -29,7 +32,6 @@ import os
 bind = f"0.0.0.0:{os.getenv('PORT', '4242')}"
 workers = 1
 worker_class = "gthread"
-threads = int(os.getenv("GUNICORN_THREADS", "16"))
+threads = int(os.getenv("GUNICORN_THREADS", "64"))
 timeout = 300
 keepalive = 5
-accesslog = None  # ponytail: no access log; request paths carry session UUIDs, not protocol text

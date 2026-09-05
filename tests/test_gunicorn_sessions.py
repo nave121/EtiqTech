@@ -29,6 +29,7 @@ pytestmark = pytest.mark.skipif(shutil.which("gunicorn") is None, reason="gunico
 
 
 def _free_port() -> int:
+    # bind-close-reuse race is possible under parallel runners; cost is a 30s startup timeout, not a false pass
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
@@ -106,6 +107,8 @@ def test_shipped_gunicorn_config_is_single_worker():
     exec((REPO_ROOT / "gunicorn.conf.py").read_text(), ns)
     assert ns["workers"] == 1, "sessions are per-process; see gunicorn.conf.py"
     assert ns["threads"] >= 8
+    # the Dockerfile must actually use this file, or the test guards nothing
+    assert '"-c", "gunicorn.conf.py"' in (REPO_ROOT / "Dockerfile").read_text()
 
 
 def test_analyze_then_sse_round_trips_never_lose_session(gunicorn_url):
