@@ -35,14 +35,14 @@ permanent · auth stays at the reverse proxy.
 | P2 retrieval layer + cited grounding | done, **off by default** | 3b67301, 64ca1ed |
 | P2 eval gate (grounded vs ungrounded) | harness ready (`scripts/eval_grounding.py`); **running subset** — see below | 342092b |
 | P2 Norecopa ingest | **blocked on maintainer** (access path) | — |
-| P3.1 rule registry (ids, version, docs/rules.md) | done; module split not done | 592aa81, 9e04573 |
+| P3.1 rule registry (ids, version, docs/rules.md) | done; **module split executing** per `linter-split-plan.md` (workflow, 8 batches, snapshot-checked) | 592aa81, 9e04573, bd2e383 |
 | P3.2 pack mechanism + EU spike | done (EU rules await review) | 6a173f9 |
 | P3.3 schema contract + adapters | done | 20ef270, 77158b0, f71c98a |
 | P3.4 providers (OpenAI-compat, Anthropic) | done | c5287c3, 6e00a43 |
 | P3.5 feedback loop (metadata only) | done | a62cd84, 398ef47 |
 | P4 prepare-mapping, demo mode, README diagram, acknowledgements | done | 8449d66, 9ce976b |
 | P4 demo GIF, social preview, i18n toggle, public deploy | not done | — |
-| Design (non-tech-friendly UX) | not started — end of sprint | — |
+| Design (non-tech-friendly UX) | spec done (`docs/design/spec.md`); 9 commits executing on branch `design-ux` (worktree ../EtiqTech-design) | 3af9372 |
 
 ## Open findings for the maintainer (do not fix without a decision)
 1. `the_law-english_translation.txt` is the Council's form guidance, not the 1994 statute (statute not in repo).
@@ -52,6 +52,9 @@ permanent · auth stays at the reverse proxy.
 5. 27 of 59 rules fire on no fixture; `three_Rs_alternatives` is a target theme in only 3 of 28 golden cases.
 6. On the 27B test model the blind pass barely separates good from bad protocols (see docs/benchmarks.md).
 7. `the_law.txt` is a word-reversed duplicate of the PDF text — candidate for deletion (rule: never delete without OK).
+
+## Branches / worktrees
+- `design-ux` at `../EtiqTech-design`: design commits land here; merge into main after the linter split finishes (files disjoint except src/rules.py additive fields).
 
 ## How to resume
 ```bash
