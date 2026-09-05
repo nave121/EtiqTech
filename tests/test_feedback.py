@@ -43,6 +43,8 @@ def test_valid_feedback_is_recorded_and_reported(db):
     {"kind": "llm", "key": "euthanasia:CO2", "verdict": "down"},  # rule id under the wrong kind
     {"kind": "lint", "key": "euthanasia:CO2", "verdict": "meh"},
     {"kind": "lint", "key": "euthanasia:CO2", "verdict": "down", "profile": "x" * 40},
+    {"kind": "lint", "key": "euthanasia:CO2", "verdict": "down", "profile": "SPECIES:Macaca;N=12"},  # text in an 'enum'
+    {"kind": "lint", "key": "euthanasia:CO2", "verdict": "down", "ruleset_version": "see protocol p.3"},
     "not json",
     None,
 ])

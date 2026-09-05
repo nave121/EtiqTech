@@ -55,9 +55,10 @@ the source.
 Thumbs up/down on a finding writes one row to a SQLite file (`FEEDBACK_DB`,
 default `output/feedback.sqlite`; `ETIQTECH_FEEDBACK=0` disables the feature):
 kind (`lint`/`llm`), the rule id or theme key, the verdict, the ruleset version,
-the linter profile, and a UTC timestamp. The server rejects any other field
-(a comment, a session id, protocol text) with 400 — the schema is an allowlist,
-not a filter. The privacy canary writes feedback during a marked run and asserts
+the linter profile, and a UTC timestamp. Every one of those is checked against a
+fixed set of known values (registered rule ids and themes, the two linter
+profiles, the current ruleset version); the server rejects any other field or
+any unknown value with 400 — the schema is an allowlist, not a filter. The privacy canary writes feedback during a marked run and asserts
 the marker never reaches the database file. Adding free-text comments would be
 a separate, maintainer-approved privacy decision.
 

@@ -12,6 +12,7 @@ from __future__ import annotations
 import os
 import sqlite3
 import threading
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -19,6 +20,7 @@ from typing import Any, Dict, List, Optional
 ROOT = Path(__file__).resolve().parent.parent
 KINDS = ("lint", "llm")
 VERDICTS = ("up", "down")
+PROFILES = ("default", "strict_law")  # the linter's two profiles; anything else is not a profile
 _ALLOWED_FIELDS = {"kind", "key", "verdict", "ruleset_version", "profile"}
 _lock = threading.Lock()
 
@@ -48,9 +50,11 @@ def _connect() -> sqlite3.Connection:
     return conn
 
 
-def validate(payload: Dict[str, Any], *, rule_ids: List[str], theme_keys: List[str]) -> Dict[str, Any]:
-    """Return the sanitized row or raise ValueError. Unknown fields are an error, not ignored:
-    a free-text 'comment' must fail loudly, never slip into the store."""
+def validate(payload: Dict[str, Any], *, rule_ids: List[str], theme_keys: List[str],
+             ruleset_versions: Optional[List[str]] = None) -> Dict[str, Any]:
+    """Return the sanitized row or raise ValueError. Every field is an allowlist of known
+    values — unknown fields, unknown keys, unknown profiles and unknown ruleset versions all
+    fail loudly, so no string a client chooses can reach the store."""
     if not isinstance(payload, dict):
         raise ValueError("body must be a JSON object")
     extra = set(payload) - _ALLOWED_FIELDS
@@ -65,18 +69,25 @@ def validate(payload: Dict[str, Any], *, rule_ids: List[str], theme_keys: List[s
     if not isinstance(key, str) or key not in valid_keys:
         raise ValueError("key is not a registered rule id / theme")
     row = {"kind": kind, "key": key, "verdict": verdict}
-    for opt in ("ruleset_version", "profile"):
-        v = payload.get(opt)
-        if v is not None:
-            if not isinstance(v, str) or len(v) > 32:
-                raise ValueError(f"{opt} must be a short string")
-            row[opt] = v
+    profile = payload.get("profile")
+    if profile is not None:
+        if profile not in PROFILES:
+            raise ValueError("profile must be one of the linter profiles")
+        row["profile"] = profile
+    version = payload.get("ruleset_version")
+    if version is not None:
+        if ruleset_versions is None:
+            from .rules import RULESET_VERSION
+            ruleset_versions = [RULESET_VERSION]
+        if version not in ruleset_versions:
+            raise ValueError("ruleset_version is not a known ruleset")
+        row["ruleset_version"] = version
     return row
 
 
 def record(row: Dict[str, Any]) -> int:
     """Insert a validated row. Returns the row id."""
-    with _lock, _connect() as conn:
+    with _lock, closing(_connect()) as conn, conn:
         cur = conn.execute(
             "INSERT INTO feedback (created_at, kind, key, verdict, ruleset_version, profile) VALUES (?,?,?,?,?,?)",
             (datetime.now(timezone.utc).isoformat(timespec="seconds"), row["kind"], row["key"], row["verdict"],
@@ -89,7 +100,7 @@ def noise_report(*, since: Optional[str] = None) -> List[Dict[str, Any]]:
     """Per (kind, key): up/down counts and down-rate — the signal that drives rule tuning."""
     if not db_path().exists():
         return []
-    with _connect() as conn:
+    with closing(_connect()) as conn:
         where, args = ("WHERE created_at >= ?", (since,)) if since else ("", ())
         rows = conn.execute(
             f"SELECT kind, key, SUM(verdict='up'), SUM(verdict='down'), COUNT(*) FROM feedback {where} "

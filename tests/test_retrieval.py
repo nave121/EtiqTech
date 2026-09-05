@@ -200,3 +200,13 @@ def test_wrong_shape_cache_falls_back_instead_of_raising(monkeypatch, tmp_path):
     path.write_text(json.dumps({str(i): "x" for i in range(len(RECORDS))}))  # valid JSON, right length, wrong shape
     fresh = Retriever(RECORDS, embed_model="fake", cache_dir=tmp_path)
     assert fresh.build_index() is True and fresh.search("euthanasia", k=1)
+
+
+def test_non_numeric_cache_falls_back(monkeypatch, tmp_path):
+    monkeypatch.setattr(retrieval, "embed_texts", _fake_embed)
+    r = Retriever(RECORDS, embed_model="fake", cache_dir=tmp_path)
+    r.build_index()
+    (path,) = tmp_path.glob("fake-*.json")
+    path.write_text(json.dumps([["a", "b"]] * len(RECORDS)))
+    fresh = Retriever(RECORDS, embed_model="fake", cache_dir=tmp_path)
+    assert fresh.build_index() is True and fresh.search("euthanasia", k=1)

@@ -321,6 +321,7 @@
 
     // Reset to Upload State
     function resetToUpload() {
+        for (const k of Object.keys(feedbackGiven)) delete feedbackGiven[k];  // feedback is per analysis, not per session
         if (llmEventSource) {
             llmEventSource.close();
             llmEventSource = null;

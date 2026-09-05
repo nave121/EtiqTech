@@ -129,8 +129,8 @@ class Retriever:
                 try:
                     self._set_vectors(json.loads(path.read_text()))
                     return True
-                except (OSError, ValueError):
-                    pass  # unreadable/partial cache: rebuild below
+                except (OSError, ValueError, TypeError):
+                    pass  # unreadable/partial/garbage cache: rebuild below
             try:
                 vectors: List[List[float]] = []
                 for i in range(0, len(self.records), 16):  # small batches keep memory and timeouts sane
@@ -154,7 +154,9 @@ class Retriever:
             return True
 
     def _set_vectors(self, vectors: List[List[float]]) -> None:
-        if not isinstance(vectors, list) or len(vectors) != len(self.records) or not all(isinstance(v, list) and v for v in vectors):
+        ok = isinstance(vectors, list) and len(vectors) == len(self.records) and all(
+            isinstance(v, list) and v and all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in v) for v in vectors)
+        if not ok or len({len(v) for v in vectors}) != 1:
             raise ValueError("cached vector shape does not match corpus")  # routes through the loader's fallback
         self._vectors = vectors
         self._norms = [math.sqrt(sum(x * x for x in v)) or 1e-9 for v in vectors]

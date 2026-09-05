@@ -162,9 +162,9 @@ def test_server_error_path_never_logs_body(marker, monkeypatch, caplog, capfd):
     caplog.set_level(logging.DEBUG)
     import server.app as app_module
 
-    def explode(html):
+    def explode(content, filename=None):
         raise RuntimeError("parser died")  # message deliberately free of the body; the test checks the frames
-    monkeypatch.setattr(app_module, "parse_html", explode)
+    monkeypatch.setattr(app_module, "ingest", explode)
     app.config["TESTING"] = True
     with app.test_client() as client:
         for route in ("/api/analyze", "/api/analyze-with-session"):
@@ -204,8 +204,10 @@ def test_feedback_store_never_contains_protocol_text(marker, quiet_llm, monkeypa
                     client.post("/api/feedback", json={"kind": "lint", "key": item["rule_id"], "verdict": "down",
                                                        "ruleset_version": report["ruleset_version"], "profile": report["profile"]})
             client.post("/api/feedback", json={"kind": "llm", "key": "three_Rs_alternatives", "verdict": "up"})
-            # an attempt to smuggle text in must be refused, not stored
+            # attempts to smuggle text in must be refused, not stored — extra field, and text in the two optional fields
             assert client.post("/api/feedback", json={"kind": "llm", "key": "three_Rs_alternatives", "verdict": "up", "note": marker}).status_code == 400
+            assert client.post("/api/feedback", json={"kind": "llm", "key": "three_Rs_alternatives", "verdict": "up", "profile": marker[:32]}).status_code == 400
+            assert client.post("/api/feedback", json={"kind": "llm", "key": "three_Rs_alternatives", "verdict": "up", "ruleset_version": marker[:32]}).status_code == 400
     finally:
         app.config["RATELIMIT_ENABLED"] = True
         _analysis_cache.clear()
