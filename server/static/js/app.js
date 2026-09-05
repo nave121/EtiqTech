@@ -11,6 +11,7 @@
     const uploadZone = document.getElementById('upload-zone');
     const uploadLoading = document.getElementById('upload-loading');
     const fileInput = document.getElementById('file-input');
+    const uploadError = document.getElementById('upload-error');
 
     // DOM Elements - Model Selection
     const providerSelect = document.getElementById('provider-select');
@@ -423,10 +424,18 @@
         llmStatusText.textContent = text;
     }
 
+    // Inline upload error line under the drop zone; hidden until needed
+    function showUploadError(text) {
+        uploadError.textContent = text;
+        uploadError.hidden = false;
+    }
+
     // Handle File Upload
     async function handleFile(file) {
+        uploadError.hidden = true;
+        uploadError.textContent = '';
         if (!file.name.match(/\.(html?|json)$/i)) {
-            alert('Please upload an HTML file.');
+            showUploadError('That file type is not supported. Upload the .html file you exported from the Council system, or a .json protocol file.');
             return;
         }
 
@@ -463,9 +472,9 @@
             }
         } catch (error) {
             console.error('Analysis error:', error);
-            alert('Error: ' + error.message);
             uploadZone.parentElement.hidden = false;
             uploadLoading.hidden = true;
+            showUploadError('Something went wrong reading that file. Try exporting it again from the Council system. If it keeps failing, the file may not be a Council export.');
         }
     }
 

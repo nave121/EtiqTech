@@ -318,6 +318,17 @@ body {
     color: var(--text-secondary);
 }
 
+.upload-error {
+    margin-top: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--status-fail-border);
+    border-radius: var(--radius-md);
+    background-color: var(--status-fail-light);
+    color: var(--status-fail);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
 /* Model Selection */
 .model-selection {
     display: flex;
