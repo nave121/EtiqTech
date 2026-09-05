@@ -151,7 +151,7 @@
             if (data.success && data.models.length > 0) {
                 const defaultModel = 'qwen3.5:35b';
                 modelSelect.innerHTML = data.models.map(m =>
-                    `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`
+                    `<option value="${escapeAttr(m)}">${escapeHtml(m)}</option>`
                 ).join('');
                 if (data.models.includes(defaultModel)) {
                     modelSelect.value = defaultModel;

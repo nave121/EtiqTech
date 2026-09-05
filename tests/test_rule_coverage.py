@@ -1,4 +1,4 @@
-"""Synthetic canonical-JSON fixtures under examples/coverage/ each trip exactly the rule named in the filename
+"""Synthetic canonical-JSON fixtures under examples/coverage/ each trip a failing item for the rule named in the filename (unrelated rules may also fire; see examples/coverage/README.md)
 (`alts__engines.json` -> `alts:engines`), so a rule that no real example exercises still has a guard.
 See examples/coverage/README.md for how to add one and which rules cannot be reached from canonical JSON."""
 import glob
