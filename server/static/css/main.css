@@ -1521,3 +1521,10 @@ body {
         color: #000;
     }
 }
+
+/* Grounding sources (Phase 2) */
+.grounding-sources { margin-top: 14px; font-size: 0.8rem; }
+.grounding-sources ul { margin: 6px 0 0; padding-left: 1.1rem; }
+.grounding-sources li { margin-bottom: 6px; word-break: break-all; }
+.grounding-anchor { opacity: 0.75; font-family: ui-monospace, monospace; font-size: 0.75rem; }
+.grounding-license { opacity: 0.7; }

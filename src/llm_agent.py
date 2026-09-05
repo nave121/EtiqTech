@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
 
 from .llm_clients import LLMError, call_llm, call_llm_stream, call_llm_two_step, context_budget_warning
+from .retrieval import format_grounding_block, get_retriever, grounding_enabled, grounding_refs
 from .schema import IACUC_SCHEMA_V2
 from .xmeta_catalog import load_high_leverage_catalog
 
@@ -247,6 +248,98 @@ THEME_SPECS: Dict[str, Dict[str, Any]] = {
         },
     },
 }
+
+
+# What each theme should be grounded in (Phase 2). Queries are written in the language of
+# the guidance corpus; the embedding model is multilingual so Hebrew records match too.
+# NORINA/PREPARE doc_types are listed already so the filter widens the day that corpus lands.
+THEME_GROUNDING: Dict[str, Dict[str, Any]] = {
+    "three_Rs_alternatives": {
+        "queries": ["how to search for alternatives to animal use: replacement, reduction, refinement, databases and preliminary experiments in alternative methods"],
+        "doc_types": ["guidance_section", "law_section", "norina_record", "threer_guide", "prepare_section"],
+    },
+    "N_and_justification": {
+        "queries": ["justification of the number of animals, statistical power, group sizes, pilot experiments"],
+        "doc_types": ["guidance_section", "law_section", "prepare_section"],
+    },
+    "severity_monitoring_analgesia": {
+        "queries": ["severity level classification of procedures, pain and distress, analgesia, monitoring of animals during the experiment"],
+        "doc_types": ["guidance_section", "law_section", "prepare_section"],
+    },
+    "euthanasia_and_endpoints": {
+        "queries": ["euthanasia method, humane endpoints and conditions for stopping the experiment, fate of the animal"],
+        "doc_types": ["guidance_section", "law_section", "prepare_section"],
+    },
+    "harm_benefit_analysis": {
+        "queries": ["justify the reason for using animals, expected scientific benefit versus harm and severity"],
+        "doc_types": ["guidance_section", "law_section", "prepare_section"],
+    },
+    "sex_and_reuse": {
+        "queries": ["choice of animal sex and strain, previous experiment on the animal, reuse"],
+        "doc_types": ["guidance_section", "law_section", "prepare_section"],
+    },
+    "housing_and_husbandry": {
+        "queries": ["housing, husbandry, research site and animal facility approval"],
+        "doc_types": ["guidance_section", "law_section", "prepare_section"],
+    },
+    "scientific_coherence": {
+        "queries": ["research abstract, scientific question, rationale and predicted outcome of using animals"],
+        "doc_types": ["guidance_section", "law_section", "prepare_section"],
+    },
+    "personnel_and_training": {
+        "queries": ["principal investigator, authorized researcher, training of those engaged in research"],
+        "doc_types": ["guidance_section", "law_section", "prepare_section"],
+    },
+    "surgical_standards": {
+        "queries": ["surgery under anesthesia, post-operative care, analgesia after surgery"],
+        "doc_types": ["guidance_section", "law_section", "prepare_section"],
+    },
+    "hazardous_agents": {
+        "queries": ["hazardous biological chemical or physical agents, institutional safety committee approval"],
+        "doc_types": ["guidance_section", "law_section", "prepare_section"],
+    },
+    "writing_quality": {
+        "queries": ["how to fill the request form: focus, brevity, answers in English, text size guidance"],
+        "doc_types": ["guidance_section"],
+    },
+}
+GROUNDING_K = 5  # small chunks, tight k (brief §6.2); ~5 x 700 chars ≈ 900 tokens per prompt
+
+
+def _instance_species(instance: Dict[str, Any]) -> List[str]:
+    """Canonical species keys already produced by the parser (species_standard)."""
+    out: List[str] = []
+    for row in instance.get("animals_total") or []:
+        key = (row or {}).get("species_standard")
+        if key and key not in out:
+            out.append(key)
+    return out
+
+
+def _retrieve_grounding(theme_key: str, instance: Dict[str, Any]):
+    """Return (hits, notice). Never raises; empty hits + notice means 'fall back to the law prefix'."""
+    spec = THEME_GROUNDING.get(theme_key)
+    if not spec:
+        return [], None
+    try:
+        retriever = get_retriever()
+        hits = []
+        seen = set()
+        for q in spec["queries"]:
+            for h in retriever.search(q, k=GROUNDING_K, doc_types=spec["doc_types"], species=_instance_species(instance)):
+                if h.id not in seen:
+                    seen.add(h.id)
+                    hits.append(h)
+        hits = hits[:GROUNDING_K]
+        notice = None
+        if not hits:
+            notice = "Grounding unavailable: no matching guidance retrieved; review ran ungrounded."
+        elif hits[0].method == "lexical":
+            notice = "Grounding degraded: embedding index unavailable, sources matched by keyword."
+        return hits, notice
+    except Exception as exc:  # retrieval must never take the review down
+        logger.warning("grounding retrieval failed: %s", type(exc).__name__)
+        return [], "Grounding unavailable: retrieval failed; review ran ungrounded."
 
 
 _ALLOWED_PROMPTS = frozenset({
@@ -509,13 +602,20 @@ def _build_theme_prompt(
     pass_name: str,
     pass1_theme: Optional[Dict[str, Any]] = None,
     pass1_questions: Optional[List[Dict[str, Any]]] = None,
+    grounding_hits: Optional[List[Any]] = None,
 ) -> str:
     """
     Build a small, theme-focused prompt to reduce load on the model.
+
+    With grounding_hits (Phase 2) the fixed 1,200-char law prefix is replaced by the
+    retrieved, theme-relevant guidance sections, each carrying its source URL.
     """
     analysis = lint_report.get("analysis") or {}
     analysis_subset = _slice_analysis(analysis, theme_spec.get("analysis_keys", []))
-    law_text = _load_law_text()
+    if grounding_hits:
+        law_text = format_grounding_block(grounding_hits)
+    else:
+        law_text = _load_law_text()
     case_reports = _load_case_reports()
     analysis_str = json.dumps(analysis_subset, ensure_ascii=False, indent=2)
     expected_str = json.dumps(
@@ -545,8 +645,9 @@ def _build_theme_prompt(
                     "prior automated review exists. Respond ONLY with valid JSON."
                 ),
                 "Do not return binary verdicts or confidence ratings.",
+                ("When a grounding reference supports a finding, cite it in the rationale as [G1], [G2] ..." if grounding_hits else None),
                 "",
-                f"Law excerpt (trimmed):\n{law_text}\n",
+                (f"Law and guidance grounding:\n{law_text}\n" if grounding_hits else f"Law excerpt (trimmed):\n{law_text}\n"),
                 f"Head-to-head committee notes (trimmed):\n{case_reports}\n",
             ]
         )
@@ -567,8 +668,9 @@ def _build_theme_prompt(
                     "final graded theme verdict. Respond ONLY with valid JSON."
                 ),
                 "Do not return binary verdicts or confidence ratings.",
+                ("When a grounding reference supports a finding, cite it in the rationale as [G1], [G2] ..." if grounding_hits else None),
                 "",
-                f"Law excerpt (trimmed):\n{law_text}\n",
+                (f"Law and guidance grounding:\n{law_text}\n" if grounding_hits else f"Law excerpt (trimmed):\n{law_text}\n"),
                 f"Head-to-head committee notes (trimmed):\n{case_reports}\n",
                 "Blind Pass 1 result:\n"
                 f"```json\n{pass1_theme_str}\n```\n",
@@ -898,14 +1000,18 @@ def run_verification(
     disagreement_theme_keys: List[str] = []
 
     use_two_step = os.getenv("OLLAMA_TWO_STEP", "").lower() in ("1", "true")
+    grounding_notice: Optional[str] = None
 
     for theme_key, theme_spec in THEME_SPECS.items():
+        hits, notice = _retrieve_grounding(theme_key, instance) if grounding_enabled() else ([], None)
+        grounding_notice = grounding_notice or notice
         blind_prompt = _build_theme_prompt(
             theme_key,
             theme_spec,
             instance,
             lint_report,
             pass_name="blind",
+            grounding_hits=hits,
         )
         fallback_rationale = (
             "LLM did not return a usable graded result; defaulting to inadequate."
@@ -949,6 +1055,7 @@ def run_verification(
             pass_name="reconcile",
             pass1_theme=pass1_themes[theme_key],
             pass1_questions=pass1_questions,
+            grounding_hits=hits,
         )
         reconcile_fallback = (
             "LLM did not return a usable reconciled graded result; defaulting to inadequate."
@@ -992,6 +1099,7 @@ def run_verification(
             else []
         )
 
+        themes[theme_key]["grounding"] = grounding_refs(hits)
         metadata = _build_theme_metadata(
             pass1_themes[theme_key],
             themes[theme_key],
@@ -1015,6 +1123,7 @@ def run_verification(
         },
         "checklist_items": [],  # keep empty; this flow focuses on thematic verdicts
         "questions": questions,
+        "grounding_notice": grounding_notice,
     }
 
 
@@ -1045,6 +1154,7 @@ def run_verification_stream(
     total_themes = len(THEME_SPECS)
     processed = 0
     budget_warned = False  # one warning per stream is enough; theme prompts are all about the same size
+    grounding_notice: Optional[str] = None
 
     for theme_key, theme_spec in THEME_SPECS.items():
         processed += 1
@@ -1058,12 +1168,18 @@ def run_verification_stream(
             "total": total_themes,
         }
 
+        hits, notice = _retrieve_grounding(theme_key, instance) if grounding_enabled() else ([], None)
+        if notice and not grounding_notice:
+            grounding_notice = notice
+            yield {"type": "warning", "code": "grounding", "theme": theme_key, "message": notice}
+
         blind_prompt = _build_theme_prompt(
             theme_key,
             theme_spec,
             instance,
             lint_report,
             pass_name="blind",
+            grounding_hits=hits,
         )
 
         if not budget_warned:
@@ -1132,6 +1248,7 @@ def run_verification_stream(
             pass_name="reconcile",
             pass1_theme=pass1_themes[theme_key],
             pass1_questions=pass1_questions,
+            grounding_hits=hits,
         )
 
         full_response = ""
@@ -1184,6 +1301,7 @@ def run_verification_stream(
             theme_payload,
             fallback_rationale=reconcile_fallback,
         )
+        themes[theme_key]["grounding"] = grounding_refs(hits)
         pass2_questions = (
             _normalize_questions(reconcile_parsed.get("questions"))
             if isinstance(reconcile_parsed, dict)
@@ -1220,6 +1338,7 @@ def run_verification_stream(
         },
         "checklist_items": [],
         "questions": questions,
+        "grounding_notice": grounding_notice,
     }
 
     yield {

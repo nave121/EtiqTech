@@ -747,6 +747,7 @@
             <div class="detail-rationale">${escapeHtml(result.rationale || 'No rationale provided.')}</div>
             <div class="detail-confidence">Overall score: ${meta.short}</div>
             ${subQuestionsHtml}
+            ${groundingHtml(result.grounding)}
             <p class="advisory-banner">${escapeHtml(advisoryNotice())}</p>
         `;
 
@@ -870,6 +871,27 @@
                 handleLLMError(data);
                 break;
         }
+    }
+
+    // Grounding sources attached to a theme result (Phase 2). Everything escaped; only
+    // http(s) URLs render as links (etiqtech:// anchors are local corpus ids, shown as text).
+    function groundingHtml(refs) {
+        if (!Array.isArray(refs) || refs.length === 0) return '';
+        const items = refs.map((g) => {
+            const url = String(g.url || '');
+            const label = `[${escapeHtml(g.ref || '')}] ${escapeHtml(g.title || '')}`;
+            const src = /^https?:\/\//i.test(url)
+                ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`
+                : `<span class="grounding-anchor">${escapeHtml(url)}</span>`;
+            const lic = g.license ? ` <span class="grounding-license">(${escapeHtml(g.license)})</span>` : '';
+            return `<li>${label}<br>${src}${lic}</li>`;
+        }).join('');
+        return `<div class="grounding-sources"><div class="detail-fix-label">Sources used for grounding</div><ul>${items}</ul></div>`;
+    }
+
+    function groundingPrintText(refs) {
+        if (!Array.isArray(refs) || refs.length === 0) return '';
+        return '<br><em>Sources:</em> ' + refs.map((g) => `[${escapeHtml(g.ref || '')}] ${escapeHtml(g.title || '')} — ${escapeHtml(g.url || '')}`).join('; ');
     }
 
     // The advisory statement is rendered server-side into the template; read it from there
@@ -1013,6 +1035,7 @@
             <div class="print-llm-box ${verdictClass}">
                 <strong>LLM Review - ${escapeHtml(formatThemeName(theme))} [${escapeHtml(meta.short)} ${escapeHtml(scoreLabel)}]:</strong> 
                 ${escapeHtml(result.rationale || 'No rationale provided.')}
+                ${groundingPrintText(result.grounding)}
         `;
         printDetailsHtml += `</div>`;
         printDiv.innerHTML = printDetailsHtml;

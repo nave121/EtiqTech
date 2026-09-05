@@ -77,11 +77,23 @@ class ThemeSubQuestionResult(BaseModel):
     rationale: str = Field(min_length=1)
 
 
+class GroundingRef(BaseModel):
+    """A retrieved source injected into the theme prompt (Phase 2); surfaced for CC BY attribution."""
+    ref: str = Field(pattern=r"^G\d+$")
+    id: str
+    title: str
+    url: str
+    doc_type: Optional[str] = None
+    license: Optional[str] = None
+    method: Optional[str] = None
+
+
 class ThemeVerdict(BaseModel):
     score: Literal[0, 1, 2, 3]
     label: Literal["not_addressed", "inadequate", "partially_adequate", "adequate"]
     rationale: str = Field(min_length=1)
     sub_questions: list[ThemeSubQuestionResult] = Field(default_factory=list)
+    grounding: list[GroundingRef] = Field(default_factory=list)
 
 
 class ThemeMetadata(BaseModel):
@@ -112,6 +124,7 @@ class VerifierResult(BaseModel):
     )
     questions: list[dict[str, Any]]
     checklist_items: list[dict[str, Any]] = Field(default_factory=list)
+    grounding_notice: Optional[str] = None  # set when retrieval degraded (lexical) or was unavailable
 
 
 # ---------------------------------------------------------------------------

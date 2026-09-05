@@ -115,6 +115,9 @@ EtiqTech reviews protocols in three layers:
 | `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | Ollama server URL |
 | `OLLAMA_MODEL` | `qwen3.5:35b` | Model for verification |
 | `ETIQTECH_ALLOW_REMOTE_LLM` | unset | `1` to permit a non-local `OLLAMA_BASE_URL` (protocol text leaves the machine) |
+| `ETIQTECH_GROUNDING` | unset | `1` to ground Layer 2 prompts in retrieved guidance sections with source refs (see Grounding) |
+| `EMBED_MODEL` | `qwen3-embedding` | Ollama embedding model for retrieval (multilingual) |
+| `RETRIEVAL_CACHE_DIR` | `output/retrieval_cache` | Where the embedding index is cached (model-specific, not committed) |
 | `LLM_TEMPERATURE` | `0.2` | Sampling temperature |
 | `LLM_MAX_TOKENS` | `8192` | Max output tokens |
 | `OLLAMA_NUM_CTX` | `32768` | Context window size |
@@ -145,6 +148,20 @@ PYTHONPATH=. python scripts/batch_process.py examples/known-good/ --fail-on-erro
 ```
 
 ---
+
+## Grounding (retrieval)
+
+With `ETIQTECH_GROUNDING=1`, each Layer 2 theme prompt replaces the fixed 1,200-character
+law prefix with the 5 most relevant sections retrieved from `resources/corpus/*.jsonl`
+(today: the Council's 2025 guidance, English and Hebrew), each carrying its source URL.
+The model is asked to cite them as `[G1]`, `[G2]`, and the sources are shown in the
+theme detail panel and the printed report. Retrieval uses `qwen3-embedding` through the
+same local-first gate as the LLM; if embeddings are unavailable it falls back to keyword
+search and says so, and if retrieval fails entirely the review runs exactly as before,
+with a visible notice. Off by default until the benchmark in `docs/benchmarks.md` shows a
+gain (see the handoff plan, Phase 2).
+
+Rebuild the corpus after editing the sources: `python scripts/build_law_corpus.py`.
 
 ## Runtime resources
 
