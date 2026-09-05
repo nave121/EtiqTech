@@ -873,6 +873,11 @@
         }
     }
 
+    // escapeHtml() is a text-node escaper (no quotes); attribute values need this one.
+    function escapeAttr(value) {
+        return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
     // Grounding sources attached to a theme result (Phase 2). Everything escaped; only
     // http(s) URLs render as links (etiqtech:// anchors are local corpus ids, shown as text).
     function groundingHtml(refs) {
@@ -881,7 +886,7 @@
             const url = String(g.url || '');
             const label = `[${escapeHtml(g.ref || '')}] ${escapeHtml(g.title || '')}`;
             const src = /^https?:\/\//i.test(url)
-                ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`
+                ? `<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`
                 : `<span class="grounding-anchor">${escapeHtml(url)}</span>`;
             const lic = g.license ? ` <span class="grounding-license">(${escapeHtml(g.license)})</span>` : '';
             return `<li>${label}<br>${src}${lic}</li>`;

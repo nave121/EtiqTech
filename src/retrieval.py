@@ -80,8 +80,8 @@ def load_corpus(corpus_dir: Path = CORPUS_DIR) -> List[Dict[str, Any]]:
 
 def _corpus_hash(records: Iterable[Dict[str, Any]]) -> str:
     h = hashlib.sha256()
-    for r in records:
-        h.update(r["id"].encode()); h.update(r["text"].encode("utf-8"))
+    for r in records:  # everything that is embedded must be in the key, or a title edit serves stale vectors
+        h.update(r["id"].encode()); h.update(r.get("title", "").encode("utf-8")); h.update(r["text"].encode("utf-8"))
     return h.hexdigest()[:16]
 
 
@@ -108,6 +108,7 @@ class Retriever:
         self.embed_model = embed_model or os.getenv("EMBED_MODEL", "qwen3-embedding")
         self.cache_dir = Path(cache_dir)
         self._vectors: Optional[List[List[float]]] = None
+        self._norms: Optional[List[float]] = None  # corpus vector norms, computed once per index load
         self._lock = threading.Lock()
         self.last_error: Optional[str] = None
         self._failed_at: float = 0.0
@@ -133,15 +134,15 @@ class Retriever:
             path = self._cache_path()
             if path.exists():
                 try:
-                    self._vectors = json.loads(path.read_text())
+                    self._set_vectors(json.loads(path.read_text()))
                     return True
                 except (OSError, ValueError):
-                    pass
+                    pass  # unreadable/partial cache: rebuild below
             try:
                 vectors: List[List[float]] = []
                 for i in range(0, len(self.records), 16):  # small batches keep memory and timeouts sane
                     vectors.extend(embed_texts([f"{r['title']}\n{r['text']}" for r in self.records[i:i + 16]], model=self.embed_model))
-                self._vectors = vectors
+                self._set_vectors(vectors)
             except (LLMError, requests.RequestException, ValueError) as exc:
                 self._failed_at = time.monotonic()
                 self.last_error = f"embedding index unavailable ({type(exc).__name__})"
@@ -149,10 +150,18 @@ class Retriever:
                 return False
             try:
                 self.cache_dir.mkdir(parents=True, exist_ok=True)
-                path.write_text(json.dumps(self._vectors))
+                tmp = path.with_suffix(f".{os.getpid()}.tmp")  # atomic replace: no reader ever sees a partial file
+                tmp.write_text(json.dumps(self._vectors))
+                os.replace(tmp, path)
             except OSError:
                 logger.info("retrieval: index cache not writable at %s (read-only FS?) — kept in memory", self.cache_dir)
             return True
+
+    def _set_vectors(self, vectors: List[List[float]]) -> None:
+        if len(vectors) != len(self.records):
+            raise ValueError("cached vector count does not match corpus")
+        self._vectors = vectors
+        self._norms = [math.sqrt(sum(x * x for x in v)) or 1e-9 for v in vectors]
 
     def build_index(self) -> bool:
         """Eagerly build (or load) the embedding index. Returns False if it fell back to lexical."""
@@ -180,7 +189,9 @@ class Retriever:
         if self._ensure_vectors():
             try:
                 qv = embed_texts([query], model=self.embed_model)[0]
-                scored = [(_cosine(qv, self._vectors[i]), i) for i in candidates]
+                nq = math.sqrt(sum(x * x for x in qv)) or 1e-9
+                # ponytail: pure-Python dot products; switch to a numpy matmul + .npy cache past ~2k records
+                scored = [(sum(a * b for a, b in zip(qv, self._vectors[i])) / (nq * self._norms[i]), i) for i in candidates]
                 scored.sort(reverse=True)
                 return [Hit(self.records[i], round(s, 4), "embedding") for s, i in scored[:k]]
             except (LLMError, requests.RequestException, ValueError, IndexError) as exc:

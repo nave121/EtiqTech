@@ -309,8 +309,9 @@ GROUNDING_K = 5  # small chunks, tight k (brief §6.2); ~5 x 700 chars ≈ 900 t
 def _instance_species(instance: Dict[str, Any]) -> List[str]:
     """Canonical species keys already produced by the parser (species_standard)."""
     out: List[str] = []
-    for row in instance.get("animals_total") or []:
-        key = (row or {}).get("species_standard")
+    rows = instance.get("animals_total")
+    for row in (rows if isinstance(rows, list) else []):
+        key = row.get("species_standard") if isinstance(row, dict) else None
         if key and key not in out:
             out.append(key)
     return out
@@ -1001,9 +1002,10 @@ def run_verification(
 
     use_two_step = os.getenv("OLLAMA_TWO_STEP", "").lower() in ("1", "true")
     grounding_notice: Optional[str] = None
+    grounded = grounding_enabled()  # read once: a whole review is grounded or it is not
 
     for theme_key, theme_spec in THEME_SPECS.items():
-        hits, notice = _retrieve_grounding(theme_key, instance) if grounding_enabled() else ([], None)
+        hits, notice = _retrieve_grounding(theme_key, instance) if grounded else ([], None)
         grounding_notice = grounding_notice or notice
         blind_prompt = _build_theme_prompt(
             theme_key,
@@ -1155,6 +1157,7 @@ def run_verification_stream(
     processed = 0
     budget_warned = False  # one warning per stream is enough; theme prompts are all about the same size
     grounding_notice: Optional[str] = None
+    grounded = grounding_enabled()
 
     for theme_key, theme_spec in THEME_SPECS.items():
         processed += 1
@@ -1168,7 +1171,7 @@ def run_verification_stream(
             "total": total_themes,
         }
 
-        hits, notice = _retrieve_grounding(theme_key, instance) if grounding_enabled() else ([], None)
+        hits, notice = _retrieve_grounding(theme_key, instance) if grounded else ([], None)
         if notice and not grounding_notice:
             grounding_notice = notice
             yield {"type": "warning", "code": "grounding", "theme": theme_key, "message": notice}

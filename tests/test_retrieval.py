@@ -76,7 +76,7 @@ def test_lexical_fallback_when_embeddings_unavailable(monkeypatch, tmp_path):
     hits = r.search("euthanasia humane endpoints", k=2)
     assert hits and hits[0].id == "b" and hits[0].method == "lexical"
     assert "unavailable" in r.last_error
-    assert r.search("חיפוש", k=1) == [] or True  # Hebrew tokens are handled by \w; no crash
+    r.search("חיפוש", k=1)  # Hebrew tokens go through \w; must not raise
 
 
 def test_lexical_fallback_does_not_hammer_a_dead_endpoint(monkeypatch, tmp_path):
@@ -165,3 +165,28 @@ def test_retrieval_failure_falls_back_to_ungrounded_review(monkeypatch):
     assert events[-1]["type"] == "complete"
     assert "unavailable" in events[-1]["result"]["grounding_notice"]
     assert all("Law excerpt (trimmed)" in p for p in prompts)  # today's behaviour, not a hard failure
+
+
+def test_cache_key_changes_when_a_title_changes(monkeypatch, tmp_path):
+    monkeypatch.setattr(retrieval, "embed_texts", _fake_embed)
+    a = Retriever(RECORDS, embed_model="fake", cache_dir=tmp_path)
+    edited = [dict(RECORDS[0], title="Alternatives search (revised)")] + RECORDS[1:]
+    b = Retriever(edited, embed_model="fake", cache_dir=tmp_path)
+    assert a._cache_path() != b._cache_path()
+
+
+def test_cache_write_is_atomic_and_partial_files_are_rebuilt(monkeypatch, tmp_path):
+    monkeypatch.setattr(retrieval, "embed_texts", _fake_embed)
+    r = Retriever(RECORDS, embed_model="fake", cache_dir=tmp_path)
+    r.build_index()
+    (path,) = tmp_path.glob("fake-*.json")
+    assert not list(tmp_path.glob("*.tmp"))
+    path.write_text('[[0.1, 0.2')  # simulate a torn write from another process
+    fresh = Retriever(RECORDS, embed_model="fake", cache_dir=tmp_path)
+    assert fresh.build_index() is True and len(fresh._vectors) == len(RECORDS)
+
+
+def test_species_helper_tolerates_malformed_shapes():
+    from src.llm_agent import _instance_species
+    assert _instance_species({"animals_total": {"species_standard": "mouse"}}) == []
+    assert _instance_species({"animals_total": ["x", None, {"species_standard": "rat"}]}) == ["rat"]
