@@ -1,5 +1,5 @@
 /**
- * EthicTech Landing Page JavaScript
+ * EtiqTech Landing Page JavaScript
  * Scroll animations, language toggle, terminal animation, smoke effect
  */
 (function () {
@@ -59,22 +59,11 @@
     const terminalEl = document.getElementById('terminal-animation');
 
     const terminalLines = [
-        { text: '> Parsing Council HTML export...', cls: 'text-[#a3a3a3]', delay: 400 },
-        { text: '  Extracted 12 sections, 3 experiments', cls: 'text-[#e5e5e5]', delay: 500 },
-        { text: '', cls: '', delay: 200 },
-        { text: '> Running 42 law-compliance checks...', cls: 'text-[#a3a3a3]', delay: 400 },
-        { text: '  \u2714 38 passed', cls: 'text-[#22c55e]', delay: 350 },
-        { text: '  \u2718 2 errors found', cls: 'text-[#ef4444]', delay: 350 },
-        { text: '  \u26A0 2 warnings found', cls: 'text-[#f59e0b]', delay: 350 },
-        { text: '', cls: '', delay: 200 },
-        { text: '> AI reviewing 11 ethical themes...', cls: 'text-[#a3a3a3]', delay: 500 },
-        { text: '  [3Rs & Alternatives]      3/3 Adequate', cls: 'text-[#22c55e]', delay: 600 },
-        { text: '  [Euthanasia & Endpoints]  1/3 Inadequate', cls: 'text-[#ef4444]', delay: 600 },
-        { text: '  [Severity & Monitoring]   2/3 Partial', cls: 'text-[#f59e0b]', delay: 600 },
-        { text: '  [Harm-Benefit]            3/3 Adequate', cls: 'text-[#22c55e]', delay: 600 },
-        { text: '  ...processing 7 more themes', cls: 'text-[#737373]', delay: 400 },
-        { text: '', cls: '', delay: 200 },
-        { text: '> Report ready. 2 critical issues flagged.', cls: 'text-[#22c55e] font-semibold', delay: 500 },
+        { text: '> Reading the Council export', cls: 'text-[#a3a3a3]', delay: 400 },
+        { text: '> Checking 59 rules', cls: 'text-[#a3a3a3]', delay: 500 },
+        { text: '  \u26A0 2 findings tied to a legal requirement', cls: 'text-[#f59e0b]', delay: 500 },
+        { text: '> Reading 12 topics the way a reviewer would', cls: 'text-[#a3a3a3]', delay: 600 },
+        { text: '> Report ready', cls: 'text-[#22c55e] font-semibold', delay: 500 },
     ];
 
     function runTerminalAnimation() {

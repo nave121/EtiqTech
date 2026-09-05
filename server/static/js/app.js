@@ -1,5 +1,5 @@
 /**
- * EthicTech Web UI JavaScript
+ * EtiqTech Web UI JavaScript
  * Document-centric design with inline badges and detail panel
  */
 
@@ -79,7 +79,7 @@
 
     const TOTAL_LLM_THEMES = 12;
 
-    // LLM Theme to Document Section Mapping (11 themes)
+    // LLM Theme to Document Section Mapping (12 themes)
     const THEME_TO_SECTIONS = {
         'three_Rs_alternatives':         ['alternatives'],
         'N_and_justification':           ['summaries', 'animals-totals'],
@@ -267,7 +267,7 @@
         }
 
         let html = '<div class="print-llm-box ok" style="border-left-color:#1a56db; background-color:#dbeafe;">';
-        html += `<strong>EthicTech IACUC Protocol Review</strong><br>`;
+        html += `<strong>EtiqTech IACUC Protocol Review</strong><br>`;
         html += `<strong>File:</strong> ${escapeHtml(currentFileName_ || '')}`;
         if (currentReport && currentReport.ruleset_version) html += ` &nbsp;|&nbsp; <strong>Ruleset:</strong> ${escapeHtml(currentReport.ruleset_version)}`;
 
@@ -425,7 +425,7 @@
 
     // Handle File Upload
     async function handleFile(file) {
-        if (!file.name.match(/\.html?$/i)) {
+        if (!file.name.match(/\.(html?|json)$/i)) {
             alert('Please upload an HTML file.');
             return;
         }
@@ -829,7 +829,7 @@
         return ref;
     }
 
-    // Format Theme Name (11 themes)
+    // Format Theme Name (12 themes)
     function formatThemeName(theme) {
         const names = {
             'three_Rs_alternatives':         '3Rs & Alternatives',
@@ -843,6 +843,7 @@
             'personnel_and_training':        'Personnel',
             'hazardous_agents':              'Hazardous Agents',
             'surgical_standards':            'Surgical Standards',
+            'writing_quality':               'Writing Quality',
         };
         return names[theme] || theme;
     }
