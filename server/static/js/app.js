@@ -98,9 +98,16 @@
     // Fetch available models from Ollama
     // Providers offered = those configured on the server (see /api/llm-providers).
     let providerInfo = {};
+    let llmEnabled = true;
     async function fetchProviders() {
         try {
             const data = await (await fetch('/api/llm-providers')).json();
+            if (data.success && data.llm_enabled === false) {
+                llmEnabled = false;
+                const sel = document.getElementById('model-selection');
+                if (sel) sel.hidden = true;
+                return;
+            }
             if (!data.success || !Array.isArray(data.providers) || data.providers.length === 0) return;
             providerInfo = {};
             providerSelect.innerHTML = data.providers.map((p) => {
@@ -116,6 +123,7 @@
     }
 
     async function fetchModels() {
+        if (!llmEnabled) return;
         modelSelect.disabled = true;
         modelSelect.innerHTML = '<option value="">Loading models...</option>';
         modelStatus.textContent = '';
@@ -443,7 +451,13 @@
                 currentReport = data.lint_report;
                 currentSessionId = data.session_id;
                 showResults(data.rendered_html, data.lint_report);
-                startLLMVerification(data.session_id);
+                if (llmEnabled) {
+                    startLLMVerification(data.session_id);
+                } else {
+                    // linter-only instance: no LLM panel, export is ready immediately
+                    if (llmProgressCard) llmProgressCard.hidden = true;
+                    setExportReady(true);
+                }
             } else {
                 throw new Error(data.error || 'Analysis failed');
             }

@@ -41,6 +41,16 @@ docker run -p 4242:4242 \
   etiqtech
 ```
 
+### Linter-only / public demo
+
+```bash
+docker run -p 4242:4242 -e ETIQTECH_LLM_DISABLED=1 etiqtech
+```
+
+No GPU or Ollama needed: Layer 1 runs, the LLM controls are hidden, and the report is ready
+immediately. Use the synthetic fixtures under `examples/golden-dataset/` and
+`examples/adapters/minimal_adapter.py` for demo material — never real protocols.
+
 ### Local Python
 
 ```bash
@@ -70,6 +80,27 @@ python -m src.linter_renderer render output/parsed.json --html output/rendered.h
 ---
 
 ## How It Works
+
+```mermaid
+flowchart LR
+    U[Researcher] -->|HTML export or canonical JSON| A[Ingest adapter]
+    A --> I[(Canonical protocol JSON)]
+    I --> L1[Layer 1 · deterministic linter<br/>59 rules, ruleset-versioned]
+    I --> L2[Layer 2 · LLM themes<br/>blind → reconcile, streamed]
+    I --> L3[Layer 3 · Human Eye<br/>adversarial pass, triggered]
+    G[(Guidance corpus<br/>retrieval, cited)] -.grounding.-> L2
+    O[(Local Ollama / configured provider)] -.-> L2
+    O -.-> L3
+    L1 --> R[Report · findings with rule ids<br/>LLM verdicts marked advisory]
+    L2 --> R
+    L3 --> R
+    R --> F[Thumbs up/down<br/>metadata only]
+    classDef store fill:#f4f4f4,stroke:#999;
+    class I,G,O store;
+```
+
+Sessions live in memory for about an hour; nothing about a protocol is written to disk
+([PRIVACY.md](PRIVACY.md)). LLM layers are advisory and never change Layer 1 findings.
 
 EtiqTech reviews protocols in three layers:
 
@@ -121,6 +152,7 @@ EtiqTech reviews protocols in three layers:
 | `ETIQTECH_GROUNDING` | unset | `1` to ground Layer 2 prompts in retrieved guidance sections with source refs (see Grounding) |
 | `EMBED_MODEL` | `qwen3-embedding` | Ollama embedding model for retrieval (multilingual) |
 | `RETRIEVAL_CACHE_DIR` | `output/retrieval_cache` | Where the embedding index is cached (model-specific, not committed) |
+| `ETIQTECH_LLM_DISABLED` | unset | `1` for a linter-only instance (demo without GPU): LLM routes answer "disabled", UI hides the LLM controls |
 | `ETIQTECH_JURISDICTION` | `IL` | Jurisdiction pack: `IL` (all rules, today's behaviour) or `generic` (welfare/science rules only; skips the IL-form `writing_quality` theme). See [docs/eu-directive-spike.md](docs/eu-directive-spike.md) for the EU pack proposal |
 | `FEEDBACK_DB` | `output/feedback.sqlite` | Metadata-only thumbs up/down store (rule id, theme, verdict, timestamp); `ETIQTECH_FEEDBACK=0` disables |
 | `LLM_TEMPERATURE` | `0.2` | Sampling temperature |
@@ -214,6 +246,16 @@ see [PRIVACY.md](PRIVACY.md).
 See [SECURITY.md](SECURITY.md) for the full policy and threat model.
 
 ---
+
+## Acknowledgements
+
+<!-- Wording is the maintainer's call (handoff decision #2); placeholders below name what belongs here. -->
+- The institutions and committees whose review practice shaped the rules and the golden dataset.
+- [Norecopa](https://norecopa.no) — the PREPARE guidelines and 3R resources referenced in
+  `docs/prepare-mapping.md` are published under CC BY 4.0; NORINA/3R Guide content will be
+  attributed record by record once the retrieval corpus includes it.
+- AVMA Guidelines for the Euthanasia of Animals (2020 edition) for the species–method matrix.
+- Tooling used in development: Ollama, Qwen and Gemma open models, Claude Code.
 
 ## License
 

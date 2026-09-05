@@ -166,6 +166,12 @@ def landing():
     return render_template('landing.html')
 
 
+# ETIQTECH_LLM_DISABLED=1: linter-only instance (public demo, no GPU). The LLM routes answer
+# with a skipped result and the UI hides the LLM controls. Layer 1 is unaffected.
+def llm_disabled() -> bool:
+    return os.getenv('ETIQTECH_LLM_DISABLED', '').strip().lower() in ('1', 'true', 'yes')
+
+
 # Permanent advisory framing for LLM output (invariant 5). Wording is the maintainer's to
 # finalize; the placement (every Layer 2/3 panel + the printed report) is not optional.
 ADVISORY_NOTICE = (
@@ -269,6 +275,7 @@ def health():
     target = local_first_status()
     return jsonify({
         'status': 'ok',
+        'llm_enabled': not llm_disabled(),
         'law_loaded': law_loaded(),
         'llm_local': not target['remote'],
         'llm_remote_allowed': target['remote_allowed'],
@@ -350,6 +357,8 @@ def llm_providers():
     """Providers the UI may offer: those with credentials/base URL configured, plus their default model."""
     default = os.getenv("LLM_PROVIDER", "ollama").strip().lower()
     out = []
+    if llm_disabled():
+        return jsonify({"success": True, "llm_enabled": False, "default": None, "providers": []})
     for name, spec in PROVIDERS.items():
         if not provider_configured(name):
             continue
@@ -361,7 +370,7 @@ def llm_providers():
             "local": not status["remote"],
             "usable": (not status["remote"]) or status["remote_allowed"],
         })
-    return jsonify({"success": True, "default": default if default in PROVIDERS else "ollama", "providers": out})
+    return jsonify({"success": True, "llm_enabled": True, "default": default if default in PROVIDERS else "ollama", "providers": out})
 
 
 @app.route('/api/ollama-models')
@@ -460,6 +469,10 @@ def llm_verify_stream(session_id):
         def error_gen():
             yield f"data: {json.dumps({'type': 'error', 'message': 'Session not found'})}\n\n"
         return Response(error_gen(), mimetype='text/event-stream')
+    if llm_disabled():
+        def disabled_gen():
+            yield f"data: {json.dumps({'type': 'error', 'code': 'llm_disabled', 'message': 'LLM review is disabled on this instance (linter only).'})}\n\n"
+        return Response(disabled_gen(), mimetype='text/event-stream')
 
     instance = cached['instance']
     lint_report = cached['lint_report']
@@ -513,6 +526,10 @@ def human_eye_stream(session_id):
         def error_gen():
             yield f"data: {json.dumps({'type': 'error', 'message': 'Session not found'})}\n\n"
         return Response(error_gen(), mimetype='text/event-stream')
+    if llm_disabled():
+        def disabled_gen():
+            yield f"data: {json.dumps({'type': 'error', 'code': 'llm_disabled', 'message': 'LLM review is disabled on this instance (linter only).'})}\n\n"
+        return Response(disabled_gen(), mimetype='text/event-stream')
 
     instance = cached['instance']
     lint_report = cached['lint_report']
