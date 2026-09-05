@@ -1,0 +1,121 @@
+{
+  "header": {
+    "protocol_id": "COV-0002",
+    "institution": "Example Institute"
+  },
+  "research": {
+    "title_he": "פרוטוקול לדוגמה",
+    "title_en": "Single-sex study without sex justification",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 1,
+    "sites": [
+      {
+        "name": "Example Institute animal facility"
+      }
+    ]
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "000000000",
+    "last_name_he": "אקסמפל",
+    "first_name_he": "עדה",
+    "last_name_en": "Example",
+    "first_name_en": "Ada",
+    "email": "ada.example@example.edu",
+    "phone_primary": "+972-00-0000000",
+    "institutional_cert_no": "EI-0000",
+    "training": [
+      {
+        "cert_no": "EI-TR-0001",
+        "issuer": "Example Institute",
+        "animal_scope": "rodents"
+      }
+    ]
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Synthetic protocol used to exercise one linter rule.",
+    "lay_he_≤150w": "פרוטוקול סינתטי לבדיקת חוק אחד של הבודק."
+  },
+  "alternatives_search": {
+    "engines": [
+      "PubMed"
+    ],
+    "date": "2026-01-15",
+    "queries": [
+      "mouse model replacement in vitro"
+    ],
+    "conclusion": "No validated non-animal alternative exists for this question."
+  },
+  "animals_total": [
+    {
+      "species": "mouse",
+      "strain": "C57BL/6J",
+      "sex": "M",
+      "genetic_status": "wild-type",
+      "source": "vendor",
+      "n_total": 24
+    }
+  ],
+  "n_justification": {
+    "method": "power",
+    "details": "Power analysis: effect size d=1.0, alpha 0.05, power 0.8, SD from prior runs gives n=12 per group."
+  },
+  "experiments": [
+    {
+      "label": "Experiment 1",
+      "animals": {
+        "species": "mouse",
+        "strain": "C57BL/6J",
+        "genetic_status": "wild-type",
+        "sex": "M",
+        "n": 24,
+        "age": {
+          "value": 8.0,
+          "unit": "weeks"
+        },
+        "source": "vendor"
+      },
+      "housing": {
+        "group_housed": true,
+        "enrichment": "standard"
+      },
+      "rationale_species_strain_sex": "C57BL/6J mice are the standard background strain for this metabolic model.",
+      "procedure_timeline": [
+        {
+          "day_or_timepoint": "Day 0",
+          "step": "Single intraperitoneal injection of test compound"
+        }
+      ],
+      "severity_level_1_to_5": 1,
+      "monitoring": {
+        "initial_72h_daily": true,
+        "ongoing_per_week": 3,
+        "parameters": [
+          "weight",
+          "posture"
+        ],
+        "documentation": "cage card and electronic log"
+      },
+      "humane_endpoints": {
+        "general": [
+          "weight loss above 20%",
+          "hunched posture with reduced mobility for more than 24 h",
+          "ulcerated injection site"
+        ]
+      },
+      "euthanasia": {
+        "primary": "CO2",
+        "parameters": "gradual fill 30% chamber volume per minute",
+        "confirmation": "cervical dislocation"
+      },
+      "fate": "euthanasia"
+    }
+  ],
+  "pi_declaration": {
+    "name": "Ada Example",
+    "date": "2026-01-20"
+  }
+}

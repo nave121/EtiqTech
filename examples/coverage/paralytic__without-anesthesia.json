@@ -1,0 +1,115 @@
+{
+  "header": {
+    "protocol_id": "900002",
+    "institution": "Example Institute"
+  },
+  "research": {
+    "title_he": "פרוטוקול כיסוי לשימוש בחומר משתק",
+    "title_en": "Coverage fixture for paralytic agent use",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 1,
+    "sites": [
+      {
+        "name": "Example Institute animal facility"
+      }
+    ]
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "000000000",
+    "last_name_he": "אקסמפל",
+    "first_name_he": "עדה",
+    "last_name_en": "Example",
+    "first_name_en": "Ada",
+    "email": "ada.example@example.edu",
+    "phone_primary": "+000-0-0000000",
+    "institutional_cert_no": "EX-CERT-0001"
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Synthetic protocol used only to exercise one linter rule.",
+    "lay_he_≤150w": "פרוטוקול סינתטי לבדיקת כלל אחד של הבודק."
+  },
+  "alternatives_search": {
+    "engines": [
+      "PubMed"
+    ],
+    "date": "2026-01-15",
+    "queries": [
+      "synthetic coverage fixture"
+    ],
+    "conclusion": "No in vitro replacement identified for this synthetic fixture."
+  },
+  "animals_total": [
+    {
+      "species": "mouse",
+      "strain": "C57BL/6",
+      "sex": "both",
+      "genetic_status": "wild type",
+      "source": "vendor",
+      "n_total": 20
+    }
+  ],
+  "n_justification": {
+    "method": "power",
+    "details": "Power analysis with alpha 0.05 and power 0.8 gives 10 animals per arm."
+  },
+  "experiments": [
+    {
+      "label": "Experiment 1",
+      "animals": {
+        "species": "mouse",
+        "species_standard": "mouse",
+        "strain": "C57BL/6",
+        "genetic_status": "wild type",
+        "sex": "both",
+        "n": 20,
+        "age": {
+          "value": 8,
+          "unit": "weeks"
+        },
+        "source": "vendor"
+      },
+      "housing": {
+        "group_housed": true,
+        "enrichment": "standard"
+      },
+      "rationale_species_strain_sex": "Standard inbred mouse strain; both sexes to detect sex differences.",
+      "procedure_timeline": [
+        {
+          "day_or_timepoint": "Day 0",
+          "step": "Intubate and ventilate, then administer vecuronium intravenously to suppress spontaneous breathing during recording.",
+          "route_or_site": "IV tail vein",
+          "volume_or_dose": "0.1 mg/kg"
+        }
+      ],
+      "severity_level_1_to_5": 4,
+      "monitoring": {
+        "initial_72h_daily": true,
+        "ongoing_per_week": 3,
+        "parameters": [
+          "weight",
+          "posture"
+        ],
+        "documentation": "cage card"
+      },
+      "humane_endpoints": {
+        "general": [
+          "Body weight loss above 15% or a clinical score of 3 leads to euthanasia."
+        ]
+      },
+      "euthanasia": {
+        "primary": "CO2",
+        "parameters": "30-70% chamber volume per minute displacement",
+        "confirmation": "cervical dislocation"
+      },
+      "fate": "euthanasia"
+    }
+  ],
+  "pi_declaration": {
+    "name": "Ada Example",
+    "date": "2026-01-20"
+  }
+}

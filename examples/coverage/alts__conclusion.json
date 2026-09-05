@@ -1,0 +1,111 @@
+{
+  "header": {
+    "protocol_id": "90001",
+    "institution": "Example Institute"
+  },
+  "research": {
+    "title_he": "בדיקת מודל עכבר לדלקת מפרקים",
+    "title_en": "Mouse model of inflammatory arthritis: dosing study",
+    "request_type": "regular",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 1,
+    "sites": [
+      {
+        "name": "Example Institute animal facility"
+      }
+    ]
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "000000018",
+    "last_name_he": "אקסמפל",
+    "first_name_he": "עדה",
+    "last_name_en": "Example",
+    "first_name_en": "Ada",
+    "email": "ada.example@example.edu",
+    "phone_primary": "+972-00-000-0000",
+    "institutional_cert_no": "EI-2026-01"
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "Collagen-induced arthritis will be induced in mice to test a candidate anti-inflammatory compound at two dose levels against vehicle. Paw swelling and clinical score are the primary readouts over 21 days.",
+    "lay_he_≤150w": "נבדוק תרכובת חדשה נגד דלקת מפרקים בעכברים."
+  },
+  "alternatives_search": {
+    "engines": [
+      "PubMed",
+      "Embase"
+    ],
+    "date": "2026-08-20",
+    "queries": [
+      "collagen-induced arthritis in vitro model",
+      "arthritis organoid alternative"
+    ],
+    "conclusion": ""
+  },
+  "animals_total": [
+    {
+      "species": "mouse",
+      "strain": "DBA/1",
+      "sex": "M",
+      "genetic_status": "wild type",
+      "source": "vendor",
+      "n_total": 36
+    }
+  ],
+  "n_justification": {
+    "method": "power",
+    "details": "Power analysis (alpha 0.05, power 0.8, effect size from a pilot) gives 12 mice per group, three groups."
+  },
+  "experiments": [
+    {
+      "label": "Dose-response of compound EX-1 in collagen-induced arthritis",
+      "animals": {
+        "species": "mouse",
+        "strain": "DBA/1",
+        "genetic_status": "wild type",
+        "sex": "M",
+        "n": 36,
+        "age": {
+          "value": 8.0,
+          "unit": "weeks"
+        },
+        "source": "vendor"
+      },
+      "housing": {
+        "group_housed": true,
+        "enrichment": "standard"
+      },
+      "rationale_species_strain_sex": "DBA/1 males develop reproducible collagen-induced arthritis; a single sex avoids hormonal variance in this first dosing study.",
+      "procedure_timeline": [],
+      "severity_level_1_to_5": 3,
+      "monitoring": {
+        "initial_72h_daily": true,
+        "ongoing_per_week": 3,
+        "parameters": [
+          "paw swelling",
+          "body weight",
+          "clinical score"
+        ],
+        "documentation": "cage card and study log"
+      },
+      "humane_endpoints": {
+        "general": [
+          "weight loss above 20%",
+          "clinical score at maximum on two consecutive days"
+        ]
+      },
+      "euthanasia": {
+        "primary": "CO2 gradual fill",
+        "parameters": "30-70% chamber volume per minute displacement",
+        "confirmation": "cervical dislocation after loss of consciousness"
+      },
+      "fate": "euthanasia"
+    }
+  ],
+  "pi_declaration": {
+    "name": "Ada Example",
+    "date": "2026-09-01"
+  }
+}

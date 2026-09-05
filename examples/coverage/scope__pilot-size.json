@@ -1,0 +1,93 @@
+{
+  "header": {
+    "protocol_id": "40117",
+    "institution": "Example Institute"
+  },
+  "research": {
+    "title_he": "פיילוט: בדיקת היתכנות של סמן דלקתי בדם במודל עכבר של קוליטיס",
+    "title_en": "Pilot: feasibility of a blood inflammatory marker in a mouse colitis model",
+    "request_type": "pilot",
+    "is_continuation": false,
+    "third_party_service": false,
+    "approval_term_years": 1,
+    "sites": [
+      { "name": "Example Institute animal facility, building 3" }
+    ]
+  },
+  "pi": {
+    "id_type": "TZ",
+    "id_number": "000000018",
+    "last_name_he": "אקסמפל",
+    "first_name_he": "עדה",
+    "last_name_en": "Example",
+    "first_name_en": "Ada",
+    "email": "ada.example@example.edu",
+    "phone_primary": "+972-50-000-0000",
+    "institutional_cert_no": "EI-2024-017"
+  },
+  "participants": [],
+  "summaries": {
+    "scientific_en_≤300w": "This pilot asks whether a candidate blood marker tracks colitis severity in mice. Colitis is induced with dextran sulfate sodium in drinking water for 7 days; blood is sampled at day 0 and day 7 and the marker is compared with a clinical score.",
+    "lay_he_≤150w": "אנו בודקים אם סמן בדם יכול לשקף את חומרת דלקת המעי בעכברים, כדי להפחית בעתיד את הצורך בבדיקות פולשניות."
+  },
+  "alternatives_search": {
+    "engines": ["PubMed", "Google Scholar"],
+    "date": "2026-08-20",
+    "queries": ["colitis blood biomarker mouse", "DSS colitis in vitro alternative"],
+    "conclusion": "No validated in vitro system reproduces the systemic inflammatory response; the animal model is required for the marker readout."
+  },
+  "animals_total": [
+    {
+      "species": "mouse",
+      "strain": "C57BL/6J",
+      "sex": "both",
+      "genetic_status": "WT",
+      "source": "vendor",
+      "n_total": 520
+    }
+  ],
+  "n_justification": {
+    "method": "literature",
+    "details": "Feasibility run across 13 marker candidates, 40 animals per candidate (20 control, 20 DSS)."
+  },
+  "experiments": [
+    {
+      "label": "Marker screen in DSS colitis",
+      "animals": {
+        "species": "mouse",
+        "strain": "C57BL/6J",
+        "genetic_status": "WT",
+        "sex": "both",
+        "n": 520,
+        "age": { "value": 8, "unit": "weeks" },
+        "source": "vendor"
+      },
+      "housing": { "group_housed": true, "enrichment": "standard" },
+      "rationale_species_strain_sex": "C57BL/6J is the reference strain for DSS colitis; both sexes are included to check the marker in each.",
+      "procedure_timeline": [
+        { "day_or_timepoint": "Day 0", "step": "Baseline tail-vein blood sample (50 µL); start 2.5% DSS in drinking water for the DSS group" },
+        { "day_or_timepoint": "Day 7", "step": "Clinical score, terminal blood sample under anesthesia, euthanasia" }
+      ],
+      "severity_level_1_to_5": 3,
+      "monitoring": {
+        "initial_72h_daily": true,
+        "ongoing_per_week": 7,
+        "parameters": ["body weight", "stool consistency", "rectal bleeding"],
+        "documentation": "Daily score sheet per cage"
+      },
+      "humane_endpoints": {
+        "general": ["Weight loss above 20% of baseline", "Severe rectal bleeding", "Immobility or hunched posture unresponsive to stimulus"]
+      },
+      "euthanasia": {
+        "primary": "CO2",
+        "parameters": "Gradual fill at 30-70% chamber volume displacement per minute",
+        "confirmation": "Cervical dislocation after loss of consciousness"
+      },
+      "fate": "euthanasia"
+    }
+  ],
+  "pi_declaration": {
+    "name": "Ada Example",
+    "date": "2026-08-25"
+  }
+}
