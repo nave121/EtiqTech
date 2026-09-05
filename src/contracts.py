@@ -66,6 +66,8 @@ class LinterResult(BaseModel):
     generated_at: str
     checklist: list[ChecklistItem]
     ruleset_version: Optional[str] = None
+    jurisdiction: Optional[str] = None
+    rules_outside_pack: Optional[int] = None
 
 
 # ---------------------------------------------------------------------------

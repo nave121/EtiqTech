@@ -121,6 +121,7 @@ EtiqTech reviews protocols in three layers:
 | `ETIQTECH_GROUNDING` | unset | `1` to ground Layer 2 prompts in retrieved guidance sections with source refs (see Grounding) |
 | `EMBED_MODEL` | `qwen3-embedding` | Ollama embedding model for retrieval (multilingual) |
 | `RETRIEVAL_CACHE_DIR` | `output/retrieval_cache` | Where the embedding index is cached (model-specific, not committed) |
+| `ETIQTECH_JURISDICTION` | `IL` | Jurisdiction pack: `IL` (all rules, today's behaviour) or `generic` (welfare/science rules only; skips the IL-form `writing_quality` theme). See [docs/eu-directive-spike.md](docs/eu-directive-spike.md) for the EU pack proposal |
 | `FEEDBACK_DB` | `output/feedback.sqlite` | Metadata-only thumbs up/down store (rule id, theme, verdict, timestamp); `ETIQTECH_FEEDBACK=0` disables |
 | `LLM_TEMPERATURE` | `0.2` | Sampling temperature |
 | `LLM_MAX_TOKENS` | `8192` | Max output tokens |

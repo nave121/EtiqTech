@@ -7,6 +7,7 @@ from typing import Any, Dict, Generator, List, Optional
 
 from .llm_clients import LLMError, call_llm, call_llm_stream, call_llm_two_step, context_budget_warning
 from .retrieval import format_grounding_block, get_retriever, grounding_enabled, grounding_refs
+from .rules import PACKS, active_pack
 from .schema import IACUC_SCHEMA_V2
 from .xmeta_catalog import load_high_leverage_catalog
 
@@ -341,6 +342,12 @@ def _retrieve_grounding(theme_key: str, instance: Dict[str, Any]):
     except Exception as exc:  # retrieval must never take the review down
         logger.warning("grounding retrieval failed: %s", type(exc).__name__)
         return [], "Grounding unavailable: retrieval failed; review ran ungrounded."
+
+
+def active_theme_specs() -> Dict[str, Dict[str, Any]]:
+    """THEME_SPECS minus the themes the active jurisdiction pack excludes (e.g. writing_quality is IL-form)."""
+    excluded = set(PACKS[active_pack()]["excluded_themes"])
+    return {k: v for k, v in THEME_SPECS.items() if k not in excluded}
 
 
 _ALLOWED_PROMPTS = frozenset({
@@ -1003,8 +1010,9 @@ def run_verification(
     use_two_step = os.getenv("OLLAMA_TWO_STEP", "").lower() in ("1", "true")
     grounding_notice: Optional[str] = None
     grounded = grounding_enabled()  # read once: a whole review is grounded or it is not
+    total_themes = len(active_theme_specs())
 
-    for theme_key, theme_spec in THEME_SPECS.items():
+    for theme_key, theme_spec in active_theme_specs().items():
         hits, notice = _retrieve_grounding(theme_key, instance) if grounded else ([], None)
         grounding_notice = grounding_notice or notice
         blind_prompt = _build_theme_prompt(
@@ -1121,7 +1129,7 @@ def run_verification(
         "theme_metadata": theme_metadata,
         "disagreement_summary": {
             "themes_with_disagreement": len(disagreement_theme_keys),
-            "total_themes": len(THEME_SPECS),
+            "total_themes": total_themes,
             "theme_keys": disagreement_theme_keys,
         },
         "checklist_items": [],  # keep empty; this flow focuses on thematic verdicts
@@ -1154,13 +1162,13 @@ def run_verification_stream(
     questions: List[Dict[str, Any]] = []
     disagreement_theme_keys: List[str] = []
 
-    total_themes = len(THEME_SPECS)
+    total_themes = len(active_theme_specs())
     processed = 0
     budget_warned = False  # one warning per stream is enough; theme prompts are all about the same size
     grounding_notice: Optional[str] = None
     grounded = grounding_enabled()
 
-    for theme_key, theme_spec in THEME_SPECS.items():
+    for theme_key, theme_spec in active_theme_specs().items():
         processed += 1
 
         # Emit theme start
@@ -1339,7 +1347,7 @@ def run_verification_stream(
         "theme_metadata": theme_metadata,
         "disagreement_summary": {
             "themes_with_disagreement": len(disagreement_theme_keys),
-            "total_themes": len(THEME_SPECS),
+            "total_themes": total_themes,
             "theme_keys": disagreement_theme_keys,
         },
         "checklist_items": [],

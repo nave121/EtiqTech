@@ -120,3 +120,62 @@ def annotate_report(report: Dict[str, Any]) -> Dict[str, Any]:
         item["rule_id"] = rule_id_from_ref(item.get("reference"))
     report["ruleset_version"] = RULESET_VERSION
     return report
+
+
+# ---------------------------------------------------------------------------
+# Jurisdiction packs (Phase 3.2, step 1): a pack = rule set + corpus filter + theme config,
+# selected by ETIQTECH_JURISDICTION. "IL" is today's behaviour and the default. The EU pack
+# is not registered until docs/eu-directive-spike.md has been reviewed and its rules exist.
+# ---------------------------------------------------------------------------
+PACKS: Dict[str, Dict[str, Any]] = {
+    "IL": {
+        "label": "Israel — National Council request form",
+        "rule_jurisdictions": ("IL-form", "generic"),   # every registered rule
+        "corpus_jurisdictions": ("IL",),
+        "excluded_themes": (),
+    },
+    "generic": {
+        "label": "Generic — welfare/science rules only (no Israeli form rules)",
+        "rule_jurisdictions": ("generic",),
+        "corpus_jurisdictions": ("IL",),  # the only corpus we have; guidance is still useful context
+        "excluded_themes": ("writing_quality",),  # scores Hebrew answers 0 — an IL form-workflow rule
+    },
+}
+DEFAULT_PACK = "IL"
+
+
+def active_pack() -> str:
+    import os
+    name = os.getenv("ETIQTECH_JURISDICTION", DEFAULT_PACK).strip() or DEFAULT_PACK
+    return name if name in PACKS else DEFAULT_PACK
+
+
+def rule_active(rule_id: Optional[str], pack: Optional[str] = None) -> bool:
+    rule = RULES.get(rule_id or "")
+    if rule is None:
+        return True  # unregistered refs are never dropped silently
+    return rule.jurisdiction in PACKS[pack or active_pack()]["rule_jurisdictions"]
+
+
+def apply_pack(report: Dict[str, Any], pack: Optional[str] = None) -> Dict[str, Any]:
+    """Drop checklist items whose rule is outside the pack and recompute the counters.
+
+    This is configuration, not review logic: the checks still ran; a pack only decides which
+    rules belong to the jurisdiction being reviewed. Never called with LLM output.
+    """
+    name = pack or active_pack()
+    report["jurisdiction"] = name
+    if name == DEFAULT_PACK:
+        return report
+    kept = [c for c in report.get("checklist") or [] if rule_active(c.get("rule_id"), name)]
+    dropped = len(report.get("checklist") or []) - len(kept)
+    report["checklist"] = kept
+    report["errors"] = sum(1 for c in kept if c.get("status") == "fail" and c.get("severity") == "error")
+    report["warnings"] = sum(1 for c in kept if c.get("status") == "fail" and c.get("severity") != "error")
+    report["status"] = "pass" if report["errors"] == 0 else "fail"
+    for field, kind, sev in (("structural_errors", "structural", "error"), ("law_critical_errors", "law_critical", "error"),
+                             ("advisory_warnings", "advisory", "warning")):
+        report[field] = sum(1 for c in kept if c.get("status") == "fail" and RULES.get(c.get("rule_id") or "") is not None
+                            and RULES[c["rule_id"]].kind == kind and (c.get("severity") == "error") == (sev == "error"))
+    report["rules_outside_pack"] = dropped
+    return report
