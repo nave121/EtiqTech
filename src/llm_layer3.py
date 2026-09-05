@@ -160,7 +160,7 @@ def _parse_layer3_json(text: str) -> Dict[str, Any]:
 
     start = cleaned.find("{")
     if start == -1:
-        raise ValueError(f"No JSON object found. Preview: {cleaned[:200]!r}")
+        raise ValueError("No JSON object found in LLM response")
 
     depth = 0
     end = -1
@@ -199,7 +199,7 @@ def _parse_layer3_json(text: str) -> Dict[str, Any]:
         except json.JSONDecodeError:
             pass
 
-    raise ValueError(f"Layer 3 response was not valid JSON. Preview: {cleaned[:300]!r}")
+    raise ValueError("Layer 3 response was not valid JSON.")
 
 
 # ---------------------------------------------------------------------------
@@ -463,7 +463,7 @@ def run_human_eye_stream(
         pass1 = _parse_layer3_json(full_response1)
     except Exception as e:
         pass1 = _fallback_pass1()
-        yield {"type": "token", "pass": 1, "token": f"\n[Layer 3 Pass 1 error: {str(e)[:80]}]"}
+        yield {"type": "token", "pass": 1, "token": f"\n[Layer 3 Pass 1 error: {type(e).__name__}]"}
 
     yield {"type": "pass_done", "pass": 1, "result": pass1}
 
@@ -482,7 +482,7 @@ def run_human_eye_stream(
         pass2 = _parse_layer3_json(full_response2)
     except Exception as e:
         pass2 = _fallback_pass2()
-        yield {"type": "token", "pass": 2, "token": f"\n[Layer 3 Pass 2 error: {str(e)[:80]}]"}
+        yield {"type": "token", "pass": 2, "token": f"\n[Layer 3 Pass 2 error: {type(e).__name__}]"}
 
     yield {"type": "pass_done", "pass": 2, "result": pass2}
 

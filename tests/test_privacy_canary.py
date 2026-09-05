@@ -155,6 +155,11 @@ def test_invalid_llm_json_path_never_logs_response(marker, monkeypatch, caplog, 
     assert events[-1]["type"] == "complete"
     l3 = list(llm_layer3.run_human_eye_stream(instance, report, events[-1]["result"], force=True))
     assert l3[-1]["type"] == "complete"
+    # the raw model text must not be replayed into fallback rationales or streamed as Layer 3 tokens
+    # (findings are findings, not a dump of whatever the model said); only the error type may appear
+    assert marker not in json.dumps(events[-1]["result"], ensure_ascii=False)
+    assert marker not in json.dumps([e for e in l3 if e["type"] != "token"], ensure_ascii=False)
+    assert not any(marker in e.get("token", "") and "error" in e.get("token", "") for e in l3 if e["type"] == "token")
     _assert_clean(marker, caplog, capfd)
 
 

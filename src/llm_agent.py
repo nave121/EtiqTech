@@ -930,7 +930,7 @@ def parse_llm_json(response_text: str) -> Dict[str, Any]:
     # Find the first { and matching }
     start = cleaned.find("{")
     if start == -1:
-        raise ValueError(f"LLM response contains no JSON object. Preview: {cleaned[:200]!r}")
+        raise ValueError("LLM response contains no JSON object")
 
     # Find matching closing brace
     depth = 0
@@ -975,7 +975,7 @@ def parse_llm_json(response_text: str) -> Dict[str, Any]:
             pass
 
     preview = cleaned[:300].replace("\n", " ")
-    raise ValueError(f"LLM response was not valid JSON. Preview: {preview!r}")
+    raise ValueError("LLM response was not valid JSON")
 
 
 def run_verification(
@@ -1235,7 +1235,7 @@ def run_verification_stream(
             blind_parsed = parse_llm_json(full_response)
         except Exception as e:
             blind_parsed = {
-                theme_key: _build_fallback_theme(theme_spec, f"LLM error: {str(e)[:100]}"),
+                theme_key: _build_fallback_theme(theme_spec, f"LLM error: {type(e).__name__}"),
                 "questions": [],
             }
 
@@ -1300,7 +1300,7 @@ def run_verification_stream(
             reconcile_parsed = {
                 theme_key: _build_fallback_theme(
                     theme_spec,
-                    f"LLM error: {str(e)[:100]}",
+                    f"LLM error: {type(e).__name__}",
                 ),
                 "questions": [],
             }
