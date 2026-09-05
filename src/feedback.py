@@ -100,12 +100,12 @@ def noise_report(*, since: Optional[str] = None) -> List[Dict[str, Any]]:
     """Per (kind, key): up/down counts and down-rate — the signal that drives rule tuning."""
     if not db_path().exists():
         return []
+    _SELECT = "SELECT kind, key, SUM(verdict='up'), SUM(verdict='down'), COUNT(*) FROM feedback"
+    _TAIL = " GROUP BY kind, key ORDER BY (SUM(verdict='down') * 1.0 / COUNT(*)) DESC, COUNT(*) DESC"
     with closing(_connect()) as conn:
-        where, args = ("WHERE created_at >= ?", (since,)) if since else ("", ())
-        rows = conn.execute(
-            f"SELECT kind, key, SUM(verdict='up'), SUM(verdict='down'), COUNT(*) FROM feedback {where} "
-            "GROUP BY kind, key ORDER BY (SUM(verdict='down') * 1.0 / COUNT(*)) DESC, COUNT(*) DESC",
-            args,
-        ).fetchall()
+        if since:  # two literal statements; `since` only ever travels as a bound parameter
+            rows = conn.execute(_SELECT + " WHERE created_at >= ?" + _TAIL, (since,)).fetchall()
+        else:
+            rows = conn.execute(_SELECT + _TAIL).fetchall()
     return [{"kind": k, "key": key, "up": int(up or 0), "down": int(down or 0), "total": int(n),
              "down_rate": round((down or 0) / n, 3)} for k, key, up, down, n in rows]

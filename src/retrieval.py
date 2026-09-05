@@ -82,8 +82,8 @@ def embed_texts(texts: List[str], *, model: Optional[str] = None) -> List[List[f
     """Embed via Ollama. Raises LLMError on any failure (gate, HTTP, shape)."""
     model = model or os.getenv("EMBED_MODEL", "qwen3-embedding")
     url = f"{ollama_base_url()}/api/embed"
-    resp = requests.post(url, json={"model": model, "input": texts}, timeout=_env_float("EMBED_TIMEOUT_SECONDS", 600),
-                         allow_redirects=False)
+    timeout = _env_float("EMBED_TIMEOUT_SECONDS", 600)
+    resp = requests.post(url, json={"model": model, "input": texts}, timeout=timeout, allow_redirects=False)
     if resp.status_code != 200:
         raise LLMError(f"embed endpoint returned HTTP {resp.status_code}")
     vectors = resp.json().get("embeddings")
