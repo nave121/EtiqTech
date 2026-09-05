@@ -252,10 +252,12 @@ def test_provider_error_bodies_never_reach_logs(marker, monkeypatch, caplog, cap
         def json(self):
             return {"response": ""}
         def iter_lines(self):
-            return iter([f'data: {{"error": {{"type": "overflow", "message": "{marker}"}}}}'.encode()])
+            # marker in BOTH the message and the type/code fields: only whitelisted types may be echoed
+            return iter([f'data: {{"error": {{"type": "{marker}", "code": "{marker}", "message": "{marker}"}}}}'.encode()])
     monkeypatch.setattr(requests, "post", lambda *a, **k: _Ok())
-    with pytest.raises(Exception):
+    with pytest.raises(Exception) as ei:
         list(llm_clients.call_llm_stream("p", provider="openai"))
+    assert marker not in str(ei.value) and "(error)" in str(ei.value)
 
     class _Boom:
         messages = types.SimpleNamespace(create=lambda **kw: (_ for _ in ()).throw(RuntimeError(f"SDK saw {marker}")))

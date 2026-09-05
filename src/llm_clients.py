@@ -299,7 +299,6 @@ def _call_ollama(
 
     text = body.get("response")
     if not isinstance(text, str) or not text.strip():
-        # Surface the full body so callers can debug provider-side issues.
         raise LLMError("Ollama response missing or empty 'response' text payload")
 
     return text.strip()
@@ -492,6 +491,12 @@ def _call_ollama_stream(
 # OpenRouter, and local servers such as vLLM, LM Studio and llama.cpp — the local ones
 # pass the gate without the opt-in flag.
 # ---------------------------------------------------------------------------
+_KNOWN_STREAM_ERRORS = frozenset({
+    "rate_limit_exceeded", "rate_limit_error", "insufficient_quota", "context_length_exceeded",
+    "invalid_request_error", "server_error", "overloaded_error", "timeout", "model_not_found",
+})
+
+
 def _openai_headers() -> Dict[str, str]:
     key = os.getenv("OPENAI_API_KEY", "").strip()
     return {"Authorization": f"Bearer {key}"} if key else {}
@@ -557,7 +562,8 @@ def _call_openai_compat_stream(prompt: str, *, model: str, temperature: Optional
         if isinstance(chunk, dict) and chunk.get("error"):
             # gateways report rate limits / overflow mid-stream without closing; never pass that off as "done"
             err = chunk["error"] if isinstance(chunk["error"], dict) else {}
-            kind = str(err.get("type") or err.get("code") or "error")[:60]  # a category token, never the message
+            raw = str(err.get("type") or err.get("code") or "")
+            kind = raw if raw in _KNOWN_STREAM_ERRORS else "error"  # provider-controlled field: whitelist, never echo
             logger.warning("openai-compat/stream error event: %s", kind)
             raise LLMError(f"OpenAI-compatible stream reported an error ({kind})")
         try:
