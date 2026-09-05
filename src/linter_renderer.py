@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Tuple
 from .schema import IACUC_SCHEMA_V2  # not used for strict validation yet, but here for future use
 from .rules import annotate_report, apply_pack
 from .lint_rules.context import RuleContext, _rule  # noqa: F401  (_rule stays importable from here)
+from .lint_rules import colony, summaries
 from .avma_matrix import (
     normalize_species,
     normalize_method,
@@ -1984,31 +1985,7 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
             )
             ctx.warnings += 1
 
-    # --- colony breeding plan (advisory) ---
-    # Israeli Rules §6-7: colony protocols require colony management plan including expected
-    # surplus animal numbers and disposition plan.
-    if instance.get("is_colony"):
-        n_just = instance.get("n_justification") or {}
-        details_text_colony = (n_just.get("details") or "").lower()
-        colony_plan_keywords = ["colony", "breeding", "surplus", "disposition"]
-        has_colony_plan = any(kw in details_text_colony for kw in colony_plan_keywords)
-        if not has_colony_plan:
-            ctx.checks.append(
-                _rule(
-                    False,
-                    "",
-                    "Colony protocol: n_justification lacks a colony management plan with expected "
-                    "surplus animal numbers and disposition plan.",
-                    fix=(
-                        "Add colony management details to n_justification.details: expected breeding "
-                        "output, surplus animal numbers, and disposition (e.g. culling, transfer, "
-                        "adoption) per Israeli Rules §6-7."
-                    ),
-                    severity="warning",
-                    ref="colony:breeding-plan",
-                )
-            )
-            ctx.warnings += 1
+    colony.run_breeding_plan(ctx)
 
     # --- specialty triggers based on text patterns ---
     for idx, e in enumerate(exps, start=1):
@@ -2205,68 +2182,9 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
                 )
             )
 
-    # --- colony constraint ---
-    if instance.get("is_colony"):
-        invasive_hits: List[Tuple[int, str]] = []
-        for idx, e in enumerate(exps, start=1):
-            for step in e.get("procedure_timeline") or []:
-                s = (step.get("step") or "").lower()
-                if any(k in s for k in ["surgery", "implant", "dbs", "tumor", "craniotomy"]):
-                    invasive_hits.append((idx, s))
-        ok_colony = len(invasive_hits) == 0
-        fix_colony = (
-            "Colony-only protocols may include breeding, identification, and genotyping steps only. "
-            "Move invasive procedures into a separate non-colony protocol."
-        )
-        ctx.checks.append(
-            _rule(
-                ok_colony,
-                "Colony protocol contains no invasive steps.",
-                "Colony protocol contains invasive steps: " + "; ".join(
-                    f"Exp {i}: {txt}" for i, txt in invasive_hits
-                ),
-                fix=fix_colony,
-                ref="colony:no-invasive",
-            )
-        )
-        if not ok_colony:
-            ctx.errors += 1
+    colony.run_no_invasive(ctx)
 
-    # --- summaries word limits (simple word count) ---
-    summaries = instance.get("summaries") or {}
-    sci = summaries.get("scientific_en_≤300w", "") or ""
-    lay = summaries.get("lay_he_≤150w", "") or ""
-    sci_wc = len(re.findall(r"\w+", sci))
-    lay_wc = len(re.findall(r"\w+", lay))
-
-    # Relaxed for Council Exports which often dump full proposal (>1000 words)
-    ok_sci = sci_wc <= 2500
-    if not ok_sci:
-        ctx.warnings += 1
-
-    ctx.checks.append(
-        _rule(
-            ok_sci,
-            f"Scientific abstract within 2500 words ({sci_wc}).",
-            f"Scientific abstract too long ({sci_wc} words, limit 2500).",
-            fix="Shorten or move methodological detail to later sections.",
-            severity="warning",
-            ref="summaries:scientific-length",
-        )
-    )
-
-    ctx.checks.append(
-        _rule(
-            lay_wc <= 150,
-            f"Lay summary within 150 words ({lay_wc}).",
-            f"Lay summary too long ({lay_wc} words, limit 150).",
-            fix="Shorten and remove technical detail; keep as lay explanation.",
-            severity="warning",
-            ref="summaries:lay-length",
-        )
-    )
-    if lay_wc > 150:
-        ctx.warnings += 1
+    summaries.run(ctx)
 
     status = "pass" if ctx.errors == 0 else "fail"
 
