@@ -329,6 +329,41 @@ body {
     line-height: 1.5;
 }
 
+.upload-privacy {
+    margin-top: var(--space-3);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* Disclosures under the drop zone (native <details>) */
+.upload-help,
+.model-advanced {
+    margin-top: var(--space-3);
+    border-top: 1px solid var(--border-light);
+}
+
+.upload-help > summary,
+.model-advanced > summary {
+    padding: var(--space-2) 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.upload-help > summary:hover,
+.model-advanced > summary:hover {
+    color: var(--brand-primary);
+}
+
+.upload-help > p {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+    padding-bottom: var(--space-2);
+}
+
 /* Model Selection */
 .model-selection {
     display: flex;

@@ -155,6 +155,9 @@
                     modelSelect.value = defaultModel;
                 }
                 modelSelect.disabled = false;
+                if ((providerInfo[provider] || {}).local) {
+                    modelStatus.textContent = 'This model runs on this server. Your protocol is not sent anywhere else.';
+                }
             } else if (data.success && data.models.length === 0) {
                 modelSelect.innerHTML = '<option value="">No models found</option>';
                 modelStatus.textContent = 'No models installed in Ollama';

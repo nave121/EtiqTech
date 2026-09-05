@@ -28,7 +28,7 @@
                 </div>
                 <div class="brand-text">
                     <h1>EtiqTech</h1>
-                    <p class="subtitle">IACUC Protocol Review</p>
+                    <p class="subtitle">Check your protocol before you submit it</p>
                 </div>
             </div>
             <div class="header-actions" id="header-actions" hidden>
@@ -63,26 +63,35 @@
                             <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
                     </div>
-                    <p class="upload-text">Drag and drop Council HTML export</p>
-                    <p class="upload-subtext">or click to browse files — HTML export or canonical JSON</p>
+                    <p class="upload-text">Drop your protocol file here</p>
+                    <p class="upload-subtext">or click to choose a file. The .html file from the Council system, or a .json export.</p>
                     <input type="file" id="file-input" accept=".html,.htm,.json" hidden>
                 </div>
                 <p class="upload-error" id="upload-error" role="alert" hidden></p>
-                <div class="model-selection" id="model-selection">
-                    <div class="model-select-group">
-                        <label for="provider-select">LLM Provider</label>
-                        <select id="provider-select">
-                            <option value="ollama" selected>Ollama</option>
-                        </select>
+                <p class="upload-privacy">Your protocol is checked in memory. It is never written to disk or into a log, and it is dropped after about an hour.</p>
+                {# TODO(maintainer): exact menu path in the Council system, see docs/design/spec.md 8.2 #}
+                <details class="upload-help">
+                    <summary>Where do I get this file?</summary>
+                    <p>It is the file the Council system produces when you save your request as a web page. Save it, then drop it here. Not sure? Ask your committee coordinator for the HTML export of your request.</p>
+                </details>
+                <details class="model-advanced" id="model-selection">
+                    <summary>Advanced: choose the AI model</summary>
+                    <div class="model-selection">
+                        <div class="model-select-group">
+                            <label for="provider-select">LLM Provider</label>
+                            <select id="provider-select">
+                                <option value="ollama" selected>Ollama</option>
+                            </select>
+                        </div>
+                        <div class="model-select-group">
+                            <label for="model-select">Model</label>
+                            <select id="model-select">
+                                <option value="">Loading models...</option>
+                            </select>
+                        </div>
+                        <div class="model-status" id="model-status"></div>
                     </div>
-                    <div class="model-select-group">
-                        <label for="model-select">Model</label>
-                        <select id="model-select">
-                            <option value="">Loading models...</option>
-                        </select>
-                    </div>
-                    <div class="model-status" id="model-status"></div>
-                </div>
+                </details>
             </div>
             <div class="upload-loading" id="upload-loading" hidden>
                 <div class="loading-card">
