@@ -37,7 +37,7 @@ permanent · auth stays at the reverse proxy.
 | P2 Norecopa ingest | **blocked on maintainer** (access path) | — |
 | P3.1 rule registry (ids, version, docs/rules.md) | done; module split not done | 592aa81, 9e04573 |
 | P3.2 pack mechanism + EU spike | done (EU rules await review) | 6a173f9 |
-| P3.3 schema contract + adapters | done | 20ef270, 77158b0 |
+| P3.3 schema contract + adapters | done | 20ef270, 77158b0, f71c98a |
 | P3.4 providers (OpenAI-compat, Anthropic) | done | c5287c3, 6e00a43 |
 | P3.5 feedback loop (metadata only) | done | a62cd84, 398ef47 |
 | P4 prepare-mapping, demo mode, README diagram, acknowledgements | done | 8449d66, 9ce976b |
