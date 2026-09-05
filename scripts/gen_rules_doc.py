@@ -54,6 +54,7 @@ def render():
         "",
         "Rule ids are the linter's long-standing `reference` values with the per-experiment suffix (`:exp-N`) stripped; "
         "they appear on every checklist item as `rule_id`, in the UI detail panel and in the printed report. "
+        "Each item also carries the registry's `rule_title` and `rule_kind` (null only for an unregistered reference) so the UI can frame a finding without a second lookup. "
         "`kind` follows the linter's severity classes (structural / law_critical / advisory; `required` is the missing-field family). "
         "`jurisdiction` is a first-pass tag for Phase 3.2 — **IL-form** = specific to the Israeli Council request form or Israeli law, "
         "**generic** = welfare/science checks any jurisdiction would keep; the maintainer should review these tags before they drive a pack split. "

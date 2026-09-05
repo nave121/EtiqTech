@@ -38,6 +38,8 @@ def test_every_emitted_check_maps_to_a_registered_rule(path):
         assert report["ruleset_version"] == RULESET_VERSION
         unregistered = [c["reference"] for c in report["checklist"] if c["rule_id"] is None]
         assert unregistered == [], unregistered
+        assert all(c["rule_title"] and c["rule_kind"] in ("structural", "law_critical", "advisory", "required")
+                   for c in report["checklist"] if c["rule_id"]), report["checklist"]
         LinterResult(**report)
 
 

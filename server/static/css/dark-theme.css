@@ -1,5 +1,5 @@
 /* ============================================
-   Dark Theme Overrides for EthicTech Analyzer
+   Dark Theme Overrides for EtiqTech Analyzer
    Overrides CSS custom properties from main.css
    ============================================ */
 
@@ -405,15 +405,7 @@
     color: var(--text-secondary);
 }
 
-.btn-layer3 {
-    border-color: rgba(34, 197, 94, 0.3);
-    background: rgba(34, 197, 94, 0.08);
-    color: #22c55e;
-}
 
-.btn-layer3:hover {
-    background: rgba(34, 197, 94, 0.14);
-}
 
 /* ============================================
    Scrollbar — dark

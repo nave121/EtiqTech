@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EthicTech - IACUC Protocol Review</title>
+    <title>EtiqTech - IACUC Protocol Review</title>
     <script src="/static/js/tailwind.js"></script>
     <link rel="stylesheet" href="/static/css/main.css">
     <link rel="stylesheet" href="/static/css/dark-theme.css">
@@ -27,19 +27,19 @@
                     </svg>
                 </div>
                 <div class="brand-text">
-                    <h1>EthicTech</h1>
-                    <p class="subtitle">IACUC Protocol Review</p>
+                    <h1>EtiqTech</h1>
+                    <p class="subtitle">Check your protocol before you submit it</p>
                 </div>
             </div>
             <div class="header-actions" id="header-actions" hidden>
                 <span class="file-name" id="current-file-name"></span>
-                <button class="btn-export" id="export-pdf-btn" disabled title="Waiting for LLM verification to complete...">
+                <button class="btn-export" id="export-pdf-btn" disabled>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
                         <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    Export PDF
+                    <span id="export-pdf-label">Export PDF (ready when the review finishes)</span>
                 </button>
                 <button class="btn-new" id="new-analysis-btn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -63,31 +63,41 @@
                             <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
                     </div>
-                    <p class="upload-text">Drag and drop Council HTML export</p>
-                    <p class="upload-subtext">or click to browse files — HTML export or canonical JSON</p>
+                    <p class="upload-text">Drop your protocol file here</p>
+                    <p class="upload-subtext">or click to choose a file. The .html file from the Council system, or a .json export.</p>
                     <input type="file" id="file-input" accept=".html,.htm,.json" hidden>
                 </div>
-                <div class="model-selection" id="model-selection">
-                    <div class="model-select-group">
-                        <label for="provider-select">LLM Provider</label>
-                        <select id="provider-select">
-                            <option value="ollama" selected>Ollama</option>
-                        </select>
+                <p class="upload-error" id="upload-error" role="alert" hidden></p>
+                <p class="upload-privacy">Your protocol is checked in memory. It is never written to disk or into a log, and it is dropped after about an hour.</p>
+                {# TODO(maintainer): exact menu path in the Council system, see docs/design/spec.md 8.2 #}
+                <details class="upload-help">
+                    <summary>Where do I get this file?</summary>
+                    <p>It is the file the Council system produces when you save your request as a web page. Save it, then drop it here. Not sure? Ask your committee coordinator for the HTML export of your request.</p>
+                </details>
+                <details class="model-advanced" id="model-selection">
+                    <summary>Advanced: choose the AI model</summary>
+                    <div class="model-selection">
+                        <div class="model-select-group">
+                            <label for="provider-select">LLM Provider</label>
+                            <select id="provider-select">
+                                <option value="ollama" selected>Ollama</option>
+                            </select>
+                        </div>
+                        <div class="model-select-group">
+                            <label for="model-select">Model</label>
+                            <select id="model-select">
+                                <option value="">Loading models...</option>
+                            </select>
+                        </div>
+                        <div class="model-status" id="model-status"></div>
                     </div>
-                    <div class="model-select-group">
-                        <label for="model-select">Model</label>
-                        <select id="model-select">
-                            <option value="">Loading models...</option>
-                        </select>
-                    </div>
-                    <div class="model-status" id="model-status"></div>
-                </div>
+                </details>
             </div>
             <div class="upload-loading" id="upload-loading" hidden>
                 <div class="loading-card">
                     <div class="spinner"></div>
-                    <p class="loading-text">Analyzing protocol...</p>
-                    <p class="loading-subtext">Parsing and validating against Israeli law requirements</p>
+                    <p class="loading-text">Checking your protocol</p>
+                    <p class="loading-subtext" id="loading-subtext">Step 1 of 3: checking the form against the rules. A few seconds.</p>
                 </div>
             </div>
         </section>
@@ -172,14 +182,14 @@
                 <textarea id="reviewer-notes-input" placeholder="Add your overall review notes here. These will be included in the PDF export." rows="4"></textarea>
             </div>
 
-            <!-- Layer 3 Human Eye Results (full-width panel) -->
+            <!-- Layer 3 results (full-width panel) -->
             <div class="layer3-results-panel" id="layer3-results-panel" hidden>
                 <div class="layer3-results-header">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"/>
                         <path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/>
                     </svg>
-                    <span>Human Eye Review</span>
+                    <span>Second read (deeper review)</span>
                     <span class="layer3-verdict-badge" id="layer3-verdict-badge"></span>
                     <span class="layer3-risk-label" id="layer3-risk-label"></span>
                 </div>
@@ -213,7 +223,7 @@
                 <div class="llm-progress-header">
                     <div class="llm-status-indicator">
                         <span class="status-dot" id="llm-status-dot"></span>
-                        <span class="status-text" id="llm-status-text">Starting LLM review...</span>
+                        <span class="status-text" id="llm-status-text">Step 2 of 3: reading your protocol the way a reviewer would. Usually a few minutes.</span>
                     </div>
                     <button class="llm-minimize" id="llm-minimize">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -230,11 +240,11 @@
                         <div class="progress-bar">
                             <div class="progress-fill" id="llm-progress-fill"></div>
                         </div>
-                        <span class="progress-text" id="llm-progress-text">0 / 12 themes</span>
+                        <span class="progress-text" id="llm-progress-text">0 of 12 topics</span>
                     </div>
                     <div class="llm-thinking" id="llm-thinking">
                         <div class="thinking-header">
-                            <span class="thinking-label">Analyzing</span>
+                            <span class="thinking-label">Draft notes from the model (not the result)</span>
                             <span class="thinking-theme" id="thinking-theme"></span>
                         </div>
                         <div class="thinking-content" id="thinking-content"></div>
@@ -248,21 +258,12 @@
                     <button class="btn-export-inline" id="llm-export-btn">Export Full Report PDF</button>
                 </div>
             </div>
-            <!-- Human Eye (Layer 3) Review -->
-            <button class="btn-layer3" id="layer3-btn" hidden>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/>
-                </svg>
-                Human Eye Review
-            </button>
-
+            <!-- Layer 3 progress card (floating) -->
             <div class="llm-progress-card" id="layer3-card" hidden>
                 <div class="llm-progress-header">
                     <div class="llm-status-indicator">
                         <span class="status-dot running" id="layer3-status-dot"></span>
-                        <span class="status-text" id="layer3-status-text">Starting Human Eye review...</span>
+                        <span class="status-text" id="layer3-status-text">Step 3 of 3: a second, deeper read of the whole protocol. Runs only when something needs it.</span>
                     </div>
                 </div>
                 <p class="advisory-banner" role="note" data-advisory>{{ advisory_notice }}</p>
@@ -274,7 +275,7 @@
                     </div>
                     <div class="llm-thinking" id="layer3-thinking">
                         <div class="thinking-header">
-                            <span class="thinking-label">Reviewing</span>
+                            <span class="thinking-label">Draft notes from the model (not the result)</span>
                         </div>
                         <div class="thinking-content" id="layer3-thinking-content"></div>
                     </div>
