@@ -226,3 +226,11 @@ Design workflow completed 9/9 (18 agents — launched before the 15-agent rule; 
 
 ## Closing gate (2026-09-06, 79 commits since fe3cb01)
 684 passed / 2 skipped · Bandit medium+ clean · pip-audit clean · docs/rules.md, docs/schema.md, corpus all current · linter snapshot byte-identical · no original test file modified · Docker image builds and serves (health ok, law loaded, summary node present, no errors in logs).
+
+## Step 29 (2026-09-06) — Razy's four decisions, executed
+
+Asked via AskUserQuestion; answers and actions:
+1. **Design commit 8 → English only, drop the Hebrew drafts.** Landed as `74eabdc` with the 10 drafted `data-he` twins removed (toggle shows English there until a native review); branch `design-ux` kept for the drafts, worktree removed.
+2. **Statute → Hebrew (WikiSource) + Weizmann English translation.** `scripts/import_statute.py` + corpus extension: 174 records now (89 guidance + 85 law/rules sections); `LAW_PATH` points at the statute translation, so the Layer 2 "law excerpt" quotes the law for the first time; provenance/licence table in `resources/law/README.md` (translation's redistribution terms marked unverified, as agreed). Commits `7e87e5f`, `66d2958`, `f793f2b`.
+3. **Layer 3 → raise the Ollama window.** `OLLAMA_NUM_CTX_LAYER3` (default 65536) threaded through `call_llm`/`call_llm_stream` and the context guard; Layer 2 keeps 32k. Commit `a03f31b`.
+4. **Fix all four linter counting quirks with fixtures** → next.
