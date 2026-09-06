@@ -272,14 +272,13 @@ def sectionize_statute_en(text: str):
                 sections.append((current[0], current[1], current[2], current[3], buf))
             current, buf = None, []
             continue
-        m = re.match(r"^(\d+)\.\s+(.*)$", s)  # section headers may be indented (ss. 21-25 are in the PDF)
-        if m and not re.match(r"^\(", m.group(2)) and int(m.group(1)) <= 40:
+        m = re.match(r"^ {0,8}(\d+)\.\s+(.*)$", line)  # headers may be indented (ss. 21-25 are, in the PDF)
+        # a real header continues the numbering of its part; anything else ('1.' inside a list) is body text
+        expected = (max_law + 1) if part == "law" else (len([x for x in sections if x[0] == part]) + (1 if current and current[0] == part else 0) + 1)
+        if m and int(m.group(1)) in (expected, expected + 1):  # +1: s. 27 is omitted from the translation (a NOTE line)
             num = int(m.group(1))
             if part == "law":
-                if num < max_law and max_law >= 20:
-                    part, chapter = "schedule", ""  # numbering restarts after s. 29: the Schedule's items
-                else:
-                    max_law = max(max_law, num)
+                max_law = num
             if current:
                 sections.append((current[0], current[1], current[2], current[3], buf))
             current, buf = (part, m.group(1), chapter, ""), [m.group(2).strip()]
