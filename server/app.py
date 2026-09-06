@@ -16,7 +16,6 @@ from flask_limiter.util import get_remote_address
 import requests as http_requests
 
 from src.adapters import ADAPTERS, IngestError, ingest
-from src.html_to_json import parse_html
 from src.linter_renderer import lint, render_html_with_refs
 from src import feedback
 from src.llm_agent import THEME_SPECS, law_loaded, run_verification_stream

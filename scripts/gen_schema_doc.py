@@ -7,7 +7,6 @@ compares to the schema over the fixture tree.
 """
 import argparse
 import glob
-import json
 import sys
 from collections import Counter
 from pathlib import Path
