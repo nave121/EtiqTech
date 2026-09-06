@@ -37,7 +37,7 @@ permanent · auth stays at the reverse proxy.
 | P2 Norecopa ingest | **blocked on maintainer** (access path) | — |
 | P3.1 rule registry + module split | **done**: 59 ids, `src/lint_rules/` package, snapshot byte-identical through 8 batches | 592aa81, 9e04573, bd2e383, 9f90148..35856f3 |
 | P3.2 pack mechanism + EU spike | done (EU rules await review) | 6a173f9 |
-| P3.3 schema contract + adapters | done | 20ef270, 77158b0, f71c98a |
+| P3.3 schema contract + adapters | done; reference adapter normalized to the schema (93/94) 2026-09-06 | 20ef270, 77158b0, f71c98a, 2ffb3e9 |
 | P3.4 providers (OpenAI-compat, Anthropic) | done | c5287c3, 6e00a43 |
 | P3.5 feedback loop (metadata only) | done | a62cd84, 398ef47 |
 | P4 prepare-mapping, demo mode, README diagram, acknowledgements | done | 8449d66, 9ce976b |

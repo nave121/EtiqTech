@@ -331,3 +331,12 @@ Running Bandit over `scripts/` as well as the CI scope (`src/ server/`) showed t
 regex is a filter for exactly those characters and sha1 only names corpus chunks — but both are one-token fixes with
 identical behaviour: escapes instead of literal characters, `usedforsecurity=False`. `build_law_corpus.py --check`
 confirms the corpus ids are unchanged. Bandit `-ll` is now clean over src/, server/ and scripts/. CI scope unchanged.
+
+## Closing gate (2026-09-06 late, 110 commits since fe3cb01)
+Second decision round complete. Commits this round: a32bf03 housekeeping, b4cea27 eval harness, 2ffb3e9 parser
+normalization, b4292c9 review fixes, d1f9483 eval verdict, 3df494e Bandit hygiene, de8aafe denominator fix. Every
+commit Sonnet-reviewed; every FIX applied (enrichment render regression, blank fate, stale chars, theme denominator).
+Gate: 814 passed / 2 skipped (440 originals untouched); linter snapshot byte-identical after refresh; docs/schema.md,
+docs/rules.md and the corpus current (--check); Bandit -ll clean over src/, server/ and scripts/; pip-audit as CI runs
+it: no known vulnerabilities; working tree clean. Open for Razy: eyeball the six golden manifest diffs
+(`git show 2ffb3e9 -- examples/head-to-head`), translation licence (decision 2), wording (decision 5).
