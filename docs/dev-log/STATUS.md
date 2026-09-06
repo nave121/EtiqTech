@@ -16,7 +16,7 @@
   plain-language findings, guided first run. Not started; scheduled after the eval gate.
 
 ## Invariants (never break)
-All tests green (684 now, 440 original untouched) · no protocol text persisted or logged at any
+All tests green (692 now, 440 original untouched) · no protocol text persisted or logged at any
 level · local-first LLM by default · LLM never gates/filters/rewrites Layer 1 · advisory framing
 permanent · auth stays at the reverse proxy.
 
@@ -43,7 +43,7 @@ permanent · auth stays at the reverse proxy.
 | P4 prepare-mapping, demo mode, README diagram, acknowledgements | done | 8449d66, 9ce976b |
 | Rule coverage fixtures (23 of 27 never-firing rules) | done, merged | 9a6648b |
 | P4 demo GIF, social preview, i18n toggle, public deploy | not done | — |
-| Design (non-tech-friendly UX) | commits 1–7 and 9 on main (rename/counts, inline errors, rule title+kind, upload screen, plain status strings, finding card, report summary, START-HERE); **commit 8 (landing copy, Hebrew drafts) held on `design-ux` for Razy's Hebrew review** | 3af9372 … a568df0, 3e5a90b, 55a2510 |
+| Design (non-tech-friendly UX) | all 9 commits on main; commit 8 landed English-only (Hebrew drafts dropped, kept on branch `design-ux`) | 3af9372 … 74eabdc |
 
 ## Memos awaiting a decision
 - `docs/dev-log/statute-sources.md` — the statute and rules are not in the repo; sources, licences and a recommendation for `resources/law/`.
@@ -53,10 +53,10 @@ permanent · auth stays at the reverse proxy.
 - `docs/benchmarks.md` — grounding stays off; rerun conditions.
 
 ## Open findings for the maintainer (do not fix without a decision)
-1. `the_law-english_translation.txt` is the Council's form guidance, not the 1994 statute (statute not in repo; see statute-sources.md — no official English translation exists).
+1. ~~Statute not in repo~~ added 2026-09-06 (Hebrew from WikiSource + Weizmann English translation; `LAW_PATH` now the statute). Translation's redistribution terms unverified.
 2. Parser output validates against the schema on 0/94 fixtures (Hebrew enums, missing summary key) — normalize parser vs widen schema. `analysis.summary.single_sex_design` is always False on real exports as a consequence.
-3. Layer 3 pass-1 ≈ 27.7k real tokens vs 24.6k available at the 32k default window, on every protocol.
-4. `term:track` can increment `errors` without a failing checklist item; `title:pilot-label` is emitted as severity error but counted as a warning (pre-existing linter counting bugs, found by review of 6a173f9).
+3. ~~Layer 3 window~~ Layer 3 runs at `OLLAMA_NUM_CTX_LAYER3=65536` (2026-09-06); prompt trimming deferred until OpenAI/Anthropic use.
+4. ~~Four linter counting quirks~~ fixed in ruleset 1.1.0 (2026-09-06, Razy's decision).
 5. 4 of 59 rules (`header`, `research`, `pi`, `required`) fire on no fixture (unreachable from canonical JSON; need a broken HTML export); `three_Rs_alternatives` is a target theme in only 3 of 28 golden cases.
 6. On the 27B test model the blind pass barely separates good from bad protocols (see docs/benchmarks.md).
 7. `the_law.txt` is a word-reversed duplicate of the PDF text — candidate for deletion (rule: never delete without OK).
@@ -78,8 +78,8 @@ python scripts/eval_grounding.py --report         # if output/eval_grounding.jso
 Long LLM jobs write resumable JSONL under `output/` (gitignored); relaunch the same command to continue.
 
 ## Next steps (in order)
-1. Razy: review the Hebrew drafts in design commit 8 (`git -C ../EtiqTech-design show 75dd5f0`), then merge `design-ux`.
-2. Decide the memos (statute, Layer 3, grounding, EU rules); then implement the chosen options.
+1. Hebrew for the landing copy: a native review of the drafts on branch `design-ux` (75dd5f0) when convenient.
+2. Remaining decisions: grounding default (eval rerun on the production model), EU seed rules, advisory/scope wording.
 2. Review follow-ups as they arrive.
 3. Design task (non-technical UX) — plan first, then build.
 4. Optional if time: P3.1 module split in small batches; i18n toggle.
