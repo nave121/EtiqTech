@@ -584,11 +584,11 @@ def _call_openai_compat_stream(prompt: str, *, model: str, temperature: Optional
 # not sent (rejected by current Claude models); adaptive thinking is the model default.
 # ---------------------------------------------------------------------------
 def _anthropic_client():
+    base_url = gated_base_url("anthropic")  # the remote gate decides first, whether or not the SDK is installed
     try:
         import anthropic  # noqa: WPS433 — optional dependency
     except ImportError as exc:
         raise LLMError("LLM_PROVIDER=anthropic needs the 'anthropic' package: pip install 'etiqtech[anthropic]'") from exc
-    base_url = gated_base_url("anthropic")
     # The SDK's default HTTP client follows redirects; every other adapter refuses them, so must this one.
     return anthropic.Anthropic(
         base_url=base_url,

@@ -340,3 +340,12 @@ Gate: 814 passed / 2 skipped (440 originals untouched); linter snapshot byte-ide
 docs/rules.md and the corpus current (--check); Bandit -ll clean over src/, server/ and scripts/; pip-audit as CI runs
 it: no known vulnerabilities; working tree clean. Open for Razy: eyeball the six golden manifest diffs
 (`git show 2ffb3e9 -- examples/head-to-head`), translation licence (decision 2), wording (decision 5).
+
+## Step 36 (2026-09-06) — first push; CI red on a test of mine
+Pushed cdfc44f..cf9b78c (110 commits). CI `test` job failed on `tests/test_providers.py::test_anthropic_is_always_remote_and_gated`:
+the runner has no optional `anthropic` SDK, so `_anthropic_client()` raised "needs the 'anthropic' package" before
+reaching the remote gate. Locally the SDK is installed, so 814 passed here and the gap never showed — the same
+lesson as "verify the environment before promising to test in it". Fix is in the code, not the test: the gate
+(`gated_base_url("anthropic")`) now runs before the import, so the local-first refusal holds whether or not the SDK
+is present. Reproduced CI locally by hiding the module (`sys.modules["anthropic"] = None`): 1 failed → all green.
+Note: the two pre-sprint CI runs on main (April) were also red; not investigated here, different cause.
