@@ -7,7 +7,7 @@ from server.app import app
 
 
 def test_law_corpus_ships_in_resources():
-    assert llm_agent.LAW_PATH == Path(llm_agent.__file__).resolve().parent.parent / "resources" / "law" / "the_law-english_translation.txt"
+    assert llm_agent.LAW_PATH == Path(llm_agent.__file__).resolve().parent.parent / "resources" / "law" / "statute-and-rules-2007-en.txt"
     assert llm_agent.law_loaded()
     assert llm_agent._load_law_text(max_chars=50)
 

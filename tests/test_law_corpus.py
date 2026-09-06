@@ -25,12 +25,12 @@ def test_committed_corpus_matches_the_builder():
 
 
 def test_schema_and_uniqueness(records):
-    assert len(records) >= 80
+    assert len(records) >= 160
     ids = [r["id"] for r in records]
     assert len(ids) == len(set(ids)), "ids must be unique and stable"
     for r in records:
         assert REQUIRED <= set(r), r["id"]
-        assert r["doc_type"] == "guidance_section" and r["lang"] in ("en", "he")
+        assert r["doc_type"] in ("guidance_section", "law_section") and r["lang"] in ("en", "he")
         assert 40 <= len(r["text"]) <= blc.MAX_CHARS, (r["id"], len(r["text"]))
         assert r["url"].startswith("etiqtech://resources/law/")
 
@@ -66,6 +66,17 @@ def test_urls_and_latin_spans_survive_hebrew_normalization(records):
 
 
 def test_hebrew_ids_are_content_hashes_with_provenance(records):
-    he = [r for r in records if r["lang"] == "he"]
+    he = [r for r in records if r["lang"] == "he" and r["doc_type"] == "guidance_section"]
     assert all(len(r["id"].split("-")[-1]) == 8 or r["id"].split("-")[-2].__len__() == 8 for r in he)
     assert all(len(r["source_sha256"]) == 12 for r in records)
+
+
+def test_statute_and_rules_are_in_the_corpus(records):
+    law = [r for r in records if r["doc_type"] == "law_section"]
+    ids = {r["id"] for r in law}
+    assert "il-law-1994-s1-he" in ids and "il-law-1994-s1-en-1" in ids or "il-law-1994-s1-en" in ids
+    assert any(i.startswith("il-rules-2001-s") and i.endswith("-he") for i in ids)
+    assert any(i.startswith("il-rules-2001-s") and "-en" in i for i in ids)
+    assert all(r["jurisdiction"] == "IL" and r["license"] for r in law)
+    he1 = next(r for r in law if r["id"] == "il-law-1994-s1-he")
+    assert "הגדרות" in he1["title"] and "בעל חוליות למעט אדם" in he1["text"]

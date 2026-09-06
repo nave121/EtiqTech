@@ -49,7 +49,7 @@ def _windows(paragraphs, max_chars=MAX_CHARS):
         if len(p) > max_chars:
             if cur:
                 out.append(cur); cur = ""
-            sentences = re.split(r"(?<=[.!?:])\s+", p)
+            sentences = re.split(r"(?<=[.!?:;])\s+", p)  # ';' too: statute definitions are one long sentence
             for s in sentences:
                 if len(cur) + len(s) + 1 > max_chars and cur:
                     out.append(cur); cur = ""
@@ -216,10 +216,116 @@ def extract_hebrew() -> str:
     return clean
 
 
+# ---------------------------------------------------------------------------
+# The statute and the rules (imported by scripts/import_statute.py). One record per section.
+# ---------------------------------------------------------------------------
+STATUTE = {
+    "statute-1994-he.txt": ("il-law-1994", "he", "חוק צער בעלי חיים (ניסויים בבעלי חיים), התשנ״ד–1994",
+                            "Statute text: no copyright under Israeli Copyright Act 2007 s.6; WikiSource markup layer CC BY-SA"),
+    "rules-2001-he.txt": ("il-rules-2001", "he", "כללי צער בעלי חיים (ניסויים בבעלי חיים), התשס״א–2001",
+                          "Rules text: no copyright under Israeli Copyright Act 2007 s.6; WikiSource markup layer CC BY-SA"),
+}
+STATUTE_EN = "statute-and-rules-2007-en.txt"
+STATUTE_EN_LICENSE = "Private English translation (Weizmann Institute veterinary resources, correct as of 30 May 2007); licence not stated — used for grounding, redistribution terms unverified"
+
+
+def sectionize_statute_he(text: str):
+    """'== chapter ==' headers and 'סעיף N: title' section lines from import_statute.py."""
+    sections, chapter, current, buf = [], "", None, []
+    for line in text.splitlines():
+        m = re.match(r"^== (.*) ==$", line)
+        if m:
+            chapter = m.group(1).strip()
+            continue
+        m = re.match(r"^סעיף ([^\s:]+):?\s*(.*)$", line)
+        if m:
+            if current:
+                sections.append((current[0], current[1], current[2], buf))
+            current, buf = (m.group(1), (m.group(2) or "").strip(), chapter), []
+            continue
+        if current and line.strip():
+            buf.append(line.strip())
+    if current:
+        sections.append((current[0], current[1], current[2], buf))
+    return sections
+
+
+def sectionize_statute_en(text: str):
+    """Numbered sections ('N.  text') under CHAPTER headers; the Rules start at their title page."""
+    sections, chapter, part, current, buf, max_law = [], "", "law", None, [], 0
+    for line in text.splitlines():
+        s = line.strip()
+        if re.match(r"^(PREVENTION OF CRUELTY TO ANIMALS )?RULES \(EXPERIMENTS", s) and current and part in ("law", "schedule") and max_law >= 20:
+            part, chapter = "rules", ""  # the Rules title page follows the law's Schedule
+        m = re.match(r"^CHAPTER [A-Z]+: (.*)$", s)
+        if m:
+            chapter = m.group(1).title()
+            continue
+        if re.match(r"^SCHEDULE", s) and part == "law" and max_law >= 20:
+            part, chapter = "schedule", ""
+        m = re.match(r"^(\d+)\.\s+(.*)$", line)
+        if m and not line.startswith(" "):
+            num = int(m.group(1))
+            if part == "law":
+                if num < max_law and max_law >= 20:
+                    part, chapter = "schedule", ""  # numbering restarts after s. 29: the Schedule's items
+                else:
+                    max_law = max(max_law, num)
+            if current:
+                sections.append((current[0], current[1], current[2], current[3], buf))
+            current, buf = (part, m.group(1), chapter, ""), [m.group(2).strip()]
+            continue
+        if current and s:
+            buf.append(s)
+    if current:
+        sections.append((current[0], current[1], current[2], current[3], buf))
+    return sections
+
+
+def _statute_records():
+    recs = []
+    for fname, (prefix, lang, title, license_) in STATUTE.items():
+        path = LAW_DIR / fname
+        if not path.exists():
+            continue
+        sha = hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+        for num, stitle, chapter, buf in sectionize_statute_he(path.read_text(encoding="utf-8")):
+            body = " ".join(buf).strip()
+            if len(body) < 20:
+                continue
+            pfx = prefix + ("-schedule" if chapter.startswith("תוספת") else "")  # the Schedule's items restart at 1
+            for n, chunk in enumerate(_windows([body]), 1):
+                rid = f"{pfx}-s{num}-he" + (f"-{n}" if len(_windows([body])) > 1 else "")
+                recs.append({"id": rid, "url": f"etiqtech://resources/law/{fname}#{rid}",
+                             "title": f"{title} — {chapter + ' › ' if chapter else ''}סעיף {num}{': ' + stitle if stitle else ''}",
+                             "doc_type": "law_section", "jurisdiction": "IL", "lang": "he",
+                             "section_path": [x for x in (chapter, f"סעיף {num}") if x], "species": [], "text": chunk,
+                             "license": license_, "source": fname, "source_sha256": sha, "retrieved_at": "2026-09-06"})
+    en = LAW_DIR / STATUTE_EN
+    if en.exists():
+        sha = hashlib.sha256(en.read_bytes()).hexdigest()[:12]
+        for part, num, chapter, _t, buf in sectionize_statute_en(en.read_text(encoding="utf-8")):
+            body = " ".join(buf).strip()
+            if len(body) < 20:
+                continue
+            prefix = {"law": "il-law-1994", "schedule": "il-law-1994-schedule", "rules": "il-rules-2001"}[part]
+            doc = ("Prevention of Cruelty to Animals Rules (Experiments on Animals) 5761-2001" if part == "rules"
+                   else "Prevention of Cruelty to Animals Law (Experiments on Animals) 5754-1994" + (" — Schedule" if part == "schedule" else ""))
+            chunks = _windows([body])
+            for n, chunk in enumerate(chunks, 1):
+                rid = f"{prefix}-s{num}-en" + (f"-{n}" if len(chunks) > 1 else "")
+                recs.append({"id": rid, "url": f"etiqtech://resources/law/{STATUTE_EN}#{rid}",
+                             "title": f"{doc} — {chapter + ' › ' if chapter else ''}Section {num}",
+                             "doc_type": "law_section", "jurisdiction": "IL", "lang": "en",
+                             "section_path": [x for x in (chapter, f"Section {num}") if x], "species": [], "text": chunk,
+                             "license": STATUTE_EN_LICENSE, "source": STATUTE_EN, "source_sha256": sha, "retrieved_at": "2026-09-06"})
+    return recs
+
+
 def build():
     en = _records(sectionize_en(EN_SRC.read_text(encoding="utf-8")), "en", DOC_TITLE_EN, EN_SRC.name)
     he = _records(sectionize_he(extract_hebrew()), "he", DOC_TITLE_HE, HE_TXT.name)
-    return en + he
+    return en + he + _statute_records()
 
 
 def main():
@@ -236,7 +342,8 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(payload, encoding="utf-8")
     en, he = [r for r in recs if r["lang"] == "en"], [r for r in recs if r["lang"] == "he"]
-    print(f"wrote {OUT.relative_to(ROOT)}: {len(recs)} records ({len(en)} en, {len(he)} he); "
+    law = [r for r in recs if r["doc_type"] == "law_section"]
+    print(f"wrote {OUT.relative_to(ROOT)}: {len(recs)} records ({len(en)} en, {len(he)} he; {len(law)} law/rules sections); "
           f"max chunk {max(len(r['text']) for r in recs)} chars")
 
 
