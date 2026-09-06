@@ -16,7 +16,7 @@
   plain-language findings, guided first run. Not started; scheduled after the eval gate.
 
 ## Invariants (never break)
-All tests green (694 now, 440 original untouched) · no protocol text persisted or logged at any
+All tests green (696 now, 440 original untouched) · no protocol text persisted or logged at any
 level · local-first LLM by default · LLM never gates/filters/rewrites Layer 1 · advisory framing
 permanent · auth stays at the reverse proxy.
 
@@ -31,7 +31,7 @@ permanent · auth stays at the reverse proxy.
 | P1.2 PRIVACY.md + canary | done | e6bffde, fb89ffe |
 | P1.3 supply chain + CSP nonce | done | 91d1083 |
 | P1.4 advisory banner | done (wording = maintainer) | 737e831 |
-| P2 corpus (IL guidance EN+HE + the 1994 statute and 2001 rules, HE+EN) | done: 174 records | 72ce96e … 7e87e5f, fbb6280, 344583b |
+| P2 corpus (IL guidance EN+HE + the 1994 statute and 2001 rules, HE+EN) | done: 178 records, section boundaries verified by read-through | 72ce96e … 7e87e5f … 233da23 |
 | P2 retrieval layer + cited grounding | done, **off by default** | 3b67301, 64ca1ed |
 | P2 eval gate (grounded vs ungrounded) | done (subset): **no gain, grounding stays off by default**; rerun conditions in docs/benchmarks.md | 342092b, bf331e4 |
 | P2 Norecopa ingest | **blocked on maintainer** (access path) | — |
