@@ -161,7 +161,7 @@ EtiqTech reviews protocols in three layers:
 | `LLM_TEMPERATURE` | `0.2` | Sampling temperature |
 | `LLM_MAX_TOKENS` | `8192` | Max output tokens |
 | `OLLAMA_NUM_CTX` | `32768` | Context window for Layer 2 theme prompts |
-| `OLLAMA_NUM_CTX_LAYER3` | `65536` | Context window for Layer 3 (whole protocol + guidance ≈ 28k tokens; see docs/dev-log/layer3-context-options.md) |
+| `OLLAMA_NUM_CTX_LAYER3` | `65536` | Context window for Layer 3 (whole protocol + guidance ≈ 28k tokens). Costs roughly 0.7 GB more KV cache per concurrent Layer 3 run on a ~30B model; see docs/dev-log/layer3-context-options.md |
 | `OLLAMA_TIMEOUT_SECONDS` | `120` | Request timeout |
 | `OLLAMA_TWO_STEP` | `false` | Enable think-then-structure mode |
 | `LAYER3_SAMPLING_RATE` | `0.10` | Fraction of clean protocols to spot-check |

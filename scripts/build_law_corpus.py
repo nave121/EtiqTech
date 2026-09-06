@@ -263,6 +263,11 @@ def sectionize_statute_en(text: str):
             continue
         if re.match(r"^SCHEDULE", s) and part == "law" and max_law >= 20:
             part, chapter = "schedule", ""
+        if re.match(r"^SCHEDULE", s) and part == "rules":
+            if current:  # close the pending section first; the Schedule (application form, omitted) is not a section
+                sections.append((current[0], current[1], current[2], current[3], buf))
+            current, buf = None, []
+            continue
         m = re.match(r"^(\d+)\.\s+(.*)$", line)
         if m and not line.startswith(" "):
             num = int(m.group(1))

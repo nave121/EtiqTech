@@ -71,3 +71,14 @@ def test_counters_reconcile_with_rows_on_every_fixture():
 
 def test_ruleset_version_bumped_and_history_known():
     assert RULESET_VERSION == "1.1.0" and "1.0.0" in KNOWN_RULESET_VERSIONS
+
+
+def test_generic_pack_recomputation_reconciles_too(monkeypatch):
+    """apply_pack recomputes the counters for the generic pack; they must reconcile the same way."""
+    from src.html_to_json import parse_html
+    monkeypatch.setenv("ETIQTECH_JURISDICTION", "generic")
+    for f in sorted((Path(__file__).resolve().parents[1] / "examples" / "known-bad").glob("*.html")):
+        r = lint(parse_html(f.read_text(encoding="utf-8")))
+        fails = [c for c in r["checklist"] if c["status"] == "fail"]
+        assert r["errors"] == sum(c["severity"] == "error" for c in fails), f.name
+        assert r["structural_errors"] + r["law_critical_errors"] == r["errors"], f.name

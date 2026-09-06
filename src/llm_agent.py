@@ -15,7 +15,6 @@ PROMPTS_DIR = Path(__file__).parent.parent / "llm"
 # The statute itself (1994 law + 2001 rules, English translation). Until 2026-09-06 this pointed at the
 # Council's form guidance, which is now served through the retrieval corpus instead.
 LAW_PATH = Path(__file__).parent.parent / "resources" / "law" / "statute-and-rules-2007-en.txt"
-GUIDANCE_PATH = Path(__file__).parent.parent / "resources" / "law" / "the_law-english_translation.txt"
 HEAD_TO_HEAD_DIR = Path(__file__).parent.parent / "examples" / "head-to-head"
 
 logger = logging.getLogger(__name__)

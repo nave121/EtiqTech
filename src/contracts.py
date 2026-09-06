@@ -32,7 +32,7 @@ class ChecklistItem(BaseModel):
     reference: str
     rule_id: Optional[str] = None  # canonical registry id (src/rules.py); None only for unregistered refs
     rule_title: Optional[str] = None  # registry title, a satisfied condition ("Alternatives search present")
-    rule_kind: Optional[str] = None  # structural | law_critical | advisory | required
+    rule_kind: Optional[str] = None  # structural | law_critical | advisory
 
 
 class LintAnalysisSummary(BaseModel):

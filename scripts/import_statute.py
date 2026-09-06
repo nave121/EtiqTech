@@ -25,11 +25,13 @@ def wiki_to_text(raw: str) -> str:
     for line in raw.splitlines():
         if line.startswith(("{{ח:התחלה", "{{ח:סיום", "{{ח:פתיח", "{{ח:מאגר", "{{ח:תיבה", "<div", "</div")):
             continue
-        m = re.match(r"\{\{ח:קטע\d\|[^|}]*\|([^}|]*)", line)
+        m = re.match(r"\{\{ח:קטע\d\|[^|}]*\|(.*)$", line)
         if m:
-            title = m.group(1).strip()
-            if title and not title.startswith("{{"):  # a header whose title is itself a template (a note) is not a chapter
+            title = re.sub(r"\{\{.*", "", m.group(1)).strip().rstrip("}").strip()  # drop any nested template (notes) from the title
+            if title:
                 lines.append(f"\n== {title} ==")
+            continue
+        if re.match(r"^\[\[קטגוריה:.*\]\]\s*$", line):  # WikiSource category links are not law text
             continue
         m = re.match(r"\{\{ח:סעיף\*?\|([^|}]*)\|([^|}]*)", line)
         if m:
