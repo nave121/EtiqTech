@@ -251,42 +251,60 @@ def sectionize_statute_he(text: str):
 
 
 def sectionize_statute_en(text: str):
-    """Numbered sections ('N.  text') under CHAPTER headers; the Rules start at their title page."""
-    sections, chapter, part, current, buf, max_law = [], "", "law", None, [], 0
+    """Numbered sections ('N.  text') under CHAPTER headers; the Rules start at their title page.
+
+    The PDF prints each section's title on the line ABOVE its number, so the last non-header line is held
+    back ("pending") until we know whether it is body text or the next section's title."""
+    sections, chapter, part, current, buf, max_law, pending = [], "", "law", None, [], 0, None
+
+    def close():
+        nonlocal current, buf, pending
+        if current:
+            if pending is not None:
+                buf.append(pending)
+            sections.append((current[0], current[1], current[2], current[3], buf))
+        current, buf, pending = None, [], None
+
     for line in text.splitlines():
         s = line.strip()
         if re.match(r"^(PREVENTION OF CRUELTY TO ANIMALS )?RULES \(EXPERIMENTS", s) and current and part in ("law", "schedule") and max_law >= 20:
+            if pending == "PREVENTION OF CRUELTY TO ANIMALS":
+                pending = None  # first line of the Rules' title page, not schedule text
+            close()
             part, chapter = "rules", ""  # the Rules title page follows the law's Schedule
+            continue
+        if part == "rules" and current is None and re.match(r"^(5761-2001|By virtue of|Definitions)$", s):
+            pending = s if s == "Definitions" else None  # title-page lines before rules s. 1; 'Definitions' is its title
+            continue
         m = re.match(r"^CHAPTER [A-Z]+: (.*)$", s)
         if m:
+            if pending is not None:
+                buf.append(pending); pending = None
             chapter = m.group(1).title()
             continue
-        if re.match(r"^SCHEDULE", s) and part == "law" and max_law >= 20:
-            if current:  # close s. 29 before the Schedule's items start
-                sections.append((current[0], current[1], current[2], current[3], buf))
-            current, buf = None, []
-            part, chapter = "schedule", ""
-            continue
-        if re.match(r"^SCHEDULE", s) and part == "rules":
-            if current:  # close the pending section first; the Schedule (application form, omitted) is not a section
-                sections.append((current[0], current[1], current[2], current[3], buf))
-            current, buf = None, []
-            continue
+        if re.match(r"^SCHEDULE", s):
+            if part == "law" and max_law >= 20:
+                close(); part, chapter = "schedule", ""
+                continue
+            if part == "rules":
+                close()  # the rules' Schedule (application form, omitted) is not a section
+                continue
         m = re.match(r"^ {0,8}(\d+)\.\s+(.*)$", line)  # headers may be indented (ss. 21-25 are, in the PDF)
-        # a real header continues the numbering of its part; anything else ('1.' inside a list) is body text
         expected = (max_law + 1) if part == "law" else (len([x for x in sections if x[0] == part]) + (1 if current and current[0] == part else 0) + 1)
         if m and int(m.group(1)) in (expected, expected + 1):  # +1: s. 27 is omitted from the translation (a NOTE line)
             num = int(m.group(1))
+            title = pending or ""  # the held-back line is this section's title, not the previous section's text
+            pending = None
             if part == "law":
                 max_law = num
-            if current:
-                sections.append((current[0], current[1], current[2], current[3], buf))
-            current, buf = (part, m.group(1), chapter, ""), [m.group(2).strip()]
+            close()
+            current, buf = (part, m.group(1), chapter, title), [m.group(2).strip()]
             continue
         if current and s:
-            buf.append(s)
-    if current:
-        sections.append((current[0], current[1], current[2], current[3], buf))
+            if pending is not None:
+                buf.append(pending)
+            pending = s
+    close()
     return sections
 
 
@@ -312,7 +330,7 @@ def _statute_records():
     en = LAW_DIR / STATUTE_EN
     if en.exists():
         sha = hashlib.sha256(en.read_bytes()).hexdigest()[:12]
-        for part, num, chapter, _t, buf in sectionize_statute_en(en.read_text(encoding="utf-8")):
+        for part, num, chapter, stitle, buf in sectionize_statute_en(en.read_text(encoding="utf-8")):
             body = " ".join(buf).strip()
             if len(body) < 20:
                 continue
@@ -323,7 +341,7 @@ def _statute_records():
             for n, chunk in enumerate(chunks, 1):
                 rid = f"{prefix}-s{num}-en" + (f"-{n}" if len(chunks) > 1 else "")
                 recs.append({"id": rid, "url": f"etiqtech://resources/law/{STATUTE_EN}#{rid}",
-                             "title": f"{doc} — {chapter + ' › ' if chapter else ''}Section {num}",
+                             "title": f"{doc} — {chapter + ' › ' if chapter else ''}Section {num}{': ' + stitle if stitle else ''}",
                              "doc_type": "law_section", "jurisdiction": "IL", "lang": "en",
                              "section_path": [x for x in (chapter, f"Section {num}") if x], "species": [], "text": chunk,
                              "license": STATUTE_EN_LICENSE, "source": STATUTE_EN, "source_sha256": sha, "retrieved_at": "2026-09-06"})

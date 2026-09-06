@@ -81,3 +81,20 @@ def test_statute_and_rules_are_in_the_corpus(records):
     assert all(r["jurisdiction"] == "IL" and r["license"] for r in law)
     he1 = next(r for r in law if r["id"] == "il-law-1994-s1-he")
     assert "הגדרות" in he1["title"] and "בעל חוליות למעט אדם" in he1["text"]
+
+
+def test_english_statute_sections_do_not_bleed_into_neighbours(records):
+    """The PDF prints each section's title above its number; that line must become the NEXT section's title,
+    never the previous section's last words (found by review: 39 of 40 English records were affected)."""
+    en = [r for r in records if r["doc_type"] == "law_section" and r["lang"] == "en"]
+    titles = [r["title"].split(": ", 1)[1] for r in en if ": " in r["title"].split(" — ")[-1]]
+    assert len(titles) >= 30, "English sections should carry their parsed titles"
+    for r in en:
+        tail = r["text"].rstrip()[-80:]
+        for t in titles:
+            if len(t) > 8:
+                assert not tail.endswith(t), (r["id"], tail)
+        assert not tail.endswith("PREVENTION OF CRUELTY TO ANIMALS"), r["id"]
+    s21 = next(r for r in en if r["id"] == "il-law-1994-s21-en")
+    assert "Supervisor of experiments in the defense establishment" in s21["title"]
+    assert s21["text"].startswith("(a)")
