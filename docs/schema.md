@@ -117,11 +117,11 @@ Top-level required blocks: `header`, `research`, `pi`, `participants`, `summarie
 | `experiments[].animals.species_standard` | string |  |  | `mouse` · `rat` · `guinea_pig` · `rabbit` · `hamster` · `gerbil` · `zebrafish` · `pig` |  |
 | `experiments[].animals.strain` | string | yes |  |  |  |
 | `experiments[].animals.genetic_status` | string | yes |  |  |  |
-| `experiments[].animals.sex` | string | yes |  | `M` · `F` · `both` |  |
+| `experiments[].animals.sex` | string | yes |  | `M` · `F` · `both` · `unknown` |  |
 | `experiments[].animals.n` | integer | yes |  |  |  |
 | `experiments[].animals.age` | object | yes |  |  |  |
 | `experiments[].animals.age.value` | number | yes |  |  |  |
-| `experiments[].animals.age.unit` | string | yes |  | `days` · `weeks` · `months` |  |
+| `experiments[].animals.age.unit` | string | yes |  | `days` · `weeks` · `months` · `years` |  |
 | `experiments[].animals.weight` | object |  |  |  |  |
 | `experiments[].animals.weight.value` | number |  |  |  |  |
 | `experiments[].animals.weight.unit` | string |  |  | `g` · `kg` |  |
@@ -156,7 +156,7 @@ Top-level required blocks: `header`, `research`, `pi`, `participants`, `summarie
 | `experiments[].restraint.justification` | string |  |  |  |  |
 | `experiments[].analgesia` | array |  |  |  |  |
 | `experiments[].analgesia[]` | object |  |  |  |  |
-| `experiments[].analgesia[].phase` | string | yes |  | `pre` · `intra` · `post` |  |
+| `experiments[].analgesia[].phase` | string | yes |  | `pre` · `intra` · `post` · `unknown` |  |
 | `experiments[].analgesia[].agent` | string | yes |  |  |  |
 | `experiments[].analgesia[].dose` | string | yes |  |  |  |
 | `experiments[].analgesia[].route` | string | yes |  |  |  |
@@ -345,18 +345,8 @@ Top-level required blocks: `header`, `research`, `pi`, `participants`, `summarie
 
 ## Conformance of the reference adapter (measured)
 
-`il-council-html` output validated against this schema over 94 fixture files: **0 validate clean**, 1091 violations in 13 distinct (path, rule) classes. The linter is written against what the parser actually emits, so these are documentation debt, not review errors — but a third-party adapter that follows the schema literally will emit *different* values (e.g. English enums) than the reference adapter does. Resolving this (normalize in the parser, or widen the schema to the bilingual reality) is a behaviour change for the maintainer to decide; until then, adapter authors should copy the reference adapter's vocabularies where they differ:
+`il-council-html` output validated against this schema over 94 fixture files: **93 validate clean**, 3 violations in 3 distinct (path, rule) classes. Since 2026-09-06 the parser normalizes the Council export's Hebrew vocabulary onto these enums (maps at the top of `src/html_to_json.py`, guarded by `tests/test_parser_schema.py`), so a third-party adapter that follows the schema literally feeds the linter the same values as the reference adapter. Remaining violations are fixtures missing whole sections (`examples/demo_render.html` is a hand-made demo page), which the parser does not invent:
 
-- `experiments[].animals.sex` (134 occurrences): enum — actual values are outside ['M', 'F', 'both']
-- `experiments[].animals.age.unit` (134 occurrences): enum — actual values are outside ['days', 'weeks', 'months']
-- `experiments[].animals.weight.unit` (134 occurrences): enum — actual values are outside ['g', 'kg']
-- `experiments[].housing.enrichment` (134 occurrences): enum — actual values are outside ['standard', 'custom']
-- `experiments[].fate` (134 occurrences): enum — actual values are outside ['euthanasia', 'return_to_colony', 'rehoming', 'other']
-- `animals_total[].sex` (99 occurrences): enum — actual values are outside ['M', 'F', 'both', 'unknown']
-- `animals_total[].source` (99 occurrences): enum — actual values are outside ['vendor', 'in-house', 'collaboration', 'other']
-- `summaries` (93 occurrences): 'lay_he_≤150w' is a required property
-- `experiments[].analgesia[].phase` (87 occurrences): enum — actual values are outside ['pre', 'intra', 'post']
-- `experiments[].euthanasia.method_standard` (40 occurrences): enum — actual values are outside ['CO2', 'inhalant_overdose', 'barbiturate', 'injectable_overdose', 'cervical_dislocation', 'decapitation', 
 - `experiments[]` (1 occurrences): 'rationale_species_strain_sex' is a required property
 - `experiments[]` (1 occurrences): 'procedure_timeline' is a required property
 - `experiments[]` (1 occurrences): 'humane_endpoints' is a required property

@@ -578,7 +578,7 @@ IACUC_SCHEMA_V2 = {
                             },
                             "strain": {"type": "string"},
                             "genetic_status": {"type": "string"},
-                            "sex": {"type": "string", "enum": ["M", "F", "both"]},
+                            "sex": {"type": "string", "enum": ["M", "F", "both", "unknown"]},
                             "n": {"type": "integer", "minimum": 0},
                             "age": {
                                 "type": "object",
@@ -587,7 +587,7 @@ IACUC_SCHEMA_V2 = {
                                     "value": {"type": "number"},
                                     "unit": {
                                         "type": "string",
-                                        "enum": ["days", "weeks", "months"],
+                                        "enum": ["days", "weeks", "months", "years"],
                                     },
                                 },
                             },
@@ -673,7 +673,7 @@ IACUC_SCHEMA_V2 = {
                             "properties": {
                                 "phase": {
                                     "type": "string",
-                                    "enum": ["pre", "intra", "post"],
+                                    "enum": ["pre", "intra", "post", "unknown"],
                                 },
                                 "agent": {"type": "string"},
                                 "dose": {"type": "string"},

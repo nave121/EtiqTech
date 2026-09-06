@@ -24,14 +24,12 @@
       "cosmetics:ban",
       "euthanasia:displacement-rate",
       "euthanasia:secondary-method",
-      "postop:monitoring",
       "vet:consultation"
     ],
     "good_expected_l1_refs": [
       "cosmetics:ban",
       "euthanasia:displacement-rate",
       "euthanasia:secondary-method",
-      "postop:monitoring",
       "vet:consultation"
     ],
     "target_l2_themes": [

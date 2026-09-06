@@ -134,7 +134,7 @@ Versioning: `RULESET_VERSION` (in `src/rules.py`) is bumped whenever a rule is a
 
 | rule id | kind | jurisdiction | title | fixtures (fire / appear) |
 |---|---|---|---|---|
-| `postop:monitoring` | law_critical | generic | Survival surgery has a post-operative monitoring plan | 17 / 17 |
+| `postop:monitoring` | law_critical | generic | Survival surgery has a post-operative monitoring plan | 0 / 0 |
 
 ## required
 
@@ -177,8 +177,8 @@ Versioning: `RULESET_VERSION` (in `src/rules.py`) is bumped whenever a rule is a
 
 | rule id | kind | jurisdiction | title | fixtures (fire / appear) |
 |---|---|---|---|---|
-| `sex:rationale` | advisory | generic | Sex choice has a rationale | 6 / 6 |
-| `sex:sabv` | advisory | generic | Sex as a biological variable considered | 7 / 7 |
+| `sex:rationale` | advisory | generic | Sex choice has a rationale | 20 / 20 |
+| `sex:sabv` | advisory | generic | Sex as a biological variable considered | 28 / 28 |
 
 ## special
 
@@ -203,7 +203,7 @@ Versioning: `RULESET_VERSION` (in `src/rules.py`) is bumped whenever a rule is a
 
 | rule id | kind | jurisdiction | title | fixtures (fire / appear) |
 |---|---|---|---|---|
-| `surgery:multiple-survival` | advisory | generic | Multiple survival surgeries justified | 16 / 16 |
+| `surgery:multiple-survival` | advisory | generic | Multiple survival surgeries justified | 0 / 0 |
 
 ## term
 
@@ -232,7 +232,7 @@ Versioning: `RULESET_VERSION` (in `src/rules.py`) is bumped whenever a rule is a
 
 ## Coverage gaps
 
-4 rules never appear on any fixture (they only emit a checklist item when they fire, and no fixture trips them): `header`, `pi`, `required`, `research`.
+6 rules never appear on any fixture (they only emit a checklist item when they fire, and no fixture trips them): `header`, `pi`, `postop:monitoring`, `required`, `research`, `surgery:multiple-survival`.
 
 Rules that cannot be reached from canonical JSON (the schema rejects the instance before the linter runs) are documented in `examples/coverage/README.md`.
 

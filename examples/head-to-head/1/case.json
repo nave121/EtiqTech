@@ -25,15 +25,13 @@
       "endpoints:20%-only",
       "euthanasia:CO2",
       "euthanasia:displacement-rate",
-      "euthanasia:secondary-method",
-      "surgery:multiple-survival"
+      "euthanasia:secondary-method"
     ],
     "good_expected_l1_refs": [
       "endpoints:20%-only",
       "euthanasia:CO2",
       "euthanasia:displacement-rate",
       "euthanasia:secondary-method",
-      "surgery:multiple-survival",
       "vet:consultation"
     ],
     "target_l2_themes": [

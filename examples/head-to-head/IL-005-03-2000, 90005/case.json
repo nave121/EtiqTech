@@ -24,7 +24,7 @@
     "bad_expected_l1_refs": [
       "euthanasia:displacement-rate",
       "euthanasia:secondary-method",
-      "postop:monitoring",
+      "sex:sabv",
       "special:oncology",
       "special:stereotaxic",
       "vet:consultation"
@@ -32,7 +32,7 @@
     "good_expected_l1_refs": [
       "euthanasia:displacement-rate",
       "euthanasia:secondary-method",
-      "postop:monitoring",
+      "sex:sabv",
       "special:oncology",
       "special:stereotaxic",
       "vet:consultation"

@@ -86,11 +86,11 @@ def render():
     n, clean, counts = conformance()
     lines += ["", "## Conformance of the reference adapter (measured)", "",
               f"`il-council-html` output validated against this schema over {n} fixture files: **{clean} validate clean**, "
-              f"{sum(counts.values())} violations in {len(counts)} distinct (path, rule) classes. The linter is written against "
-              "what the parser actually emits, so these are documentation debt, not review errors — but a third-party adapter that "
-              "follows the schema literally will emit *different* values (e.g. English enums) than the reference adapter does. "
-              "Resolving this (normalize in the parser, or widen the schema to the bilingual reality) is a behaviour change for the "
-              "maintainer to decide; until then, adapter authors should copy the reference adapter's vocabularies where they differ:", ""]
+              f"{sum(counts.values())} violations in {len(counts)} distinct (path, rule) classes. Since 2026-09-06 the parser "
+              "normalizes the Council export's Hebrew vocabulary onto these enums (maps at the top of `src/html_to_json.py`, "
+              "guarded by `tests/test_parser_schema.py`), so a third-party adapter that follows the schema literally feeds the "
+              "linter the same values as the reference adapter. Remaining violations are fixtures missing whole sections "
+              "(`examples/demo_render.html` is a hand-made demo page), which the parser does not invent:", ""]
     for (path, detail), c in counts.most_common(25):
         lines.append(f"- `{path}` ({c} occurrences): {detail}")
     return "\n".join(lines) + "\n"

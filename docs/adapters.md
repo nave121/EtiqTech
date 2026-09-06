@@ -43,13 +43,15 @@ parse)`. `detect(text) -> bool` is used when the upload has no usable extension;
 to show users — never include the content). Add an entry, and the upload routes accept the
 new extension automatically.
 
-## Vocabulary caveat (read this)
+## Vocabulary (normalized since 2026-09-06)
 
-`docs/schema.md` ends with a measured **conformance** section: the reference adapter's own
-output does not validate against the schema on any fixture, mainly because the Council export
-carries Hebrew enum values (`נקבה`, `גרם`, `שבוע`, `המתה`) where the schema declares English
-ones, and one required summary key is never produced. The linter is written against what the
-parser emits. Until the maintainer decides whether to normalize the parser or widen the schema,
-a third-party adapter that follows the schema literally is *valid* but will feed the linter
-different vocabularies than the reference adapter does; where a check depends on a value
-(sex, units, euthanasia method, fate), copy the reference adapter's values.
+The reference adapter maps the Council export's Hebrew form values onto the schema enums
+(`נקבה` → `F`, `גרם` → `g`, `שבוע` → `weeks`, `המתה` → `euthanasia`, `מקור חיצוני` → `vendor`,
+free-text enrichment → `custom` + `enrichment_custom`), always emits the required
+`summaries.lay_he_≤150w` key (empty when the section is absent) and omits
+`euthanasia.method_standard` when the method cannot be resolved. `docs/schema.md` ends with a
+measured conformance section (93 of 94 fixtures validate; the demo page lacks three required
+sections by design). Unknown values pass through unchanged rather than being guessed, so a
+third-party adapter that follows the schema literally feeds the linter the same vocabulary as
+the reference adapter. The maps live at the top of `src/html_to_json.py`; extend them there
+and `tests/test_parser_schema.py` will tell you if anything Hebrew still leaks.

@@ -47,6 +47,60 @@ def _structured_method(raw: str) -> str:
     return normalize_method(raw) or ""
 
 
+# Council-export vocabulary → canonical schema enums (src/schema.py). Unknown values pass
+# through unchanged so nothing is invented; tests/test_parser_schema.py catches new ones.
+_SEX = {"זכר": "M", "נקבה": "F", "זכר, נקבה": "both", "נקבה, זכר": "both", "לא חשוב": "unknown", "": "unknown"}
+_SOURCE = {"מקור חיצוני": "vendor", "גידול עצמי": "in-house", "אחר": "other"}
+_AGE_UNIT = {"יום": "days", "ימים": "days", "שבוע": "weeks", "שבועות": "weeks", "חודש": "months", "חודשים": "months", "שנה": "years", "שנים": "years"}
+_WEIGHT_UNIT = {"גרם": "g", "ג": "g", "ק\"ג": "kg", "קג": "kg", "קילוגרם": "kg"}
+_FATE = {"המתה": "euthanasia", "euthanized": "euthanasia", "החזרה לגידול": "return_to_colony", "אימוץ": "rehoming"}
+
+
+def _norm(table: Dict[str, str], raw: Optional[str], *, default: Optional[str] = None) -> str:
+    key = (raw or "").strip()
+    if key in table:
+        return table[key]
+    if key.lower() in table.values():
+        return key.lower()
+    if key in ("", None) and default is not None:
+        return default
+    return key
+
+
+def _norm_sex(raw: Optional[str]) -> str:
+    key = (raw or "").strip()
+    if key in ("M", "F", "both", "unknown"):
+        return key
+    parts = {p.strip() for p in key.split(",") if p.strip()}
+    if len(parts) > 1 and all(p in ("זכר", "נקבה") for p in parts):
+        return "both"
+    return _norm(_SEX, key)
+
+
+def _norm_source(raw: Optional[str]) -> str:
+    key = (raw or "").strip()
+    if "," in key:  # mixed sources on one row: the schema has one slot, "other" is the honest one
+        return "other"
+    return _norm(_SOURCE, key)
+
+
+def _norm_fate(raw: Optional[str]) -> str:
+    key = (raw or "").strip()
+    if key in _FATE.values():
+        return key
+    return _FATE.get(key, "other" if key else key)
+
+
+def _norm_enrichment(raw: Optional[str]) -> Dict[str, str]:
+    """Council exports carry free prose; the schema wants standard|custom plus the prose in enrichment_custom."""
+    text = (raw or "").strip()
+    if text.lower() in ("", "standard", "אין", "לא", "רגיל", "רגילה", "סטנדרטי", "סטנדרטית"):
+        return {"enrichment": "standard"}
+    if text.lower() == "custom":
+        return {"enrichment": "custom"}
+    return {"enrichment": "custom", "enrichment_custom": text}
+
+
 def _extract_pain_category(text: str) -> str:
     """Extract explicit USDA B/C/D/E pain category text without guessing."""
     if not text:
@@ -420,10 +474,10 @@ def parse_html(html_content: str) -> Dict[str, Any]:
                     "species_standard": row.get("מין מובנה", "") or _structured_species(species_raw),
                     "strain": row.get("זן/קווים", ""),
                     "genetic_status": row.get("סטטוס גנטי", ""),
-                    "sex": row.get("זוויג", "both"), # Default if missing
+                    "sex": _norm_sex(row.get("זוויג")),
                     "age": row.get("גיל", ""),
                     "n_total": int(row.get("כמות", 0)) if row.get("כמות") else 0,
-                    "source": row.get("מקור", "")
+                    "source": _norm_source(row.get("מקור")),
                 })
     instance["animals_total"] = animals_total
 
@@ -487,6 +541,8 @@ def parse_html(html_content: str) -> Dict[str, Any]:
     lay_header = soup.find("div", class_="sub-header", string=re.compile("תקציר לקהל הרחב"))
     if lay_header:
         summaries["lay_he_≤150w"] = _clean_text(lay_header.find_next("div", class_="table").find("div").get_text())
+    else:
+        summaries["lay_he_≤150w"] = ""  # required by the schema; summaries:lay-length treats "" as absent
     
     instance["summaries"] = summaries
 
@@ -621,30 +677,30 @@ def parse_html(html_content: str) -> Dict[str, Any]:
                              group = {
                                  "species": a_data.get("בעל חיים", ""),
                                  "strain": a_data.get("זן", ""),
-                                 "sex": a_data.get("מין", ""),
+                                 "sex": _norm_sex(a_data.get("מין")),
                                  "n": n_val,
-                                 "age": {"value": float(a_data.get("גיל", 0) or 0), "unit": a_data.get("תקופת גיל", "")},
+                                 "age": {"value": float(a_data.get("גיל", 0) or 0), "unit": _norm(_AGE_UNIT, a_data.get("תקופת גיל"))},
                                  "genetic_modification": a_data.get("עבר שינוי גנטי", ""),
                                  "source": a_data.get("מקור בע\"ח", ""),
                                  "supplier": a_data.get("מקור אחר", ""),
                              }
                              if a_data.get("משקל"):
-                                 group["weight"] = {"value": float(a_data["משקל"]), "unit": a_data.get("מידת משקל", "")}
+                                 group["weight"] = {"value": float(a_data["משקל"]), "unit": _norm(_WEIGHT_UNIT, a_data.get("מידת משקל"))}
                              animal_groups.append(group)
 
                          exp["animals"] = {
                             "species": ", ".join(sorted(aggregated["species"])),
                             "species_standard": _structured_species(", ".join(sorted(aggregated["species"]))),
                             "strain": ", ".join(sorted(aggregated["strain"])),
-                            "sex": ", ".join(sorted(aggregated["sex"])),
+                            "sex": _norm_sex(", ".join(sorted(aggregated["sex"]))),
                             "n": aggregated["n"],
-                            "age": {"value": aggregated["age_val"], "unit": aggregated["age_unit"]},
+                            "age": {"value": aggregated["age_val"], "unit": _norm(_AGE_UNIT, aggregated["age_unit"])},
                             "source": ", ".join(sorted(aggregated["source"])),
                             "supplier": ", ".join(sorted(aggregated["supplier"])),
                             "genetic_status": ", ".join(sorted(aggregated["genetic_status"]))
                          }
                          if aggregated["weight_val"]:
-                             exp["animals"]["weight"] = {"value": aggregated["weight_val"], "unit": aggregated["weight_unit"]}
+                             exp["animals"]["weight"] = {"value": aggregated["weight_val"], "unit": _norm(_WEIGHT_UNIT, aggregated["weight_unit"])}
                          if len(animal_groups) > 1:
                              exp["animals"]["groups"] = animal_groups
                      break
@@ -661,7 +717,7 @@ def parse_html(html_content: str) -> Dict[str, Any]:
                     "species_standard": r.get("מין מובנה", "") or r.get("Species standard", "") or _structured_species(species_raw),
                     "strain": r.get("זן/קווים"),
                     "genetic_status": r.get("סטטוס גנטי"),
-                    "sex": r.get("זוויג"),
+                    "sex": _norm_sex(r.get("זוויג")),
                     "n": int(r.get("כמות", 0)),
                     "source": r.get("מקור"),
                     "age": {"value": 0, "unit": ""} 
@@ -676,7 +732,7 @@ def parse_html(html_content: str) -> Dict[str, Any]:
         if "אופן החזקת בע\"ח" in data:
              exp["housing"] = {
                 "group_housed": (data.get("אופן החזקת בע\"ח") == "קבוצה"),
-                "enrichment": data.get("מהי ההעשרה שתינתן לבעה\"ח, ובמידה וחורגת מהמקובל, נא לנמק", "standard"),
+                **_norm_enrichment(data.get("מהי ההעשרה שתינתן לבעה\"ח, ובמידה וחורגת מהמקובל, נא לנמק")),
                 "single_housing_reason": "",
                 "single_housing_duration_days": float(data.get("משך זמן החזקת חיה בודדת (במידה ונדרש)", 0) or 0)
             }
@@ -698,7 +754,7 @@ def parse_html(html_content: str) -> Dict[str, Any]:
                         r = h_rows[0]
                         exp["housing"] = {
                             "group_housed": (r.get("שיכון") == "קבוצתי"),
-                            "enrichment": r.get("העשרה", "standard"),
+                            **_norm_enrichment(r.get("העשרה")),
                             "single_housing_reason": r.get("סיבת שיכון בודד", ""),
                             "single_housing_duration_days": float(r.get("משך שיכון בודד (ימים)", 0) or 0)
                         }
@@ -843,13 +899,14 @@ def parse_html(html_content: str) -> Dict[str, Any]:
                         if "שיטת המתה" in k:
                              exp["euthanasia"] = {
                                  "primary": v,
-                                 "method_standard": _structured_method(v),
                                  "confirmation": "",
                                  "parameters": "",
                                  "conditions_text": "",
                              }
+                             if _structured_method(v):
+                                 exp["euthanasia"]["method_standard"] = _structured_method(v)
                         if "גורל בע''ח" in k:
-                             exp["fate"] = v
+                             exp["fate"] = _norm_fate(v)
                         if "תנאים כלליים להפסקת" in k:
                              if "humane_endpoints" not in exp: exp["humane_endpoints"] = {}
                              exp["humane_endpoints"]["general"] = [v]
@@ -932,11 +989,12 @@ def parse_html(html_content: str) -> Dict[str, Any]:
                          )
                          exp["euthanasia"] = {
                              "primary": primary,
-                             "method_standard": method_standard,
                              "parameters": r.get("פרמטרים", ""),
                              "conditions_text": conditions_text,
                              "confirmation": r.get("אישור מוות", ""),
                          }
+                         if method_standard:
+                             exp["euthanasia"]["method_standard"] = method_standard
 
             if "Structured Anesthesia Drugs" in txt and "table-header" in curr.get("class", []):
                  t = curr.find_next_sibling("div", class_="table horizontal").find("table")
@@ -953,7 +1011,7 @@ def parse_html(html_content: str) -> Dict[str, Any]:
             # Demo Fate
             if "מצב אחרי הניסוי" in txt:
                  content = curr.find_next_sibling("div", class_="table")
-                 if content: exp["fate"] = _clean_text(content.get_text())
+                 if content: exp["fate"] = _norm_fate(_clean_text(content.get_text()))
 
             # Specialty Blocks (renderer-produced text-based key-values)
             if "table-header" in curr.get("class", []):
@@ -1038,7 +1096,7 @@ def parse_html(html_content: str) -> Dict[str, Any]:
     # num, species, count — missing strain AND sex AND genetic_status).
     if experiments and instance.get("animals_total"):
         for at in instance["animals_total"]:
-            is_sparse = not at.get("strain") and not at.get("genetic_status") and (not at.get("sex") or at.get("sex") == "both")
+            is_sparse = not at.get("strain") and not at.get("genetic_status") and at.get("sex") in ("", None, "unknown")
             if not is_sparse:
                 continue
             exp_animals = [e.get("animals", {}) for e in experiments if e.get("animals")]
@@ -1060,7 +1118,7 @@ def parse_html(html_content: str) -> Dict[str, Any]:
                         gs.add(s)
                 if gs:
                     at["genetic_status"] = ", ".join(sorted(gs))
-            if not at.get("sex") or at.get("sex") == "both":
+            if at.get("sex") in ("", None, "unknown"):
                 sexes = set()
                 for ea in exp_animals:
                     s = ea.get("sex", "")
@@ -1075,7 +1133,7 @@ def parse_html(html_content: str) -> Dict[str, Any]:
                     if s:
                         sources.add(s)
                 if sources:
-                    at["source"] = ", ".join(sorted(sources))
+                    at["source"] = _norm_source(", ".join(sorted(sources)))
             if not at.get("supplier"):
                 suppliers = set()
                 for ea in exp_animals:

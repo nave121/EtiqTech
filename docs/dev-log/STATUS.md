@@ -16,7 +16,7 @@
   plain-language findings, guided first run. Done (spec commits 1–9 on main).
 
 ## Invariants (never break)
-All tests green (696 now, 440 original untouched) · no protocol text persisted or logged at any
+All tests green (814 now, 440 original untouched) · no protocol text persisted or logged at any
 level · local-first LLM by default · LLM never gates/filters/rewrites Layer 1 · advisory framing
 permanent · auth stays at the reverse proxy.
 
@@ -50,17 +50,17 @@ permanent · auth stays at the reverse proxy.
 |---|---|---|---|
 | 1 | delete `resources/law/the_law.txt` | yes | done (this commit) |
 | 2 | Weizmann English translation redistribution terms | Razy asks Weizmann | **Razy**; README keeps "unverified" until then |
-| 3 | grounding default | rerun the eval on `qwen3.5:397b-cloud`, all 20 pairs, two-pass; flip only if the pre-set rule in docs/benchmarks.md is met | in progress |
+| 3 | grounding default | `qwen3.5:397b-cloud` is subscription-gated → rerun on `gemma4:31b-cloud` (Razy), all 20 pairs, two-pass; flip only if the pre-set rule is met | running (output/eval_grounding_gemma4-31b-cloud_2pass.jsonl) |
 | 4 | EU seed rules (`docs/eu-directive-spike.md`) | Israel-only for launch; EU is the first post-launch feature | parked |
 | 5 | advisory notice / scope sentence / acknowledgements wording | Razy edits | **Razy** |
 | 6 | Hebrew landing copy | not needed now | branch `design-ux` (75dd5f0) stays parked, no work |
-| 7 | parser output vs canonical schema (0/94) | normalize the parser, schema stays strict; fate normalization may silence `postop:monitoring` / `surgery:multiple-survival` on euthanasia-fated experiments (accepted) | in progress |
+| 7 | parser output vs canonical schema (0/94) | normalized: 93/94 valid, fate/sex rule shifts accepted, 6 golden manifests updated (**Razy to eyeball**) | done (step 32) |
 
 Decided memos (kept for the record): `statute-sources.md` (statute imported), `layer3-context-options.md` (num_ctx 65536), `design/spec.md` §8 (English-only).
 
 ## Open findings for the maintainer (do not fix without a decision)
 1. ~~Statute not in repo~~ added 2026-09-06 (Hebrew from WikiSource + Weizmann English translation; `LAW_PATH` now the statute). Translation's redistribution terms unverified.
-2. Parser output validates against the schema on 0/94 fixtures — **decision 2026-09-06: normalize the parser** (in progress). `analysis.summary.single_sex_design` is always False on real exports until then.
+2. ~~Parser output 0/94~~ normalized 2026-09-06: 93/94 (demo page lacks three sections). `single_sex_design` now works on real exports. New: SYNTH/ADV golden JSON fixtures fail the schema themselves (15 errors on SYNTH-001) — fixture debt, no functional effect.
 3. ~~Layer 3 window~~ Layer 3 runs at `OLLAMA_NUM_CTX_LAYER3=65536` (2026-09-06); prompt trimming deferred until OpenAI/Anthropic use.
 4. ~~Four linter counting quirks~~ fixed in ruleset 1.1.0 (2026-09-06, Razy's decision).
 5. 4 of 59 rules (`header`, `research`, `pi`, `required`) fire on no fixture (unreachable from canonical JSON; need a broken HTML export); `three_Rs_alternatives` is a target theme in only 3 of 28 golden cases.
@@ -84,7 +84,7 @@ python scripts/eval_grounding.py --report         # if output/eval_grounding.jso
 Long LLM jobs write resumable JSONL under `output/` (gitignored); relaunch the same command to continue.
 
 ## Next steps (in order) — plan: ~/.claude/plans/golden-sauteeing-teapot.md
-1. Grounding eval: add `--two-pass` to `scripts/eval_grounding.py`, run on `qwen3.5:397b-cloud` (all 20 pairs), report into docs/benchmarks.md, apply the pre-set decision rule.
-2. Parser normalization (decision 7): Hebrew vocab → schema enums in `src/html_to_json.py`, two enum additions in `src/schema.py`, snapshot diff reviewed, docs regenerated, new `tests/test_parser_schema.py` (94/94 valid).
-3. Close decisions 3 and 7 in this file and the dev log.
+1. Grounding eval running on `gemma4:31b-cloud` (b4cea27 harness). When done: `python scripts/eval_grounding.py --report --out output/eval_grounding_gemma4-31b-cloud_2pass.jsonl`, write Reading/Decision into docs/benchmarks.md, apply the rule: flip only if grounded beats ungrounded on pair_acc AND gap, json_ok not lower, cited ≥ 50 %.
+2. ~~Parser normalization~~ done (step 32).
+3. Close decision 3 here and in the dev log; Sonnet reviews of b4cea27 and the parser commit.
 4. Razy's items: translation licence (2), wording (5). Optional later: i18n toggle, P4 leftovers.

@@ -259,3 +259,42 @@ Razy answered the seven open items (see STATUS "Decisions taken 2026-09-06"). Pl
 the cloud run discloses nothing new), and the fate normalization's effect on two linter rules is accepted.
 This commit: `the_law.txt` removed (no code read it; three doc/comment mentions dropped), STATUS memos and next steps
 brought current (statute/Layer 3 memos were still listed as open; design task still listed as not started).
+
+## Step 31 (2026-09-06) — grounding eval harness: two-pass + JSON cases (b4cea27)
+Two defects found while preparing the rerun: the harness only ran the blind pass (rerun condition 2 asks for the
+production blind → reconcile flow) and it crashed with KeyError on the 10 SYNTH/ADV golden cases, whose files are
+canonical JSON, so the earlier "6 pairs" eval was the most it could ever run. Added `--two-pass` (same prompt builder
+and normalizers as `src/llm_agent.py`, reconciled verdict scored, blind score kept as `blind_score`), JSON loading,
+pass-aware resume keys, and a `--report` guard against mixed-pass files. Wiring test (lesson: offline green is not
+wired): SYNTH-001 with gemma4:e4b, 8 calls, blind and reconcile both parsed, grounded rows cite [Gn]. Side finding for
+the maintainer: the SYNTH/ADV `good.json`/`bad.json` fixtures themselves fail the canonical schema (15 errors on
+SYNTH-001); the linter accepts them, so no functional effect, but the golden set does not follow its own contract.
+
+Model for the rerun: Razy first chose `qwen3.5:397b-cloud`; Ollama answered "requires a subscription or extra usage".
+Of the cloud aliases on this Mac only `gemma4:31b-cloud` answers (qwen3-next and kimi were retired). Razy chose
+gemma4:31b-cloud (free now, directional for the qwen3.5:35b production default). Run launched with all 20 pairs,
+two-pass, `ETIQTECH_ALLOW_REMOTE_LLM=1` set for honesty (the local daemon proxies to ollama.com, so the hostname
+gate does not fire). Disclosure: the golden set is committed to the public repo, nothing non-public left the machine.
+
+## Step 32 (2026-09-06) — parser normalization (decision 7)
+`src/html_to_json.py`: Hebrew form vocabulary → schema enums (sex, source, age/weight units, fate, enrichment →
+standard|custom + `enrichment_custom`), `lay_he_≤150w` always present (empty when absent), `method_standard` omitted
+when unresolved, backfilled totals normalized too, totals sex default `unknown` (was `both`). `src/schema.py`: three
+enum additions (`experiments[].animals.sex` += unknown to match totals; `age.unit` += years, 24 real occurrences;
+`analgesia[].phase` += unknown, the export has no phase column). Conformance 0/94 → **93/94**; the one holdout is
+`examples/demo_render.html`, a hand-made demo page missing three required sections the parser does not invent.
+
+Snapshot review (188 reports, pre-change baseline verified byte-identical first): 186 changed. Every checklist delta
+classified by rule id, no unexpected rule moved:
+- removed: `postop:monitoring` 34 items, `surgery:multiple-survival` 32 items (fate `המתה` now reads as euthanasia,
+  the rules' existing non-survival skip applies; accepted by Razy).
+- added: `sex:sabv` 42, `sex:rationale` 28 (single-sex designs are finally detected on real exports;
+  `analysis.summary.single_sex_design` flipped in 64 reports, `sexes_seen` changed in all 186).
+- no status flips, `errors`/`warnings` counts moved only where those items moved.
+Golden manifests: 6 of 10 REAL `case.json` files carried `bad/good_expected_l1_refs` that encoded the old behaviour
+(surgery:multiple-survival on REAL-001/003, postop:monitoring on REAL-036/077/084/115, and the sex rules now firing
+on REAL-036/115). Updated to the new output, test file untouched. **Razy: these manifests are hand-written ground
+truth; please eyeball the six diffs** (`git show <commit> -- examples/head-to-head`). Ruleset stays 1.1.0 (no rule
+logic changed). New `tests/test_parser_schema.py` (118 tests: per-fixture validation, no Hebrew in enum fields,
+single-sex detection, map table). Suite 814 passed / 2 skipped. Live check in linter-only mode: real export →
+`sexes_seen ["F"]`, `single_sex_design true`, no protocol text in the server log. Bandit clean on changed files.

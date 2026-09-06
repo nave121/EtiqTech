@@ -26,7 +26,6 @@
       "euthanasia:secondary-method",
       "special:biosafety",
       "special:oncology",
-      "surgery:multiple-survival",
       "vet:consultation"
     ],
     "good_expected_l1_refs": [
@@ -34,7 +33,6 @@
       "euthanasia:secondary-method",
       "special:biosafety",
       "special:oncology",
-      "surgery:multiple-survival",
       "vet:consultation"
     ],
     "target_l2_themes": [
