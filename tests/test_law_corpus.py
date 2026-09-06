@@ -31,7 +31,8 @@ def test_schema_and_uniqueness(records):
     for r in records:
         assert REQUIRED <= set(r), r["id"]
         assert r["doc_type"] in ("guidance_section", "law_section") and r["lang"] in ("en", "he")
-        assert 40 <= len(r["text"]) <= blc.MAX_CHARS, (r["id"], len(r["text"]))
+        floor = 20 if r["doc_type"] == "law_section" else 40  # a statute section can be one sentence (s. 26 is 36 chars)
+        assert floor <= len(r["text"]) <= blc.MAX_CHARS, (r["id"], len(r["text"]))
         assert r["url"].startswith("etiqtech://resources/law/")
 
 
