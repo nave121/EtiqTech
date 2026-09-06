@@ -262,7 +262,11 @@ def sectionize_statute_en(text: str):
             chapter = m.group(1).title()
             continue
         if re.match(r"^SCHEDULE", s) and part == "law" and max_law >= 20:
+            if current:  # close s. 29 before the Schedule's items start
+                sections.append((current[0], current[1], current[2], current[3], buf))
+            current, buf = None, []
             part, chapter = "schedule", ""
+            continue
         if re.match(r"^SCHEDULE", s) and part == "rules":
             if current:  # close the pending section first; the Schedule (application form, omitted) is not a section
                 sections.append((current[0], current[1], current[2], current[3], buf))

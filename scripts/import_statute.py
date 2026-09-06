@@ -23,6 +23,8 @@ OUT = ROOT / "resources" / "law"
 def wiki_to_text(raw: str) -> str:
     lines = []
     for line in raw.splitlines():
+        if line.startswith("{{ח:חתימות"):
+            break  # the signatures block ends the legal text
         if line.startswith(("{{ח:התחלה", "{{ח:סיום", "{{ח:פתיח", "{{ח:מאגר", "{{ח:תיבה", "<div", "</div")):
             continue
         m = re.match(r"\{\{ח:קטע\d\|[^|}]*\|(.*)$", line)
@@ -44,7 +46,7 @@ def wiki_to_text(raw: str) -> str:
         line = re.sub(r"\{\{ח:הערה\|[^}]*\}\}", "", line)
         line = re.sub(r"\{\{[^}]*\}\}", "", line)
         line = re.sub(r"\[\[[^\]|]*\|([^\]]*)\]\]", r"\1", line)
-        line = re.sub(r"<[^>]+>", "", line).strip()
+        line = re.sub(r"<[^>]+>", "", line).replace("'''", "").strip()
         if line:
             lines.append(line)
     text = "\n".join(lines)
