@@ -70,6 +70,12 @@ Decided memos (kept for the record): `statute-sources.md` (statute imported), `l
 ## Running jobs (as of step 25, resumed after the 21:00 limit reset)
 - Nothing running. Done: split, coverage, eval, research memos, design 1–9 (8 English-only), the four maintainer decisions (statute import, Layer 3 window, ruleset 1.1.0, landing English-only), reviews.
 
+## Remote
+Pushed to origin/main 2026-09-06 (cdfc44f..2603558). CI on main **green** for the first time (run 34059532894); the
+first push was red on a sprint test that assumed the optional anthropic SDK was installed — fixed in 2603558 by running
+the remote gate before the import. Dependabot PRs (pydantic, gunicorn, setup-python, python 3.14 image) are open and
+unreviewed — maintainer's call.
+
 ## Branches / worktrees
 - `design-ux` (branch only, worktree removed): holds the Hebrew landing drafts (75dd5f0) for a native review; everything else from it is on main.
 - `rule-coverage`: merged and removed.
