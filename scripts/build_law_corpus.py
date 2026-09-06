@@ -293,8 +293,11 @@ def sectionize_statute_en(text: str):
         expected = (max_law + 1) if part == "law" else (len([x for x in sections if x[0] == part]) + (1 if current and current[0] == part else 0) + 1)
         if m and int(m.group(1)) in (expected, expected + 1):  # +1: s. 27 is omitted from the translation (a NOTE line)
             num = int(m.group(1))
-            title = pending or ""  # the held-back line is this section's title, not the previous section's text
-            pending = None
+            if part == "schedule":
+                title = ""  # schedule items have no title lines: the held-back line is the previous item's last sentence
+            else:
+                title = pending or ""  # the held-back line is this section's title, not the previous section's text
+                pending = None
             if part == "law":
                 max_law = num
             close()
@@ -304,6 +307,8 @@ def sectionize_statute_en(text: str):
             if pending is not None:
                 buf.append(pending)
             pending = s
+        elif current is None and part == "law" and s and chapter and not re.match(r"^\d", s):
+            pending = s  # a title line before the very first section (e.g. 'Definitions' above '1.')
     close()
     return sections
 

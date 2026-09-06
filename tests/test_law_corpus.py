@@ -98,3 +98,16 @@ def test_english_statute_sections_do_not_bleed_into_neighbours(records):
     s21 = next(r for r in en if r["id"] == "il-law-1994-s21-en")
     assert "Supervisor of experiments in the defense establishment" in s21["title"]
     assert s21["text"].startswith("(a)")
+
+
+def test_english_schedule_items_and_first_section_are_intact(records):
+    """Schedule items have no title lines (a held-back line there is body text), and the law's first
+    section title precedes any section (both found by review of 9c954d0)."""
+    by = {r["id"]: r for r in records}
+    s1, s2, s3 = by["il-law-1994-schedule-s1-en"], by["il-law-1994-schedule-s2-en"], by["il-law-1994-schedule-s3-en"]
+    assert s1["text"].rstrip().endswith("shall be used.") and "minimization of pain and suffering" in s1["text"]
+    assert s2["text"].rstrip().endswith("on its objectives.")
+    for r in (s1, s2, s3):
+        assert r["title"].split(" — ")[-1].startswith("Section") and ": " not in r["title"].split(" — ")[-1], r["title"]
+    first = by.get("il-law-1994-s1-en-1") or by.get("il-law-1994-s1-en")
+    assert first["title"].endswith("Section 1: Definitions"), first["title"]
