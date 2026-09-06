@@ -84,7 +84,7 @@ python scripts/eval_grounding.py --report         # if output/eval_grounding.jso
 Long LLM jobs write resumable JSONL under `output/` (gitignored); relaunch the same command to continue.
 
 ## Next steps (in order) — plan: ~/.claude/plans/golden-sauteeing-teapot.md
-1. ~~Grounding eval~~ done: stays off (step 34). Open engineering question it raised: Layer 2 rubric — known-good protocols score ≤ 1 on 7 of 9 themes; run `scripts/eval_grounding.py --conditions ungrounded --two-pass` on the production model after any prompt change and watch `good_clean`.
+1. ~~Grounding eval~~ done: stays off (step 34). Open engineering question it raised: Layer 2 rubric — known-good protocols score ≤ 1 on 7 of 8 target themes; run `scripts/eval_grounding.py --conditions ungrounded --two-pass` on the production model after any prompt change and watch `good_clean`.
 2. ~~Parser normalization~~ done (step 32); Razy to eyeball the six golden manifest diffs (`git show 2ffb3e9 -- examples/head-to-head`).
 3. SYNTH/ADV golden JSON fixtures fail the canonical schema (fixture debt, no functional effect) — fix when touching the golden set.
 4. Razy's items: translation licence (2), wording (5). Optional later: i18n toggle, P4 leftovers.
