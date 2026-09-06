@@ -272,8 +272,8 @@ def sectionize_statute_en(text: str):
                 sections.append((current[0], current[1], current[2], current[3], buf))
             current, buf = None, []
             continue
-        m = re.match(r"^(\d+)\.\s+(.*)$", line)
-        if m and not line.startswith(" "):
+        m = re.match(r"^(\d+)\.\s+(.*)$", s)  # section headers may be indented (ss. 21-25 are in the PDF)
+        if m and not re.match(r"^\(", m.group(2)) and int(m.group(1)) <= 40:
             num = int(m.group(1))
             if part == "law":
                 if num < max_law and max_law >= 20:
