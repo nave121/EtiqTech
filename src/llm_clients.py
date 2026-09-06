@@ -168,14 +168,14 @@ def estimate_tokens(text: str) -> int:
     return len(text) // 4
 
 
-def context_budget_warning(prompt: str, *, label: str) -> Optional[Dict[str, Any]]:
+def context_budget_warning(prompt: str, *, label: str, num_ctx: Optional[int] = None) -> Optional[Dict[str, Any]]:
     """Return an SSE-shaped warning event when a prompt is close to overflowing num_ctx.
 
     Ollama silently truncates prompts that exceed num_ctx - num_predict, which
     degrades the review without any error. Callers yield the returned dict to the
     client (and log it); None means the prompt fits comfortably.
     """
-    num_ctx = _env_int("OLLAMA_NUM_CTX", 32768)
+    num_ctx = num_ctx if num_ctx is not None else _env_int("OLLAMA_NUM_CTX", 32768)
     num_predict = _env_int("LLM_MAX_TOKENS", 8192)
     available = max(num_ctx - num_predict, 1)
     est = estimate_tokens(prompt)
@@ -219,6 +219,7 @@ def call_llm(
     model: Optional[str] = None,
     temperature: Optional[float] = None,
     max_tokens: Optional[int] = None,
+    num_ctx: Optional[int] = None,
 ) -> str:
     """
     Dispatch the prompt to the configured LLM provider and return the raw text response.
@@ -228,7 +229,7 @@ def call_llm(
     if not resolved_model:
         raise LLMError(f"No model configured for provider '{name}' (set {PROVIDERS[name]['model_env']}).")
     if name == "ollama":
-        return _call_ollama(prompt, model=resolved_model, temperature=temperature, max_tokens=max_tokens)
+        return _call_ollama(prompt, model=resolved_model, temperature=temperature, max_tokens=max_tokens, num_ctx=num_ctx)
     if name == "openai":
         return _call_openai_compat(prompt, model=resolved_model, temperature=temperature, max_tokens=max_tokens)
     return _call_anthropic(prompt, model=resolved_model, max_tokens=max_tokens)
@@ -257,6 +258,7 @@ def _call_ollama(
     model: str,
     temperature: Optional[float],
     max_tokens: Optional[int],
+    num_ctx: Optional[int] = None,
 ) -> str:
     base_url = ollama_base_url()
     endpoint = f"{base_url}/api/generate"
@@ -272,7 +274,7 @@ def _call_ollama(
         "think": _thinking_enabled(),
         "options": {
             "temperature": temperature if temperature is not None else _env_float("LLM_TEMPERATURE", 0.2),
-            "num_ctx": _env_int("OLLAMA_NUM_CTX", 32768),
+            "num_ctx": num_ctx if num_ctx is not None else _env_int("OLLAMA_NUM_CTX", 32768),
             "num_predict": max_tokens,
             "presence_penalty": _env_float("OLLAMA_PRESENCE_PENALTY", 1.5),
         },
@@ -414,6 +416,7 @@ def call_llm_stream(
     model: Optional[str] = None,
     temperature: Optional[float] = None,
     max_tokens: Optional[int] = None,
+    num_ctx: Optional[int] = None,
 ) -> Generator[str, None, None]:
     """
     Dispatch the prompt to the configured LLM provider and yield tokens as they stream.
@@ -423,7 +426,7 @@ def call_llm_stream(
     if not resolved_model:
         raise LLMError(f"No model configured for provider '{name}' (set {PROVIDERS[name]['model_env']}).")
     if name == "ollama":
-        yield from _call_ollama_stream(prompt, model=resolved_model, temperature=temperature, max_tokens=max_tokens)
+        yield from _call_ollama_stream(prompt, model=resolved_model, temperature=temperature, max_tokens=max_tokens, num_ctx=num_ctx)
     elif name == "openai":
         yield from _call_openai_compat_stream(prompt, model=resolved_model, temperature=temperature, max_tokens=max_tokens)
     else:
@@ -436,6 +439,7 @@ def _call_ollama_stream(
     model: str,
     temperature: Optional[float],
     max_tokens: Optional[int],
+    num_ctx: Optional[int] = None,
 ) -> Generator[str, None, None]:
     """Stream tokens from Ollama API."""
     base_url = ollama_base_url()
@@ -452,7 +456,7 @@ def _call_ollama_stream(
         "think": _thinking_enabled(),
         "options": {
             "temperature": temperature if temperature is not None else _env_float("LLM_TEMPERATURE", 0.2),
-            "num_ctx": _env_int("OLLAMA_NUM_CTX", 32768),
+            "num_ctx": num_ctx if num_ctx is not None else _env_int("OLLAMA_NUM_CTX", 32768),
             "num_predict": max_tokens,
             "presence_penalty": _env_float("OLLAMA_PRESENCE_PENALTY", 1.5),
         },

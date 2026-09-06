@@ -71,3 +71,28 @@ def test_session_cache_survives_concurrent_store_and_cleanup():
     assert not errors
     assert len(app_module._analysis_cache) <= app_module.MAX_SESSIONS
     app_module._analysis_cache.clear()
+
+
+def test_layer3_uses_its_own_wider_context_window(monkeypatch):
+    import requests
+    from src import llm_layer3
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    monkeypatch.delenv("OLLAMA_NUM_CTX_LAYER3", raising=False)
+    seen = []
+
+    class _Resp:
+        status_code = 200
+        text = ""
+        def json(self):
+            return {"response": "{}"}
+        def iter_lines(self):
+            return iter([b'{"response": "{}", "done": true}'])
+    monkeypatch.setattr(requests, "post", lambda url, json=None, **k: seen.append(json["options"]["num_ctx"]) or _Resp())
+    monkeypatch.setenv("LAYER3_SAMPLING_RATE", "0")
+    list(llm_layer3.run_human_eye_stream({"header": {}, "experiments": [], "animals_total": []}, {"checklist": []}, None, force=True))
+    assert seen and all(n == 65536 for n in seen), seen
+    # Layer 2 keeps the default window
+    seen.clear()
+    from src import llm_agent
+    list(llm_agent.run_verification_stream({"animals_total": []}, {"checklist": []}))
+    assert seen and all(n == 32768 for n in seen), seen

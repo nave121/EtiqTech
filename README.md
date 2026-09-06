@@ -160,7 +160,8 @@ EtiqTech reviews protocols in three layers:
 | `FEEDBACK_DB` | `output/feedback.sqlite` | Metadata-only thumbs up/down store (rule id, theme, verdict, timestamp); `ETIQTECH_FEEDBACK=0` disables |
 | `LLM_TEMPERATURE` | `0.2` | Sampling temperature |
 | `LLM_MAX_TOKENS` | `8192` | Max output tokens |
-| `OLLAMA_NUM_CTX` | `32768` | Context window size |
+| `OLLAMA_NUM_CTX` | `32768` | Context window for Layer 2 theme prompts |
+| `OLLAMA_NUM_CTX_LAYER3` | `65536` | Context window for Layer 3 (whole protocol + guidance ≈ 28k tokens; see docs/dev-log/layer3-context-options.md) |
 | `OLLAMA_TIMEOUT_SECONDS` | `120` | Request timeout |
 | `OLLAMA_TWO_STEP` | `false` | Enable think-then-structure mode |
 | `LAYER3_SAMPLING_RATE` | `0.10` | Fraction of clean protocols to spot-check |

@@ -25,10 +25,17 @@ from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
 from .llm_agent import LAW_PATH
-from .llm_clients import call_llm, call_llm_stream, context_budget_warning
+from .llm_clients import _env_int, call_llm, call_llm_stream, context_budget_warning
 from .xmeta_catalog import load_high_leverage_catalog
 
 PROMPTS_DIR = Path(__file__).parent.parent / "llm"
+
+
+def layer3_num_ctx() -> int:
+    """Layer 3 injects the whole protocol plus its context (~28k tokens on a typical export), so it
+    runs with a wider Ollama window than Layer 2. Maintainer decision 2026-09-06: raise the window
+    rather than trim the prompt for now; OpenAI/Anthropic providers ignore this (their windows are larger)."""
+    return _env_int("OLLAMA_NUM_CTX_LAYER3", 65536)
 HEAD_TO_HEAD_DIR = Path(__file__).parent.parent / "examples" / "head-to-head"
 
 # ---------------------------------------------------------------------------
@@ -392,18 +399,18 @@ def run_human_eye(
 
     # Pass 1 — section-by-section
     p1_prompt = _build_pass1_prompt(instance, lint_report)
-    context_budget_warning(p1_prompt, label="Layer 3 / pass 1")  # logs; no stream to notify
+    context_budget_warning(p1_prompt, label="Layer 3 / pass 1", num_ctx=layer3_num_ctx())  # logs; no stream to notify
     try:
-        raw1 = call_llm(p1_prompt, provider=provider, model=model, temperature=temperature)
+        raw1 = call_llm(p1_prompt, provider=provider, model=model, temperature=temperature, num_ctx=layer3_num_ctx())
         pass1 = _parse_layer3_json(raw1)
     except Exception:
         pass1 = _fallback_pass1()
 
     # Pass 2 — cross-reference + synthesis
     p2_prompt = _build_pass2_prompt(instance, lint_report, pass1, layer2_result)
-    context_budget_warning(p2_prompt, label="Layer 3 / pass 2")
+    context_budget_warning(p2_prompt, label="Layer 3 / pass 2", num_ctx=layer3_num_ctx())
     try:
-        raw2 = call_llm(p2_prompt, provider=provider, model=model, temperature=temperature)
+        raw2 = call_llm(p2_prompt, provider=provider, model=model, temperature=temperature, num_ctx=layer3_num_ctx())
         pass2 = _parse_layer3_json(raw2)
     except Exception:
         pass2 = _fallback_pass2()
@@ -452,12 +459,12 @@ def run_human_eye_stream(
     yield {"type": "pass_start", "pass": 1, "label": "Section-by-section review"}
 
     p1_prompt = _build_pass1_prompt(instance, lint_report)
-    warning = context_budget_warning(p1_prompt, label="Layer 3 / pass 1")
+    warning = context_budget_warning(p1_prompt, label="Layer 3 / pass 1", num_ctx=layer3_num_ctx())
     if warning:
         yield {**warning, "pass": 1}
     full_response1 = ""
     try:
-        for token in call_llm_stream(p1_prompt, provider=provider, model=model, temperature=temperature):
+        for token in call_llm_stream(p1_prompt, provider=provider, model=model, temperature=temperature, num_ctx=layer3_num_ctx()):
             full_response1 += token
             yield {"type": "token", "pass": 1, "token": token}
         pass1 = _parse_layer3_json(full_response1)
@@ -471,12 +478,12 @@ def run_human_eye_stream(
     yield {"type": "pass_start", "pass": 2, "label": "Cross-reference & synthesis"}
 
     p2_prompt = _build_pass2_prompt(instance, lint_report, pass1, layer2_result)
-    warning = context_budget_warning(p2_prompt, label="Layer 3 / pass 2")
+    warning = context_budget_warning(p2_prompt, label="Layer 3 / pass 2", num_ctx=layer3_num_ctx())
     if warning:
         yield {**warning, "pass": 2}
     full_response2 = ""
     try:
-        for token in call_llm_stream(p2_prompt, provider=provider, model=model, temperature=temperature):
+        for token in call_llm_stream(p2_prompt, provider=provider, model=model, temperature=temperature, num_ctx=layer3_num_ctx()):
             full_response2 += token
             yield {"type": "token", "pass": 2, "token": token}
         pass2 = _parse_layer3_json(full_response2)
