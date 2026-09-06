@@ -16,7 +16,7 @@
   plain-language findings, guided first run. Not started; scheduled after the eval gate.
 
 ## Invariants (never break)
-All tests green (692 now, 440 original untouched) · no protocol text persisted or logged at any
+All tests green (694 now, 440 original untouched) · no protocol text persisted or logged at any
 level · local-first LLM by default · LLM never gates/filters/rewrites Layer 1 · advisory framing
 permanent · auth stays at the reverse proxy.
 
@@ -31,7 +31,7 @@ permanent · auth stays at the reverse proxy.
 | P1.2 PRIVACY.md + canary | done | e6bffde, fb89ffe |
 | P1.3 supply chain + CSP nonce | done | 91d1083 |
 | P1.4 advisory banner | done (wording = maintainer) | 737e831 |
-| P2 corpus (IL guidance EN+HE) | done | 72ce96e, 39f396f, b593a54 |
+| P2 corpus (IL guidance EN+HE + the 1994 statute and 2001 rules, HE+EN) | done: 174 records | 72ce96e … 7e87e5f, fbb6280, 344583b |
 | P2 retrieval layer + cited grounding | done, **off by default** | 3b67301, 64ca1ed |
 | P2 eval gate (grounded vs ungrounded) | done (subset): **no gain, grounding stays off by default**; rerun conditions in docs/benchmarks.md | 342092b, bf331e4 |
 | P2 Norecopa ingest | **blocked on maintainer** (access path) | — |
@@ -62,10 +62,10 @@ permanent · auth stays at the reverse proxy.
 7. `the_law.txt` is a word-reversed duplicate of the PDF text — candidate for deletion (rule: never delete without OK).
 
 ## Running jobs (as of step 25, resumed after the 21:00 limit reset)
-- Nothing running. Done: split, coverage, eval, research memos, design 1–9 (8 held), reviews.
+- Nothing running. Done: split, coverage, eval, research memos, design 1–9 (8 English-only), the four maintainer decisions (statute import, Layer 3 window, ruleset 1.1.0, landing English-only), reviews.
 
 ## Branches / worktrees
-- `design-ux` at `../EtiqTech-design`: design commits land here; merge into main after the linter split finishes (files disjoint except src/rules.py additive fields).
+- `design-ux` (branch only, worktree removed): holds the Hebrew landing drafts (75dd5f0) for a native review; everything else from it is on main.
 - `rule-coverage`: merged and removed.
 
 ## How to resume
