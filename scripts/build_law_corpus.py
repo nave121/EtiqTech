@@ -8,8 +8,7 @@ committed and reviewable. Re-run after editing the sources.
   python scripts/build_law_corpus.py            # writes resources/corpus/guidance_il.jsonl
   python scripts/build_law_corpus.py --check    # exit 1 if the committed file is stale
 
-Hebrew comes from `pdftotext` on the guidance PDF (logical order). The older
-resources/law/the_law.txt is a word-reversed extraction of the same PDF and is not used.
+Hebrew comes from `pdftotext` on the guidance PDF (logical order).
 """
 import argparse
 import hashlib

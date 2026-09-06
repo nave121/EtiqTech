@@ -38,7 +38,7 @@ def test_schema_and_uniqueness(records):
 
 def test_hebrew_is_in_logical_order_not_word_reversed(records):
     he = " ".join(r["text"] for r in records if r["lang"] == "he")
-    assert "בשנת 1994 חוקקה כנסת ישראל" in he  # the_law.txt (reversed extraction) has 'ישראל כנסת חוקקה 1994 בשנת'
+    assert "בשנת 1994 חוקקה כנסת ישראל" in he  # a visual-order extraction would read 'ישראל כנסת חוקקה 1994 בשנת'
     assert "עמוד –" not in " ".join(r["section_path"][0] for r in records if r["lang"] == "he")
 
 

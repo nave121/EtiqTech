@@ -251,3 +251,11 @@ Asked via AskUserQuestion; answers and actions:
 
 ## Closing gate (2026-09-06, 102 commits since fe3cb01)
 696 passed / 2 skipped · Bandit medium+ clean · pip-audit clean · docs/rules.md, docs/schema.md, corpus all current · linter snapshot reproducible at ruleset 1.1.0 · no original test file modified · Docker image builds and serves (health ok, law loaded) · working tree clean. Open items for Razy are listed in STATUS.md (Hebrew landing copy review, grounding rerun on the production model, EU seed rules, wording).
+
+## Step 30 (2026-09-06) — second decision round, housekeeping
+Razy answered the seven open items (see STATUS "Decisions taken 2026-09-06"). Plan approved in plan mode
+(`~/.claude/plans/golden-sauteeing-teapot.md`). Two extra calls he made when asked: the grounding eval reruns on
+`qwen3.5:397b-cloud` (the production `qwen3.5:35b` is not on this 32 GB Mac; the golden set is public in the repo, so
+the cloud run discloses nothing new), and the fate normalization's effect on two linter rules is accepted.
+This commit: `the_law.txt` removed (no code read it; three doc/comment mentions dropped), STATUS memos and next steps
+brought current (statute/Layer 3 memos were still listed as open; design task still listed as not started).
