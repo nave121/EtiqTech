@@ -792,7 +792,7 @@ def render_html(instance: Dict[str, Any], out_html_path: str = None, with_refs: 
             _row(
                 [
                     "קבוצתי" if h.get("group_housed") else "בודד",
-                    h.get("enrichment", ""),
+                    h.get("enrichment_custom") or h.get("enrichment", ""),
                     h.get("single_housing_reason", ""),
                     h.get("single_housing_duration_days", ""),
                 ]

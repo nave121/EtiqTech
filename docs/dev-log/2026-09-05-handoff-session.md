@@ -298,3 +298,19 @@ truth; please eyeball the six diffs** (`git show <commit> -- examples/head-to-he
 logic changed). New `tests/test_parser_schema.py` (118 tests: per-fixture validation, no Hebrew in enum fields,
 single-sex detection, map table). Suite 814 passed / 2 skipped. Live check in linter-only mode: real export →
 `sexes_seen ["F"]`, `single_sex_design true`, no protocol text in the server log. Bandit clean on changed files.
+
+## Step 33 (2026-09-06) — Sonnet review of b4cea27 + 2ffb3e9, fixes
+Review verdicts: harness matches production's reconcile flow, privacy invariant holds (lengths only in the JSONL);
+method_standard omission safe (all four readers use .get); backfill sentinel change is a correctness improvement.
+Three findings, all fixed in this commit:
+1. **FIX (regression, human-facing)** — `src/linter_renderer.py` housing table read only `enrichment`, so after the
+   normalization a non-standard enrichment rendered as the word "custom" instead of the description. My live check had
+   tested for the column header, not the prose — a weak check. Now renders `enrichment_custom or enrichment`; verified
+   on head-to-head/1: prose present, no bare "custom" cell. Snapshot unaffected (render is not part of the report).
+2. FIX — blank fate produced `""`, outside the required enum. Parser now leaves `fate` absent when blank so schema
+   validation reports the real gap instead of a wrong value (same policy as `method_standard`).
+3. FIX — eval JSONL kept the blind response length in `chars` when the reconcile call failed; cleared on error.
+NOTE (not changed): the eval progress counter counts rows, not LLM calls (2 per row under --two-pass).
+Also: `tests/test_gunicorn_sessions.py` (a test from this sprint) flaked once under load — the 1 s health poll raised
+ReadTimeout, which the loop did not catch; it now tolerates any RequestException inside the 30 s deadline. Passed
+alone and in the full run after the change.

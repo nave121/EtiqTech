@@ -130,7 +130,7 @@ def run(a):
                                 rec["score"], rec["json_ok"], rec["citations"] = _score(text, theme)
                                 rec["chars"] = len(text)
                         except Exception as e:
-                            rec.update(score=None, json_ok=False, citations=0, llm_error=f"{type(e).__name__}")
+                            rec.update(score=None, json_ok=False, citations=0, chars=None, llm_error=f"{type(e).__name__}")
                         rec["seconds"] = round(time.time() - t0, 1)
                         fh.write(json.dumps(rec) + "\n"); fh.flush()
                         print(f"[{n}/{total}] {c['case_id']} {variant} {theme} {cond} score={rec['score']} json={rec['json_ok']} cites={rec.get('citations')} {rec['seconds']}s", flush=True)

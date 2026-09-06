@@ -906,7 +906,8 @@ def parse_html(html_content: str) -> Dict[str, Any]:
                              if _structured_method(v):
                                  exp["euthanasia"]["method_standard"] = _structured_method(v)
                         if "גורל בע''ח" in k:
-                             exp["fate"] = _norm_fate(v)
+                             if _norm_fate(v):
+                                 exp["fate"] = _norm_fate(v)  # blank stays absent: the schema requires it, so validation reports the gap
                         if "תנאים כלליים להפסקת" in k:
                              if "humane_endpoints" not in exp: exp["humane_endpoints"] = {}
                              exp["humane_endpoints"]["general"] = [v]
@@ -1011,7 +1012,8 @@ def parse_html(html_content: str) -> Dict[str, Any]:
             # Demo Fate
             if "מצב אחרי הניסוי" in txt:
                  content = curr.find_next_sibling("div", class_="table")
-                 if content: exp["fate"] = _norm_fate(_clean_text(content.get_text()))
+                 if content and _norm_fate(_clean_text(content.get_text())):
+                     exp["fate"] = _norm_fate(_clean_text(content.get_text()))
 
             # Specialty Blocks (renderer-produced text-based key-values)
             if "table-header" in curr.get("class", []):

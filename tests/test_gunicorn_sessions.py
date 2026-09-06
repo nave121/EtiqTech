@@ -70,7 +70,7 @@ def gunicorn_url():
             try:
                 if requests.get(f"{url}/api/health", timeout=1).ok:
                     break
-            except requests.ConnectionError:
+            except requests.RequestException:  # ConnectionError before bind, ReadTimeout when the box is loaded
                 time.sleep(0.2)
         else:
             raise RuntimeError("gunicorn did not become healthy in 30s")
