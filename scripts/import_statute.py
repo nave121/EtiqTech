@@ -27,7 +27,9 @@ def wiki_to_text(raw: str) -> str:
             continue
         m = re.match(r"\{\{ח:קטע\d\|[^|}]*\|([^}|]*)", line)
         if m:
-            lines.append(f"\n== {m.group(1).strip()} ==")
+            title = m.group(1).strip()
+            if title and not title.startswith("{{"):  # a header whose title is itself a template (a note) is not a chapter
+                lines.append(f"\n== {title} ==")
             continue
         m = re.match(r"\{\{ח:סעיף\*?\|([^|}]*)\|([^|}]*)", line)
         if m:
