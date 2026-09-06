@@ -1,0 +1,60 @@
+{
+ "header": {
+  "protocol_id": "90101",
+  "institution": "Example Institute"
+ },
+ "research": {
+  "title_he": "מחקר רגיל של אחיזה במנהרה",
+  "title_en": "Regular study of tunnel handling",
+  "request_type": "pilot",
+  "is_continuation": false,
+  "third_party_service": false,
+  "approval_term_years": 1,
+  "sites": [
+   {
+    "name": "x"
+   }
+  ]
+ },
+ "pi": {
+  "id_type": "TZ",
+  "id_number": "x",
+  "last_name_he": "x",
+  "first_name_he": "x",
+  "last_name_en": "x",
+  "first_name_en": "x",
+  "email": "x",
+  "phone_primary": "x",
+  "institutional_cert_no": "x"
+ },
+ "participants": [],
+ "summaries": {
+  "scientific_en_≤300w": "x",
+  "lay_he_≤150w": "x"
+ },
+ "alternatives_search": {
+  "engines": [],
+  "date": "x",
+  "queries": [],
+  "conclusion": "x"
+ },
+ "animals_total": [
+  {
+   "species": "x",
+   "strain": "x",
+   "sex": "M",
+   "genetic_status": "x",
+   "source": "vendor",
+   "n_total": 0
+  }
+ ],
+ "n_justification": {
+  "method": "power",
+  "details": "x"
+ },
+ "experiments": [],
+ "pi_declaration": {
+  "name": "x",
+  "date": "x"
+ }
+}

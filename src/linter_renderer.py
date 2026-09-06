@@ -124,6 +124,7 @@ def _e(val: Any) -> str:
 # Classification of checks for reporting / analysis.
 # This does NOT change behavior; it only affects summary counters in the report.
 STRUCTURAL_REFS = {
+    "required",  # required:<path> family (ruleset 1.1.0)
     "header",
     "research",
     "pi",
@@ -279,6 +280,8 @@ def lint(instance: Dict[str, Any], profile: str = "default") -> Dict[str, Any]:
     def ref_matches(ref: str, ref_set: set) -> bool:
         """Check if ref matches any pattern in ref_set (exact match or prefix before :exp-)."""
         if ref in ref_set:
+            return True
+        if ref.startswith("required:") and "required" in ref_set:  # ruleset 1.1.0: missing-field rows are structural
             return True
         # Handle experiment-suffixed refs like "euthanasia:CO2:exp-1"
         if ":exp-" in ref:

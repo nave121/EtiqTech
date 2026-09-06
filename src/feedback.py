@@ -77,8 +77,8 @@ def validate(payload: Dict[str, Any], *, rule_ids: List[str], theme_keys: List[s
     version = payload.get("ruleset_version")
     if version is not None:
         if ruleset_versions is None:
-            from .rules import RULESET_VERSION
-            ruleset_versions = [RULESET_VERSION]
+            from .rules import KNOWN_RULESET_VERSIONS
+            ruleset_versions = list(KNOWN_RULESET_VERSIONS)
         if version not in ruleset_versions:
             raise ValueError("ruleset_version is not a known ruleset")
         row["ruleset_version"] = version

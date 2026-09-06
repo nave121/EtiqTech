@@ -17,7 +17,8 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-RULESET_VERSION = "1.0.0"  # bump when a rule is added, removed, or its trigger changes
+KNOWN_RULESET_VERSIONS = ("1.0.0", "1.1.0")  # feedback rows may carry any of these
+RULESET_VERSION = "1.1.0"  # bump when a rule is added, removed, or its trigger/severity changes (1.1.0: four counting fixes, 2026-09-06)
 
 _INSTANCE_SUFFIX = re.compile(r":exp-\d+$")
 
@@ -26,7 +27,7 @@ _INSTANCE_SUFFIX = re.compile(r":exp-\d+$")
 class Rule:
     id: str
     domain: str
-    kind: str           # structural | law_critical | advisory | required
+    kind: str           # structural | law_critical | advisory
     jurisdiction: str   # IL-form: Israeli request-form / Council specific; generic: welfare/science, any jurisdiction
     title: str
 
@@ -38,7 +39,7 @@ def _r(rule_id: str, kind: str, jurisdiction: str, title: str) -> Rule:
 RULES: Dict[str, Rule] = {r.id: r for r in [
     # --- structure of the request. Block/field presence is canonical-schema integrity (generic);
     #     only the Israeli-form specifics (continuation, third-party, colony, track/term, labels) are IL-form.
-    _r("required", "required", "generic", "Required fields present at a given path"),
+    _r("required", "structural", "generic", "Required fields present at a given path"),
     _r("header", "structural", "generic", "Header block present"),
     _r("research", "structural", "generic", "Research block present"),
     _r("pi", "structural", "generic", "Principal-investigator block present"),

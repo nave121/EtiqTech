@@ -29,6 +29,7 @@ COVERED = {
     "scope:pilot-size",
     "sex:rationale", "sex:sabv",
     "special:neonatal-CO2",
+    "title:pilot-label",
 }
 
 

@@ -28,7 +28,7 @@ def run(ctx: RuleContext) -> None:
             st = e.get("stereotaxic_implant") or {}
             # Warn only if missing
             ok_st = bool(st.get("implant_type") or st.get("craniotomy") is not None)
-            severity = "warning" if not ok_st else "error"
+            severity = "warning"  # ruleset 1.1.0: advisory rule, warning on pass and fail alike
             if not ok_st:
                  ctx.warnings += 1
             ctx.checks.append(
@@ -62,7 +62,7 @@ def run(ctx: RuleContext) -> None:
             on = e.get("oncology") or {}
             ok_onc = bool(on.get("tumor_burden_cap")) and bool(on.get("ulceration_policy"))
             # Warn only
-            severity = "warning" if not ok_onc else "error"
+            severity = "warning"  # ruleset 1.1.0: advisory rule, warning on pass and fail alike
             if not ok_onc: ctx.warnings += 1
             ctx.checks.append(
                 _rule(
@@ -93,7 +93,7 @@ def run(ctx: RuleContext) -> None:
             db = e.get("diabetes") or {}
             ok_db = db.get("measurement") in ("fasted", "non_fasted")
             # Warn only
-            severity = "warning" if not ok_db else "error"
+            severity = "warning"  # ruleset 1.1.0: advisory rule, warning on pass and fail alike
             if not ok_db: ctx.warnings += 1
             ctx.checks.append(
                 _rule(
@@ -125,7 +125,7 @@ def run(ctx: RuleContext) -> None:
             bs = e.get("biosafety_infectious_agents") or {}
             ok_bs = bool(bs.get("agent_name"))
             # Warn only
-            severity = "warning" if not ok_bs else "error"
+            severity = "warning"  # ruleset 1.1.0: advisory rule, warning on pass and fail alike
             if not ok_bs: ctx.warnings += 1
             ctx.checks.append(
                 _rule(
@@ -158,7 +158,7 @@ def run(ctx: RuleContext) -> None:
             nm = e.get("nanomaterials") or {}
             ok_nm = bool(nm.get("particle_type"))
             # Warn only
-            severity = "warning" if not ok_nm else "error"
+            severity = "warning"  # ruleset 1.1.0: advisory rule, warning on pass and fail alike
             if not ok_nm: ctx.warnings += 1
             ctx.checks.append(
                 _rule(
@@ -189,7 +189,7 @@ def run(ctx: RuleContext) -> None:
             oc = e.get("ocular_procedures") or {}
             ok_oc = bool(oc.get("topical_anesthesia")) or bool(oc.get("ocular_lubrication"))
             # Warn only
-            severity = "warning" if not ok_oc else "error"
+            severity = "warning"  # ruleset 1.1.0: advisory rule, warning on pass and fail alike
             if not ok_oc: ctx.warnings += 1
             ctx.checks.append(
                 _rule(

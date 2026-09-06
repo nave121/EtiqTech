@@ -4,9 +4,10 @@ third-party, pi, pi:training, participant:training,
 participant:certified-without-training. Verbatim move from
 linter_renderer.lint() (P3.1 batch 7).
 
-term:track keeps its two counter lines ABOVE the append and passes ideal_term
-(not ok_term) to _rule; title:pilot-label keeps no severity= with a warnings
-counter. Both are documented quirks (plan section 5), preserved on purpose.
+Ruleset 1.1.0 (2026-09-06, maintainer-approved): term:track now fails visibly
+whenever it bumps a counter (flag = ok_term and ideal_term) and title:pilot-label
+carries severity="warning" to match its counter. Both were quirks preserved
+through the module split (linter-split-plan.md section 5).
 """
 from .context import RuleContext, _rule
 
@@ -65,6 +66,7 @@ def run(ctx: RuleContext) -> None:
                     "Pilot track: title clearly marked as Pilot.",
                     "Pilot track: title should explicitly include 'Pilot/פיילוט'.",
                     fix="Add 'פיילוט' to Hebrew title and 'Pilot' to English title.",
+                    severity="warning",  # ruleset 1.1.0: was the _rule default "error" against a warnings counter
                     ref="title:pilot-label",
                 )
             )
@@ -88,7 +90,7 @@ def run(ctx: RuleContext) -> None:
             )
             ctx.checks.append(
                 _rule(
-                    ideal_term,
+                    ok_term and ideal_term,  # ruleset 1.1.0: out-of-range terms fail visibly (was a phantom error)
                     "Approval term consistent with request type.",
                     f"Approval term {term} years is inconsistent with request_type='{rt}'.",
                     fix=fix_term,

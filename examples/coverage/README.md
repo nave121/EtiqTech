@@ -6,6 +6,10 @@ and (b) makes `lint()` (either profile) emit a failing checklist item for the ru
 `tests/test_rule_coverage.py` guards every file, and `scripts/gen_rules_doc.py` counts them in the `fixtures` column
 of `docs/rules.md`.
 
+
+`term:track`'s out-of-range branch (term outside 1..4) is also unreachable from canonical JSON: the schema caps
+`approval_term_years` at 4. It is covered by a raw-dict test in `tests/test_ruleset_1_1_0.py`.
+
 ## Adding one
 
 1. Name the file after the rule id with `:` replaced by `__`: `euthanasia:cervical-weight` -> `euthanasia__cervical-weight.json`.
