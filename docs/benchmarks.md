@@ -94,3 +94,40 @@ because the eval must be rerun before the decision is final:
 
 Caveats: blind pass only; 6 pairs; `three_Rs_alternatives` (the theme the brief most wanted to
 improve) has one pair in the subset and three in the whole golden set.
+## Grounded vs ungrounded Layer 2 — 2026-09-06
+
+Model: `gemma4:31b-cloud` · two-pass (blind → reconcile), reconciled verdict scored · temperature 0.2 · cases: 20 golden pairs · themes: target_l2_themes per case · retrieval: k=5 over `resources/corpus/guidance_il.jsonl`
+
+| condition | pairs | pair_acc | bad_hit | good_clean | gap | json_ok | cited | sec/call |
+|---|---|---|---|---|---|---|---|---|
+| ungrounded | 51 | 18% | 100% | 16% | +0.18 | 100% | — | 5 |
+| grounded | 51 | 18% | 100% | 14% | +0.20 | 100% | 96% | 5 |
+
+Per theme:
+
+| theme | condition | pairs | pair_acc | bad_hit | good_clean | gap | cited |
+|---|---|---|---|---|---|---|---|
+| N_and_justification | ungrounded | 3 | 0% | 100% | 0% | +0.00 | — |
+| N_and_justification | grounded | 3 | 0% | 100% | 0% | +0.00 | 100% |
+| euthanasia_and_endpoints | ungrounded | 13 | 54% | 100% | 54% | +0.54 | — |
+| euthanasia_and_endpoints | grounded | 13 | 54% | 100% | 54% | +0.62 | 100% |
+| harm_benefit_analysis | ungrounded | 13 | 8% | 100% | 0% | +0.08 | — |
+| harm_benefit_analysis | grounded | 13 | 8% | 100% | 0% | +0.08 | 96% |
+| personnel_and_training | ungrounded | 1 | 0% | 100% | 0% | +0.00 | — |
+| personnel_and_training | grounded | 1 | 0% | 100% | 0% | +0.00 | 100% |
+| scientific_coherence | ungrounded | 5 | 0% | 100% | 0% | -0.20 | — |
+| scientific_coherence | grounded | 5 | 0% | 100% | 0% | +0.00 | 80% |
+| severity_monitoring_analgesia | ungrounded | 12 | 0% | 100% | 0% | +0.00 | — |
+| severity_monitoring_analgesia | grounded | 12 | 0% | 100% | 0% | +0.00 | 96% |
+| sex_and_reuse | ungrounded | 2 | 0% | 100% | 0% | +0.00 | — |
+| sex_and_reuse | grounded | 2 | 0% | 100% | 0% | +0.00 | 100% |
+| three_Rs_alternatives | ungrounded | 2 | 50% | 100% | 50% | +1.00 | — |
+| three_Rs_alternatives | grounded | 2 | 50% | 100% | 0% | +0.50 | 100% |
+
+pair_acc = bad variant scored strictly below good on the same theme; bad_hit = bad scored <= 1; good_clean = good scored >= 2; gap = mean(good) - mean(bad); cited = grounded rationales citing a [Gn] source.
+
+**Setup notes.** Rerun requested by the maintainer (2026-09-06) to close the grounding decision. Production default `qwen3.5:35b` is not on the eval machine (32 GB) and `qwen3.5:397b-cloud` is subscription-gated, so the maintainer chose `gemma4:31b-cloud` (Ollama cloud; the golden set is committed to this public repo, nothing non-public left the machine). First run of the full harness: all 20 testable pairs (51 target-theme pairs, 204 calls, 0 errors), production two-pass flow (blind → reconcile), reconciled verdict scored. Blind-pass view of the same run: ungrounded pair_acc 12 % / gap +0.12, grounded 14 % / +0.16; reconcile changed the blind score in 5 of 204 calls.
+
+**Reading.** Grounding changes nothing that matters: pair_acc 18 % → 18 %, gap +0.18 → +0.20, good_clean 16 % → 14 %. The retrieval itself works (96 % of grounded rationales cite a `[Gn]` source, embedding index built), but there is nothing for it to improve on: `bad_hit` is 100 % because the model scores nearly *every* protocol ≤ 1, including the known-good ones (good_clean 16 %). Only `euthanasia_and_endpoints` (54 %) and `three_Rs_alternatives` (2 pairs) separate good from bad at all; five themes have pair_acc 0 %. Rerun condition 3 from the previous section (a model that separates good from bad) is therefore still unmet, and until it is, no grounding experiment can register a gain.
+
+**Decision (pre-registered rule: flip only if grounded beats ungrounded on pair_acc AND gap, json_ok not lower, cited ≥ 50 %).** pair_acc is tied, so `ETIQTECH_GROUNDING` **stays off by default**. Retrieval, corpus and citation UI stay in the tree as opt-in. The next experiment is not about grounding: it is the Layer 2 rubric/prompt (why do known-good protocols score ≤ 1 on seven of nine themes?) on the production model, and only after `good_clean` is in a usable range does the grounding question reopen. Directional caveat: gemma4 is not the production model family.

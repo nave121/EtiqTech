@@ -314,3 +314,12 @@ NOTE (not changed): the eval progress counter counts rows, not LLM calls (2 per 
 Also: `tests/test_gunicorn_sessions.py` (a test from this sprint) flaked once under load — the 1 s health poll raised
 ReadTimeout, which the loop did not catch; it now tolerates any RequestException inside the 30 s deadline. Passed
 alone and in the full run after the change.
+
+## Step 34 (2026-09-06) — grounding eval verdict: stays off
+Full run on `gemma4:31b-cloud`: 20 pairs, 51 theme pairs, 204 calls, 0 errors, ~17 min. Reconciled verdicts:
+ungrounded pair_acc 18 % / gap +0.18 / good_clean 16 %; grounded 18 % / +0.20 / 14 %; cited 96 %. Pre-registered rule
+(grounded must beat ungrounded on pair_acc AND gap) not met → `ETIQTECH_GROUNDING` stays off. Blind-pass view of the
+same rows agrees (12 % vs 14 %); reconcile changed 5 of 204 scores. The finding that matters: the model scores nearly
+every protocol ≤ 1, good ones included (bad_hit 100 %, good_clean 16 %), so five of nine themes cannot separate
+good from bad at all — the Layer 2 rubric/prompt is the next experiment, grounding is not. Full write-up appended to
+docs/benchmarks.md (generated table + Setup / Reading / Decision). No code change follows from this decision.

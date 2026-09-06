@@ -33,7 +33,7 @@ permanent · auth stays at the reverse proxy.
 | P1.4 advisory banner | done (wording = maintainer) | 737e831 |
 | P2 corpus (IL guidance EN+HE + the 1994 statute and 2001 rules, HE+EN) | done: 178 records, section boundaries verified by read-through | 72ce96e … 7e87e5f … 233da23 |
 | P2 retrieval layer + cited grounding | done, **off by default** | 3b67301, 64ca1ed |
-| P2 eval gate (grounded vs ungrounded) | done (subset): **no gain, grounding stays off by default**; rerun conditions in docs/benchmarks.md | 342092b, bf331e4 |
+| P2 eval gate (grounded vs ungrounded) | done: subset (27B) and full 20-pair two-pass rerun (gemma4:31b-cloud, 2026-09-06) both show **no gain, grounding stays off by default** | 342092b, bf331e4, b4cea27 |
 | P2 Norecopa ingest | **blocked on maintainer** (access path) | — |
 | P3.1 rule registry + module split | **done**: 59 ids, `src/lint_rules/` package, snapshot byte-identical through 8 batches | 592aa81, 9e04573, bd2e383, 9f90148..35856f3 |
 | P3.2 pack mechanism + EU spike | done (EU rules await review) | 6a173f9 |
@@ -50,7 +50,7 @@ permanent · auth stays at the reverse proxy.
 |---|---|---|---|
 | 1 | delete `resources/law/the_law.txt` | yes | done (this commit) |
 | 2 | Weizmann English translation redistribution terms | Razy asks Weizmann | **Razy**; README keeps "unverified" until then |
-| 3 | grounding default | `qwen3.5:397b-cloud` is subscription-gated → rerun on `gemma4:31b-cloud` (Razy), all 20 pairs, two-pass; flip only if the pre-set rule is met | running (output/eval_grounding_gemma4-31b-cloud_2pass.jsonl) |
+| 3 | grounding default | rerun on `gemma4:31b-cloud`, all 20 pairs, two-pass: pair_acc 18 % → 18 %, gap +0.18 → +0.20 → rule not met, **stays off**. Real finding: the model scores almost every good protocol ≤ 1 (good_clean 16 %) — Layer 2 rubric work comes before any grounding retry | done (step 34, docs/benchmarks.md) |
 | 4 | EU seed rules (`docs/eu-directive-spike.md`) | Israel-only for launch; EU is the first post-launch feature | parked |
 | 5 | advisory notice / scope sentence / acknowledgements wording | Razy edits | **Razy** |
 | 6 | Hebrew landing copy | not needed now | branch `design-ux` (75dd5f0) stays parked, no work |
@@ -84,7 +84,7 @@ python scripts/eval_grounding.py --report         # if output/eval_grounding.jso
 Long LLM jobs write resumable JSONL under `output/` (gitignored); relaunch the same command to continue.
 
 ## Next steps (in order) — plan: ~/.claude/plans/golden-sauteeing-teapot.md
-1. Grounding eval running on `gemma4:31b-cloud` (b4cea27 harness). When done: `python scripts/eval_grounding.py --report --out output/eval_grounding_gemma4-31b-cloud_2pass.jsonl`, write Reading/Decision into docs/benchmarks.md, apply the rule: flip only if grounded beats ungrounded on pair_acc AND gap, json_ok not lower, cited ≥ 50 %.
-2. ~~Parser normalization~~ done (step 32).
-3. Close decision 3 here and in the dev log; Sonnet reviews of b4cea27 and the parser commit.
+1. ~~Grounding eval~~ done: stays off (step 34). Open engineering question it raised: Layer 2 rubric — known-good protocols score ≤ 1 on 7 of 9 themes; run `scripts/eval_grounding.py --conditions ungrounded --two-pass` on the production model after any prompt change and watch `good_clean`.
+2. ~~Parser normalization~~ done (step 32); Razy to eyeball the six golden manifest diffs (`git show 2ffb3e9 -- examples/head-to-head`).
+3. SYNTH/ADV golden JSON fixtures fail the canonical schema (fixture debt, no functional effect) — fix when touching the golden set.
 4. Razy's items: translation licence (2), wording (5). Optional later: i18n toggle, P4 leftovers.
