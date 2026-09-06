@@ -323,3 +323,11 @@ same rows agrees (12 % vs 14 %); reconcile changed 5 of 204 scores. The finding 
 every protocol ≤ 1, good ones included (bad_hit 100 %, good_clean 16 %), so five of nine themes cannot separate
 good from bad at all — the Layer 2 rubric/prompt is the next experiment, grounding is not. Full write-up appended to
 docs/benchmarks.md (generated table + Setup / Reading / Decision). No code change follows from this decision.
+
+## Step 35 (2026-09-06) — closing gate, Bandit on scripts/
+Running Bandit over `scripts/` as well as the CI scope (`src/ server/`) showed two pre-existing Highs in
+`scripts/build_law_corpus.py` (present at 585f3e2): B613 trojan-source (literal bidi control characters inside the
+`_BIDI` regex) and B324 (sha1 for stable chunk ids without `usedforsecurity=False`). Neither is a vulnerability — the
+regex is a filter for exactly those characters and sha1 only names corpus chunks — but both are one-token fixes with
+identical behaviour: escapes instead of literal characters, `usedforsecurity=False`. `build_law_corpus.py --check`
+confirms the corpus ids are unchanged. Bandit `-ll` is now clean over src/, server/ and scripts/. CI scope unchanged.

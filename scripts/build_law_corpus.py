@@ -31,7 +31,7 @@ DOC_TITLE_HE = "המועצה לניסויים בבעלי חיים — הנחיו
 LICENSE = "Israeli government publication; redistribution terms unverified — cite, do not reprint"
 MAX_CHARS = 1600  # ~400 tokens; k=5-8 chunks stays well inside the Layer 2 budget
 
-_BIDI = re.compile(r"[‎‏‪-‮⁦-⁩]")
+_BIDI = re.compile("[\\u200e\\u200f\\u202a-\\u202e\\u2066-\\u2069]")  # escapes, not literal bidi chars (Bandit B613)
 _HE_HEADING = re.compile(r"^(תת סעיף|חלק [א-ת]|סעיף \d|הקדמה|כללי|דברי הסבר)")
 _HE_PAGE_MARK = re.compile(r"^[–\-—\s]*עמוד[–\-—\s]*\d+[–\-—\s]*$")
 MIN_SECTION_CHARS = 120  # smaller Hebrew fragments are merged into the preceding section
@@ -179,7 +179,7 @@ def _records(sections, lang, doc_title, source):
             if lang == "en":
                 base = _slug(" ".join(parents)) if len(parents) > 1 and heading.lower() == "general" else _slug(heading)
             else:
-                base = hashlib.sha1(chunk.encode("utf-8")).hexdigest()[:8]  # stable unless this chunk's text changes
+                base = hashlib.sha1(chunk.encode("utf-8"), usedforsecurity=False).hexdigest()[:8]  # stable unless this chunk's text changes
             rid = f"il-guidance-{lang}-{base}" + (f"-{n}" if len(chunks) > 1 else "")
             k = 2
             while rid in used:  # repeated headings ("General") get a stable ordinal suffix
