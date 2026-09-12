@@ -349,3 +349,25 @@ lesson as "verify the environment before promising to test in it". Fix is in the
 (`gated_base_url("anthropic")`) now runs before the import, so the local-first refusal holds whether or not the SDK
 is present. Reproduced CI locally by hiding the module (`sys.modules["anthropic"] = None`): 1 failed → all green.
 Note: the two pre-sprint CI runs on main (April) were also red; not investigated here, different cause.
+
+## Step 37 (2026-09-13) — Razy boots it: "I can't even load a protocol"
+He was right, and every gate was green while it was broken. Three defects, found by loading the page the way a user
+does (headless Chrome over the DevTools protocol, real file set on the hidden input):
+1. **The upload did nothing.** `server/static/js/app.js:813` had a `// ponytail:` comment inserted mid-object-literal
+   in **6ba084a** — the last commit of the first sprint, titled "docs: … comment the tier-per-rule assumption", made
+   after every review had run. The comment swallowed `items: [] };`, the browser dropped the whole script, nothing on
+   the page bound. Every design commit before it parsed cleanly (checked per revision with `node --check`).
+2. **English UI in an RTL shell.** `app.html` carried `lang="he" dir="rtl"` from the original release; the design
+   commits made every string English and never flipped the document. Now `lang="en" dir="ltr"`; Hebrew protocol
+   values inside English sentences render via Unicode bidi (verified on head-to-head/1).
+3. **CSRF allowlist hardcoded port 4242.** Any other port refused the browser's own origin with 403. Same-origin
+   (`request.host_url`) is now always allowed; `ALLOWED_ORIGINS` still extends it.
+Why the gates missed it: no test loaded the JavaScript; the reviewers read the Python diff of a "docs" commit; my
+live check posted to the API with curl instead of loading the page. Fixes to the gate, not just the code:
+`tests/test_static_js_syntax.py` (node --check on every served script + the LTR shell), and
+`scripts/browser_smoke.py` (Chrome uploads a fixture, prints verdict and console errors; exit 1 on exception or no
+verdict). Both variants of head-to-head/1 render: bad → "1 finding fails the automated check … 16 more are tied to a
+legal requirement"; good → "Nothing fails … 15 findings are tied to a legal requirement … 4 more are worth fixing".
+Suite 819 passed / 2 skipped. His running server caches templates: restart to pick up the direction fix.
+Open NOTE: `server/static/js/tailwind.js` is the Tailwind play-CDN build and warns in the console about production
+use — a build step or a static CSS export before public deploy.

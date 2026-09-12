@@ -809,7 +809,8 @@
         items.forEach((item) => {
             const id = item.rule_id || item.reference || 'general';
             if (!byId[id]) {
-                byId[id] = { id, tier: tierOf(item),  // ponytail: tier is taken from the first instance; a rule's severity does not vary within one profile items: [] };
+                // tier is taken from the first instance; a rule's severity does not vary within one profile
+                byId[id] = { id, tier: tierOf(item), items: [] };
                 groups.push(byId[id]);
             }
             byId[id].items.push(item);

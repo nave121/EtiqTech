@@ -16,7 +16,7 @@
   plain-language findings, guided first run. Done (spec commits 1–9 on main).
 
 ## Invariants (never break)
-All tests green (814 now, 440 original untouched) · no protocol text persisted or logged at any
+All tests green (819 now, 440 original untouched) · no protocol text persisted or logged at any
 level · local-first LLM by default · LLM never gates/filters/rewrites Layer 1 · advisory framing
 permanent · auth stays at the reverse proxy.
 
@@ -69,6 +69,11 @@ Decided memos (kept for the record): `statute-sources.md` (statute imported), `l
 
 ## Running jobs (as of step 25, resumed after the 21:00 limit reset)
 - Nothing running. Done: split, coverage, eval, research memos, design 1–9 (8 English-only), the four maintainer decisions (statute import, Layer 3 window, ruleset 1.1.0, landing English-only), reviews.
+
+## Gate addition (2026-09-13)
+The closing gate now includes **loading the page in a browser**: `python scripts/browser_smoke.py http://localhost:4242 examples/head-to-head/1/bad.html`
+must print a verdict and a clean console. Reason: 6ba084a shipped a JavaScript syntax error that killed the upload
+while 814 tests, Bandit, pip-audit and CI were all green (step 37). `tests/test_static_js_syntax.py` guards the parse.
 
 ## Remote
 Pushed to origin/main 2026-09-06 (cdfc44f..2603558). CI on main **green** for the first time (run 34059532894); the

@@ -145,10 +145,9 @@ def check_origin():
     if not origin:
         # No Origin header — same-origin requests from most browsers omit it
         return None
-    allowed_origins = [
-        'http://localhost:4242',
-        'http://127.0.0.1:4242',
-    ]
+    # Same-origin is always allowed (whatever host/port the browser used to reach us); anything
+    # else needs ALLOWED_ORIGINS. Hardcoding :4242 broke uploads on any other port.
+    allowed_origins = [request.host_url.rstrip('/'), 'http://localhost:4242', 'http://127.0.0.1:4242']
     custom = os.getenv('ALLOWED_ORIGINS', '')
     if custom:
         allowed_origins.extend(o.strip() for o in custom.split(','))
