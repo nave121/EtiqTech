@@ -12,6 +12,7 @@ Exit code 1 if the page has a JavaScript exception or no verdict rendered. Needs
 import json
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -77,6 +78,11 @@ def main(base_url: str, fixture: str) -> int:
         return 0 if verdict and not any(c.startswith("EXCEPTION") for c in console) else 1
     finally:
         chrome.terminate()
+        try:
+            chrome.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            chrome.kill()
+        shutil.rmtree(profile, ignore_errors=True)  # nothing from the run survives, fixture or not
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@
   plain-language findings, guided first run. Done (spec commits 1–9 on main).
 
 ## Invariants (never break)
-All tests green (819 now, 440 original untouched) · no protocol text persisted or logged at any
+All tests green (824 now, 440 original untouched) · no protocol text persisted or logged at any
 level · local-first LLM by default · LLM never gates/filters/rewrites Layer 1 · advisory framing
 permanent · auth stays at the reverse proxy.
 
@@ -79,7 +79,7 @@ while 814 tests, Bandit, pip-audit and CI were all green (step 37). `tests/test_
 Pushed to origin/main 2026-09-06 (cdfc44f..2603558). CI on main **green** for the first time (run 34059532894); the
 first push was red on a sprint test that assumed the optional anthropic SDK was installed — fixed in 2603558 by running
 the remote gate before the import. Dependabot PRs (pydantic, gunicorn, setup-python, python 3.14 image) are open and
-unreviewed — maintainer's call.
+unreviewed — maintainer's call. **Deployment note (step 38): with `PROXY_FIX=1` the public origin must be set in `ALLOWED_ORIGINS` or every upload is refused as cross-site.**
 
 ## Branches / worktrees
 - `design-ux` (branch only, worktree removed): holds the Hebrew landing drafts (75dd5f0) for a native review; everything else from it is on main.

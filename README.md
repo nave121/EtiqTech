@@ -170,7 +170,8 @@ EtiqTech reviews protocols in three layers:
 | `PORT` | `4242` | Listen port (gunicorn.conf.py) |
 | `LOG_LEVEL` | `INFO` | Server log level; DEBUG is opt-in |
 | `GUNICORN_THREADS` | `64` | Thread pool = max concurrent LLM streams |
-| `PROXY_FIX` | unset | `1` to trust one X-Forwarded-For hop behind a reverse proxy |
+| `PROXY_FIX` | unset | `1` to trust one X-Forwarded-For hop behind a reverse proxy. **Then set `ALLOWED_ORIGINS`** to the public origin, e.g. `https://etiq.example.org`: the CSRF check cannot trust a forwarded Host |
+| `ALLOWED_ORIGINS` | unset | Comma-separated origins allowed to POST besides localhost:4242 and, when not behind a proxy, the request's own host |
 | `RATELIMIT_ENABLED` | `true` | `false` only for load tests; refused in production |
 
 ---

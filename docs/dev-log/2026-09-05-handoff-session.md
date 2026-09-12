@@ -371,3 +371,14 @@ legal requirement"; good → "Nothing fails … 15 findings are tied to a legal 
 Suite 819 passed / 2 skipped. His running server caches templates: restart to pick up the direction fix.
 Open NOTE: `server/static/js/tailwind.js` is the Tailwind play-CDN build and warns in the console about production
 use — a build step or a static CSS export before public deploy.
+
+## Step 38 (2026-09-13) — review of 40b7507: the CSRF fix was too trusting behind a proxy
+Sonnet's adversarial read: adding `request.host_url` to the CSRF allowlist is safe on direct access (a browser
+cannot forge its own Host) but under `PROXY_FIX=1` the host comes from `X-Forwarded-Host`, which the app never
+verifies; today only the absence of CORS keeps that closed. Fixed: same-origin-by-host is added only when not behind
+the proxy; behind it the deployment must name its public origin in `ALLOWED_ORIGINS` (README env table, k8s manifest
+comment). `tests/test_csrf_origin.py` covers all five cases including the forwarded-host spoof (the check had no
+tests at all before). Also from the review: an unscoped `text-align: right` on protocol tables became wrong under the
+LTR shell → `text-align: start`; `browser_smoke.py` now waits for Chrome and deletes its temp profile (two leaked
+profiles from earlier runs removed). Dead template `server/templates/index.html` still says rtl; no route renders it.
+Suite 824 passed / 2 skipped; browser smoke clean on the new build.

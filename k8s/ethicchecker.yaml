@@ -42,6 +42,8 @@ spec:
             - name: OLLAMA_MODEL
               value: "qwen3.5:35b"
             # Behind Cloudflare Access / an ingress that sets X-Forwarded-For:
+            # - name: ALLOWED_ORIGINS        # required with PROXY_FIX: the public origin, e.g. https://etiq.example.org
+            #   value: "https://etiq.example.org"
             # - name: PROXY_FIX
             #   value: "1"
             - name: OLLAMA_NUM_CTX

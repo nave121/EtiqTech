@@ -89,7 +89,11 @@ if not app.config['RATELIMIT_ENABLED']:
 # user would share one rate-limit bucket. Set PROXY_FIX=1 to trust ONE hop of
 # X-Forwarded-For. Leave it unset when clients reach gunicorn directly, or they can
 # spoof the header to dodge the limiter.
-if os.getenv('PROXY_FIX', '').lower() in ('1', 'true', 'yes'):
+def _behind_proxy() -> bool:
+    return os.getenv('PROXY_FIX', '').lower() in ('1', 'true', 'yes')
+
+
+if _behind_proxy():
     from werkzeug.middleware.proxy_fix import ProxyFix
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
@@ -145,9 +149,12 @@ def check_origin():
     if not origin:
         # No Origin header — same-origin requests from most browsers omit it
         return None
-    # Same-origin is always allowed (whatever host/port the browser used to reach us); anything
-    # else needs ALLOWED_ORIGINS. Hardcoding :4242 broke uploads on any other port.
-    allowed_origins = [request.host_url.rstrip('/'), 'http://localhost:4242', 'http://127.0.0.1:4242']
+    allowed_origins = ['http://localhost:4242', 'http://127.0.0.1:4242']
+    if not _behind_proxy():
+        # Direct access: the Host header is the browser's own, so same-origin on any port is safe.
+        # Behind PROXY_FIX the host comes from X-Forwarded-Host, which this app cannot verify, so
+        # the deployment must name its origin in ALLOWED_ORIGINS instead.
+        allowed_origins.append(request.host_url.rstrip('/'))
     custom = os.getenv('ALLOWED_ORIGINS', '')
     if custom:
         allowed_origins.extend(o.strip() for o in custom.split(','))
