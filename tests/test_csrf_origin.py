@@ -8,7 +8,7 @@ from server import app as appmod
 
 @pytest.fixture
 def client(monkeypatch):
-    monkeypatch.delenv("PROXY_FIX", raising=False)
+    monkeypatch.setattr(appmod, "_BEHIND_PROXY", False)
     monkeypatch.delenv("ALLOWED_ORIGINS", raising=False)
     appmod.app.config["TESTING"] = True
     return appmod.app.test_client()
@@ -34,14 +34,14 @@ def test_cross_site_origin_is_refused(client):
 
 
 def test_behind_proxy_host_header_is_not_trusted(client, monkeypatch):
-    monkeypatch.setenv("PROXY_FIX", "1")
+    monkeypatch.setattr(appmod, "_BEHIND_PROXY", True)  # what PROXY_FIX=1 sets at import
     # what ProxyFix would produce from an attacker-supplied X-Forwarded-Host
     r = _post(client, Origin="http://evil.example", Host="evil.example")
     assert r.status_code == 403
 
 
 def test_behind_proxy_allowed_origins_names_the_public_origin(client, monkeypatch):
-    monkeypatch.setenv("PROXY_FIX", "1")
+    monkeypatch.setattr(appmod, "_BEHIND_PROXY", True)  # what PROXY_FIX=1 sets at import
     monkeypatch.setenv("ALLOWED_ORIGINS", "https://etiq.example.org")
     assert _post(client, Origin="https://etiq.example.org", Host="etiq.example.org").status_code != 403
     assert _post(client, Origin="https://other.example.org", Host="etiq.example.org").status_code == 403

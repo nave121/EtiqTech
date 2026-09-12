@@ -82,6 +82,7 @@ def main(base_url: str, fixture: str) -> int:
             chrome.wait(timeout=10)
         except subprocess.TimeoutExpired:
             chrome.kill()
+            chrome.wait()
         shutil.rmtree(profile, ignore_errors=True)  # nothing from the run survives, fixture or not
 
 

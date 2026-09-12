@@ -89,11 +89,10 @@ if not app.config['RATELIMIT_ENABLED']:
 # user would share one rate-limit bucket. Set PROXY_FIX=1 to trust ONE hop of
 # X-Forwarded-For. Leave it unset when clients reach gunicorn directly, or they can
 # spoof the header to dodge the limiter.
-def _behind_proxy() -> bool:
-    return os.getenv('PROXY_FIX', '').lower() in ('1', 'true', 'yes')
+# Read once: check_origin() must agree with whether ProxyFix is installed, by construction.
+_BEHIND_PROXY = os.getenv('PROXY_FIX', '').lower() in ('1', 'true', 'yes')
 
-
-if _behind_proxy():
+if _BEHIND_PROXY:
     from werkzeug.middleware.proxy_fix import ProxyFix
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
@@ -150,7 +149,7 @@ def check_origin():
         # No Origin header — same-origin requests from most browsers omit it
         return None
     allowed_origins = ['http://localhost:4242', 'http://127.0.0.1:4242']
-    if not _behind_proxy():
+    if not _BEHIND_PROXY:
         # Direct access: the Host header is the browser's own, so same-origin on any port is safe.
         # Behind PROXY_FIX the host comes from X-Forwarded-Host, which this app cannot verify, so
         # the deployment must name its origin in ALLOWED_ORIGINS instead.
