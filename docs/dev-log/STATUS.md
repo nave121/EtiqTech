@@ -77,9 +77,14 @@ while 814 tests, Bandit, pip-audit and CI were all green (step 37). `tests/test_
 
 ## Deployment (2026-09-13)
 Argo CD scaffold on main: `argocd/application.yaml` → `k8s/overlays/prod-remote` (Anthropic by default). CI `publish` job
-pushes `ghcr.io/nave121/etiqtech:{main,sha-*}` — **images live 2026-09-13**: overlay pinned to `sha-f92079c` (OpenAI parameter fix + loud LLM failures + health probe); multi-arch, uid 1000, public package. First real run (step 46) found every LLM call failing silently — fixed. Local run under the pod's security context (uid 1000, read-only root, tmpfs) serves and accepts uploads. Razy owns: Secrets (`etiqtech-app`, `etiqtech-llm`), Cloudflare
+pushes `ghcr.io/nave121/etiqtech:{main,sha-*}` — **images live 2026-09-13**: overlay pinned to `sha-1e2349a` (OpenAI parameter fix + loud LLM failures + health probe + review follow-ups); multi-arch, uid 1000, public package. First real run (step 46) found every LLM call failing silently — fixed. Local run under the pod's security context (uid 1000, read-only root, tmpfs) serves and accepts uploads. Razy owns: Secrets (`etiqtech-app`, `etiqtech-llm`), Cloudflare
 Tunnel/Access, GHCR package visibility, setting `ALLOWED_ORIGINS`. Runbook: `k8s/README.md`. Old name `ethicchecker`
 removed everywhere but this log.
+
+## Known flake
+`tests/test_retrieval.py::test_embedding_search_ranks_by_similarity_and_filters` failed once on CI (run 34768892528,
+method came back `lexical`), passed on rerun and on the six runs around it; the fake embedder is deterministic (md5),
+so the cause is not in the test data. Not chased yet; if it recurs, capture the retriever's `last_error` in the assertion.
 
 ## Remote
 Pushed to origin/main 2026-09-06 (cdfc44f..2603558). CI on main **green** for the first time (run 34059532894); the

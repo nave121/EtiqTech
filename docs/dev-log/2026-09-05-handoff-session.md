@@ -496,3 +496,10 @@ theme; sentinel and contracts confirmed; probe limit runs with request context a
 reconcile pass that returned valid JSON without the theme's key went to a fresh fallback instead of keeping pass 1 —
 both paths now route that through `_pass1_or_fallback` (test). Note kept: the reviewer's local run used flask-limiter
 3.12 (no project venv); CI and the earlier fresh venv ran the pinned 4.1.1 green. Suite 842 passed / 2 skipped.
+
+## Step 49 (2026-09-13) — pinned to sha-1e2349a; one CI flake noted
+Review of 1e2349a: no findings. CI on it failed once on `test_embedding_search_ranks_by_similarity_and_filters`
+(retrieval, untouched by the commit; `lexical` instead of `embedding`), rerun green, publish green. Logged under
+STATUS "Known flake" rather than chased. Overlay pinned to `sha-1e2349a`. What the deploy agent should see after sync:
+`/api/health?probe=llm` → `llm_probe.ok true`; a real protocol → graded themes; if the provider fails again the status
+turns red, the failed themes show "AI review unavailable" with no grade, and `llm_failures` names them.
