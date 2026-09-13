@@ -105,7 +105,10 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          # GITHUB_TOKEN works once the repository may write packages. If GHCR keeps answering
+          # permission_denied: write_package, create a classic PAT with write:packages and store it
+          # as the repository secret GHCR_TOKEN; it takes precedence here.
+          password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Image tags
         id: meta

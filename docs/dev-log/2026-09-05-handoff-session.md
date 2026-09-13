@@ -405,3 +405,12 @@ CI on 81b98a4: test/security/audit/docker green; **publish failed** with `denied
 the first push to ghcr.io/nave121/etiqtech. The job's token permissions are correct (`packages: write`); the denial is on
 the GitHub side (repository → Settings → Actions → General → Workflow permissions must allow write, or an existing
 `etiqtech` package under the user must grant this repository write access). Razy's lane; documented in k8s/README.md.
+
+## Step 41 (2026-09-13) — publish still denied after the permission change
+Razy set the workflow permission; `gh run rerun` gave him 500s. Re-triggered twice with empty commits (this gh login is
+the Rhino account, no admin on nave121/EtiqTech, so rerun/cancel are refused). Run 34748702430 sat in `queued` with zero
+jobs for 11+ minutes (GitHub-side; status page green); run 34748953890 ran: four gates green, publish denied again with
+`permission_denied: write_package`. The job token asks for `packages: write`, so the remaining causes are on the GitHub
+side: the setting changed on a different repo/account, or a pre-existing `etiqtech` package under nave121 not linked to
+this repository (registry answers 401 to anonymous pulls, so it is either private or absent — cannot tell from here).
+Fallback wired: the login step uses `secrets.GHCR_TOKEN` (classic PAT, write:packages) when present, else GITHUB_TOKEN.
