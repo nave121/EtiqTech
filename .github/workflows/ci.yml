@@ -15,7 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
+          python-version: "3.14"   # the interpreter the image ships (Dockerfile FROM)
 
       - name: Install dependencies
         run: |
@@ -34,7 +34,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
+          python-version: "3.14"   # the interpreter the image ships (Dockerfile FROM)
 
       - name: Install dependencies
         run: pip install -r requirements.txt bandit
@@ -59,7 +59,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
+          python-version: "3.14"   # the interpreter the image ships (Dockerfile FROM)
 
       - name: pip-audit pinned dependencies
         run: |

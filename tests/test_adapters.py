@@ -115,6 +115,9 @@ def test_schema_error_messages_never_embed_values_for_any_validator():
 
 
 def test_deeply_nested_json_is_a_400_not_a_500():
+    """Whatever the interpreter does with absurd nesting (RecursionError on 3.13 at 20k levels,
+    a parsed list on 3.14 until ~100k), the adapter must answer with IngestError, never a 500."""
     from src.adapters import parse_canonical_json
-    with pytest.raises(IngestError, match="Invalid JSON"):
-        parse_canonical_json("[" * 20000 + "]" * 20000)
+    for depth in (20000, 250000):
+        with pytest.raises(IngestError):
+            parse_canonical_json("[" * depth + "]" * depth)

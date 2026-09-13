@@ -443,3 +443,13 @@ gunicorn 26 opens a control socket under $HOME and logs `[ERROR] Control server 
 '/nonexistent'` in the read-only container — serving unaffected; disabled via `control_socket_disable = True` in
 gunicorn.conf.py, log clean. Dependabot closes its PRs itself once main carries the versions; #13 (flask 3.1.3) and
 #14 (lxml 6.1.0) were already satisfied by main before this.
+
+## Step 45 (2026-09-13) — review of 7cd6300: CI tested 3.13 while the image ships 3.14
+Correction to step 44: the "fresh venv" was Python 3.13; parity with the 3.14 image was not covered, and the reviewer
+found `test_deeply_nested_json_is_a_400_not_a_500` failing on 3.14 (20k-deep JSON now parses; the adapter still
+answers IngestError, just with the "must be an object" message — a 400 either way, no security change). Test now
+asserts the contract (IngestError at 20k and 250k levels) instead of one interpreter's message; CI `python-version`
+is 3.14 in all three Python jobs so the tested interpreter is the shipped one. Verified locally in a Python 3.14.7
+venv: full suite green. Also from the review: gunicorn 26's control-socket error was log noise, serving was never at
+risk — the step 44 wording stands corrected. flask-limiter 4 API, Actions v7 majors, 3.14 deprecations: no findings.
+All 15 Dependabot PRs are closed (8 by Dependabot after 7cd6300, 6 superseded ones by hand, #20 by a5590e9).
