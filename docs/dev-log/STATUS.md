@@ -77,7 +77,7 @@ while 814 tests, Bandit, pip-audit and CI were all green (step 37). `tests/test_
 
 ## Deployment (2026-09-13)
 Argo CD scaffold on main: `argocd/application.yaml` → `k8s/overlays/prod-remote` (Anthropic by default). CI `publish` job
-pushes `ghcr.io/nave121/etiqtech:{main,sha-*}` — **first image live 2026-09-13** (`sha-fca384c`, public, linked to the repo); overlay pinned to it. Razy owns: Secrets (`etiqtech-app`, `etiqtech-llm`), Cloudflare
+pushes `ghcr.io/nave121/etiqtech:{main,sha-*}` — **images live 2026-09-13**: `sha-586cc30` multi-arch (amd64+arm64, uid 1000), public, linked to the repo; overlay pinned to it. Local run under the pod's security context (uid 1000, read-only root, tmpfs) serves and accepts uploads. Razy owns: Secrets (`etiqtech-app`, `etiqtech-llm`), Cloudflare
 Tunnel/Access, GHCR package visibility, setting `ALLOWED_ORIGINS`. Runbook: `k8s/README.md`. Old name `ethicchecker`
 removed everywhere but this log.
 

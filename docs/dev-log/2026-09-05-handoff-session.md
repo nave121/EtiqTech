@@ -421,3 +421,13 @@ Razy re-authenticated gh as nave121 and added package scopes. Found two private 
 which explains every `write_package` denial (the workflow-permission setting was already `write`). With his OK both
 were deleted via the API; the next run (34763184075) went fully green and created `ghcr.io/nave121/etiqtech` linked to
 nave121/EtiqTech, public, tags `sha-fca384c` and `main`. Overlay pinned to `sha-fca384c`; README corrected.
+
+## Step 43 (2026-09-13) — image verified under the pod's security context; multi-arch
+Docker back on: pulled `sha-fca384c`, health OK, law loaded, browser smoke through the container renders the verdict.
+Two gaps: amd64-only (this Mac ran it under emulation) and the image user was uid 100 while the manifest says 1000.
+Ran the image exactly as the pod would (`--user 1000:1000 --read-only --tmpfs /tmp --tmpfs /app/output`): health and
+upload both fine, so the mismatch was harmless; aligned anyway (`adduser --uid 1000 --gid 1000`) and made the publish
+multi-arch (QEMU + buildx, linux/amd64 + linux/arm64). Run 34763703890 green; `sha-586cc30` manifest lists both
+platforms (plus the two `unknown/unknown` provenance entries buildx adds; containerd ignores them). Native arm64 pull:
+uid 1000, aarch64. Overlay pinned to `sha-586cc30`. Review FIX applied: README no longer states "public" as a rule —
+it is what happened once; GitHub documents private as the personal-account default, so the operator checks visibility.

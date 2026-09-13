@@ -14,7 +14,7 @@ resources:
 images:
   - name: etiqtech
     newName: ghcr.io/nave121/etiqtech
-    newTag: sha-fca384c   # pinned to a CI "publish" tag; bump per release ("main" also exists but floats)
+    newTag: sha-586cc30   # pinned to a CI "publish" tag; bump per release ("main" also exists but floats)
 patches:
   - path: deployment-patch.yaml
   - path: network-policy-patch.yaml
