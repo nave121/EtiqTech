@@ -39,7 +39,7 @@ Kustomize layout. Argo CD points at one overlay; nothing sensitive is in git.
 | `LLM_PROVIDER` | `anthropic` | `ollama` \| `openai` \| `anthropic`. |
 | `ETIQTECH_ALLOW_REMOTE_LLM` | `1` | Opt-in to non-local LLM hosts. Unset = refused. |
 | `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` | Secret / `claude-opus-5` | Anthropic provider. `ANTHROPIC_BASE_URL` optional. |
-| `OPENAI_API_KEY` / `OPENAI_MODEL` / `OPENAI_BASE_URL` | commented block | OpenAI-compatible provider. `OPENAI_MODEL` has no default. |
+| `OPENAI_API_KEY` / `OPENAI_MODEL` / `OPENAI_BASE_URL` | commented block | OpenAI-compatible provider. `OPENAI_MODEL` has no default. Against api.openai.com the client sends `max_completion_tokens` and no temperature; `OPENAI_PARAM_STYLE=legacy` forces the vLLM/LM Studio shape. |
 | `OLLAMA_BASE_URL` / `OLLAMA_MODEL` / `OLLAMA_NUM_CTX` | base values | Ignored unless `LLM_PROVIDER=ollama`. |
 | `LLM_TEMPERATURE` / `LLM_MAX_TOKENS` / `OLLAMA_TIMEOUT_SECONDS` | `0.2` / `8192` / `300` | Sampling and per-call timeout. Anthropic ignores sampling. |
 | `ETIQTECH_FEEDBACK` | `0` | Thumbs up/down store (SQLite, metadata only). `1` needs a PVC mounted at `/app/output`, otherwise it is wiped on restart. |
@@ -56,7 +56,8 @@ Kustomize layout. Argo CD points at one overlay; nothing sensitive is in git.
 kubectl apply -f argocd/application.yaml
 argocd app sync etiqtech && argocd app wait etiqtech --health
 kubectl -n etiqtech port-forward svc/etiqtech 4242:80 &
-curl -s localhost:4242/api/health      # expect law_loaded true, llm_enabled true, llm_local false, llm_remote_allowed true
+curl -s localhost:4242/api/health            # config: law_loaded true, llm_enabled true, llm_local false, llm_remote_allowed true
+curl -s 'localhost:4242/api/health?probe=llm' # one real call to the provider: llm_probe.ok must be true (status "degraded" otherwise)
 python scripts/browser_smoke.py http://localhost:4242 examples/head-to-head/1/bad.html   # through the tunnel URL once Access is up
 ```
 

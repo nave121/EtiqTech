@@ -345,8 +345,8 @@ def _build_final_result(
 
 
 def _theme_score_at_most(theme_value: Any, threshold: int) -> bool:
-    if not isinstance(theme_value, dict):
-        return False
+    if not isinstance(theme_value, dict) or theme_value.get("unavailable"):
+        return False  # no verdict at all is not a low verdict
     score = theme_value.get("score")
     return isinstance(score, int) and score <= threshold
 

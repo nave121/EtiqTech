@@ -137,7 +137,7 @@ def test_grounded_prompt_cites_sources_and_results_carry_refs(grounded_agent, mo
     assert any("cite it in the rationale as [G1]" in p and "Law and guidance grounding:" in p for p in prompts)
     assert not any("Law excerpt (trimmed)" in p for p in prompts), "the fixed law prefix is replaced when grounded"
     assert final["grounding_notice"] is None
-    assert not [e for e in events if e["type"] == "warning"]
+    assert not [e for e in events if e["type"] == "warning" and e.get("code") != "llm_unavailable"]  # fake stream is not JSON
 
 
 def test_grounding_degrades_with_visible_notice(monkeypatch, tmp_path):

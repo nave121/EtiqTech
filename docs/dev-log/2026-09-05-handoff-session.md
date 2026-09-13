@@ -453,3 +453,21 @@ is 3.14 in all three Python jobs so the tested interpreter is the shipped one. V
 venv: full suite green. Also from the review: gunicorn 26's control-socket error was log noise, serving was never at
 risk — the step 44 wording stands corrected. flask-limiter 4 API, Actions v7 majors, 3.14 deprecations: no findings.
 All 15 Dependabot PRs are closed (8 by Dependabot after 7cd6300, 6 superseded ones by hand, #20 by a5590e9).
+
+## Step 46 (2026-09-13) — first production run: every LLM call failed and the app hid it
+Razy's deploy agent ran a real protocol through the Argo deployment (OpenAI provider, model gpt-5.6-luna): all 12
+themes came back score 1 "inadequate" with rationale "LLM error: LLMError"; /api/health was green because it reports
+configuration only. Root cause verified from inside the pod: the model rejects `max_tokens` (wants
+`max_completion_tokens`) and rejects temperature 0.2 (default only); `_openai_payload` hardcoded both.
+Two fixes, both mine:
+1. `src/llm_clients.py`: parameter style auto-detected from the base URL — `api.openai.com` → `max_completion_tokens`,
+   no temperature; any other host → `max_tokens` + `temperature` (vLLM, LM Studio, llama.cpp). `OPENAI_PARAM_STYLE`
+   overrides. Tests: `tests/test_openai_param_style.py`.
+2. **Loud failure.** A fallback theme now carries `unavailable: true`; `_normalize_theme_payload` preserves it; the
+   stream emits `warning/llm_unavailable` per failed theme; both result shapes carry `llm_failures` (theme → reason);
+   Layer 3 no longer treats a failed theme as a weak one; the UI renders "AI review unavailable" (grey `n/a` chip, no
+   grade), keeps failed themes out of every count and average, and turns the status red with the reason.
+   `/api/health?probe=llm` makes one tiny real call ("Reply with OK", no protocol content) and reports `llm_probe` /
+   `status: degraded` so monitors can tell configured from answering. Tests: `tests/test_llm_unavailable.py`.
+Two existing tests asserted "no warnings" with fake non-JSON streams and were scoped to their own warning codes.
+Suite 837 passed / 2 skipped; browser smoke clean. Deploy agent: bump `newTag` to the sha this push publishes.

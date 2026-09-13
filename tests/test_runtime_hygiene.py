@@ -38,7 +38,7 @@ def test_layer2_stream_emits_budget_warning_once(monkeypatch):
     monkeypatch.setenv("LLM_MAX_TOKENS", "512")
     monkeypatch.setattr(llm_agent, "call_llm_stream", lambda *a, **k: iter(["{}"]))
     events = list(llm_agent.run_verification_stream({"header": {}, "experiments": []}, {"checklist": []}))
-    warnings = [e for e in events if e["type"] == "warning"]
+    warnings = [e for e in events if e["type"] == "warning" and e.get("code") == "context_budget"]
     assert len(warnings) == 1 and warnings[0]["code"] == "context_budget"
     assert events[-1]["type"] == "complete"
 

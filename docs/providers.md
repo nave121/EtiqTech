@@ -22,6 +22,13 @@ Notes
   parameters are sent (current Claude models reject them); `stop_reason: refusal` is surfaced as an
   LLM error for that theme, never silently swapped to another model.
 - `openai` does not pin a default model: set `OPENAI_MODEL` to whatever your server serves.
+- `openai` parameter style: against `api.openai.com` the payload sends `max_completion_tokens` and no
+  `temperature` (current OpenAI models reject `max_tokens` and any non-default temperature with HTTP 400);
+  against any other host it sends `max_tokens` + `temperature` as vLLM, LM Studio and llama.cpp expect.
+  `OPENAI_PARAM_STYLE=modern|legacy` overrides the auto-detection.
+- When a call fails, the theme is returned with `unavailable: true` and the result carries `llm_failures`
+  (theme → reason); the UI shows "AI review unavailable" instead of a grade. `GET /api/health?probe=llm`
+  makes one tiny real call and reports `llm_probe` — use it for monitors, the plain health is config only.
 - The UI lists only providers that are configured (credentials or base URL present) and marks
   remote ones; a remote provider without the opt-in flag is shown disabled.
 - Governance: choosing a remote provider is the deployment's decision and must be reflected in

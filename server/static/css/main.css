@@ -1727,3 +1727,13 @@ body {
 .fb-btn.chosen { border-color: #2f7d32; background: rgba(47,125,50,0.12); }
 .fb-btn:disabled { cursor: default; opacity: 0.7; }
 @media print { .finding-feedback { display: none !important; } }
+
+/* AI review unavailable: a failed LLM call is shown as "no verdict", never as a low grade */
+.result-chip.unavailable {
+    background: var(--text-muted, #6b7280) !important;
+    color: #fff;
+}
+.summary-ai-failed {
+    color: var(--status-error, #b91c1c);
+    font-weight: 600;
+}

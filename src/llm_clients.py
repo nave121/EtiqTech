@@ -506,14 +506,30 @@ def _openai_headers() -> Dict[str, str]:
     return {"Authorization": f"Bearer {key}"} if key else {}
 
 
+def _openai_param_style() -> str:
+    """'modern' = max_completion_tokens and no temperature (what api.openai.com models require;
+    reasoning models reject both max_tokens and a non-default temperature). 'legacy' = max_tokens
+    + temperature, what vLLM, LM Studio and llama.cpp servers still expect. Auto-detected from the
+    base URL host; OPENAI_PARAM_STYLE overrides."""
+    style = os.getenv("OPENAI_PARAM_STYLE", "auto").strip().lower()
+    if style in ("modern", "legacy"):
+        return style
+    host = (urlsplit(os.getenv(PROVIDERS["openai"]["base_url_env"], PROVIDERS["openai"]["base_url_default"])).hostname or "").lower()
+    return "modern" if host == "api.openai.com" or host.endswith(".openai.com") else "legacy"
+
+
 def _openai_payload(prompt: str, model: str, temperature: Optional[float], max_tokens: Optional[int], stream: bool) -> Dict[str, Any]:
     payload: Dict[str, Any] = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": temperature if temperature is not None else _env_float("LLM_TEMPERATURE", 0.2),
-        "max_tokens": max_tokens if max_tokens is not None else _env_int("LLM_MAX_TOKENS", 8192),
         "stream": stream,
     }
+    limit = max_tokens if max_tokens is not None else _env_int("LLM_MAX_TOKENS", 8192)
+    if _openai_param_style() == "modern":
+        payload["max_completion_tokens"] = limit  # temperature omitted: model default, the only value some models accept
+    else:
+        payload["max_tokens"] = limit
+        payload["temperature"] = temperature if temperature is not None else _env_float("LLM_TEMPERATURE", 0.2)
     if os.getenv("OPENAI_JSON_MODE", "").strip().lower() in ("1", "true", "yes"):
         payload["response_format"] = {"type": "json_object"}
     return payload

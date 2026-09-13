@@ -409,11 +409,20 @@
             inadequate: 'Inadequate',
             partially_adequate: 'Partially Adequate',
             adequate: 'Adequate',
+            unavailable: 'AI review unavailable',
         };
         return labelMap[normalized] || fallbackMap[fallbackScore] || 'Inadequate';
     }
 
+    function isUnavailable(result) {
+        return Boolean(result && result.unavailable);
+    }
+
     function getThemeGradeMeta(result) {
+        if (isUnavailable(result)) {
+            // No verdict at all. Never render this as a low grade.
+            return { score: null, color: 'var(--text-muted, #6b7280)', short: 'n/a', label: 'AI review unavailable' };
+        }
         const score = normalizeThemeScore(result);
         if (score === 3) {
             return { score, color: 'var(--status-pass)', short: '3/3', label: 'Adequate' };
@@ -862,11 +871,17 @@
         summaryStart.hidden = top.length === 0;
 
         // 4. AI review, only once a theme has finished
-        const themes = Object.keys(llmResults);
-        if (themes.length > 0) {
+        const allThemes = Object.keys(llmResults);
+        if (allThemes.length > 0) {
+            const failed = allThemes.filter((t) => isUnavailable(llmResults[t]));
+            const themes = allThemes.filter((t) => !isUnavailable(llmResults[t]));
             const adequate = themes.filter((t) => normalizeThemeScore(llmResults[t]) >= 2).length;
             const weak = themes.filter((t) => normalizeThemeScore(llmResults[t]) < 2);
-            let html = `<p class="summary-ai-line">AI review (advisory): ${adequate} of ${themes.length} topics look adequate.</p>`;
+            let html = '';
+            if (failed.length) {
+                html += `<p class="summary-ai-line summary-ai-failed">The AI reviewer did not answer for ${failed.length} of ${allThemes.length} topics (${escapeHtml(llmResults[failed[0]].rationale || 'error')}). Those topics have no grade below. The rule checks above are unaffected.</p>`;
+            }
+            if (themes.length) html += `<p class="summary-ai-line">AI review (advisory): ${adequate} of ${themes.length} topics look adequate.</p>`;
             if (weak.length) {
                 html += '<ul class="summary-ai-list">' + weak.map((t) => {
                     const score = getThemeGradeMeta(llmResults[t]).score;
@@ -1351,7 +1366,7 @@
     function addResultChip(theme, result) {
         const meta = getThemeGradeMeta(result);
         const chip = document.createElement('span');
-        chip.className = `result-chip ${meta.score >= 3 ? 'ok' : 'needs-fixes'}`;
+        chip.className = `result-chip ${meta.score === null ? 'unavailable' : meta.score >= 3 ? 'ok' : 'needs-fixes'}`;
         chip.textContent = `${meta.short} ${formatThemeName(theme).split(' ')[0]}`;
         chip.style.background = meta.color;
         llmResultsSummary.appendChild(chip);
@@ -1362,20 +1377,31 @@
         llmThinking.classList.remove('active');
         llmProgressFill.style.width = '100%';
 
-        // Count scores
-        const themes = data.result.themes || {};
-        const totalCount = Object.keys(themes).length;
-        const acceptableCount = Object.values(themes).filter(t => normalizeThemeScore(t) >= 2).length;
-        const totalScore = Object.values(themes).reduce((sum, t) => sum + normalizeThemeScore(t), 0);
+        // Count scores — failed themes are not verdicts and are kept out of every number
+        const allThemes = data.result.themes || {};
+        const failures = data.result.llm_failures || {};
+        const graded = Object.values(allThemes).filter(t => !isUnavailable(t));
+        const failedCount = Object.keys(failures).length;
+        const totalCount = graded.length;
+        const acceptableCount = graded.filter(t => normalizeThemeScore(t) >= 2).length;
+        const totalScore = graded.reduce((sum, t) => sum + normalizeThemeScore(t), 0);
         const averageScore = totalCount ? (totalScore / totalCount).toFixed(1) : '0.0';
 
         // Update summary card
-        llmSummary.textContent = `${averageScore}/3 avg`;
-
-        if (acceptableCount === totalCount) {
-            setLLMStatus('done', `All ${totalCount} topics look adequate.`);
+        if (failedCount && !totalCount) {
+            llmSummary.textContent = 'AI review failed';
+            const reason = Object.values(failures)[0] || 'error';
+            setLLMStatus('error', `The AI reviewer did not answer (${reason}). No topic was graded. The rule checks are unaffected and your report is ready to export.`);
+        } else if (failedCount) {
+            llmSummary.textContent = `${averageScore}/3 avg, ${failedCount} unavailable`;
+            setLLMStatus('error', `The AI reviewer failed on ${failedCount} of ${failedCount + totalCount} topics. Of the rest, ${acceptableCount} look adequate.`);
         } else {
-            setLLMStatus('done', `${acceptableCount} of ${totalCount} topics look adequate. ${totalCount - acceptableCount} need work.`);
+            llmSummary.textContent = `${averageScore}/3 avg`;
+            if (acceptableCount === totalCount) {
+                setLLMStatus('done', `All ${totalCount} topics look adequate.`);
+            } else {
+                setLLMStatus('done', `${acceptableCount} of ${totalCount} topics look adequate. ${totalCount - acceptableCount} need work.`);
+            }
         }
 
         // Hide LLM progress card after delay (export stays disabled until Layer 3 finishes)

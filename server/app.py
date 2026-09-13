@@ -21,7 +21,7 @@ from src import feedback
 from src.llm_agent import THEME_SPECS, law_loaded, run_verification_stream
 from src.rules import RULES
 from src.llm_clients import (
-    LLMError, PROVIDERS, local_first_status, ollama_base_url, provider_configured, provider_default_model,
+    LLMError, PROVIDERS, call_llm, local_first_status, ollama_base_url, provider_configured, provider_default_model,
 )
 from src.llm_layer3 import run_human_eye_stream
 
@@ -275,15 +275,28 @@ def analyze():
 
 @app.route('/api/health', methods=['GET'])
 def health():
-    """Health check. law_loaded=false means the runtime law corpus is missing (see resources/law/)."""
+    """Health check. law_loaded=false means the runtime law corpus is missing (see resources/law/).
+
+    The plain check reports configuration only. `?probe=llm` also makes one tiny real call to the
+    configured provider ("Reply with OK", no protocol content) so a monitor can tell "configured"
+    from "answering" — the 2026-09-13 deploy was green here while every LLM call failed.
+    """
     target = local_first_status()
-    return jsonify({
+    body = {
         'status': 'ok',
         'llm_enabled': not llm_disabled(),
         'law_loaded': law_loaded(),
         'llm_local': not target['remote'],
         'llm_remote_allowed': target['remote_allowed'],
-    })
+    }
+    if request.args.get('probe') == 'llm' and not llm_disabled():
+        try:
+            call_llm("Reply with the single word OK.", max_tokens=8)
+            body['llm_probe'] = {'ok': True}
+        except Exception as e:  # never the body: status codes/type names only, like every other path
+            body['llm_probe'] = {'ok': False, 'error': type(e).__name__}
+            body['status'] = 'degraded'
+    return jsonify(body)
 
 
 # Store analysis results temporarily for LLM verification.

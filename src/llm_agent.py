@@ -455,9 +455,13 @@ def _normalize_label(value: Any, score: int) -> str:
 
 
 def _build_fallback_theme(theme_spec: Dict[str, Any], rationale: str) -> Dict[str, Any]:
+    """No usable LLM verdict for this theme. `unavailable` marks it so the UI shows "AI review
+    unavailable" instead of a grade and the summary excludes it: an LLM failure must never look
+    like a verdict. The numeric score stays for consumers that expect one."""
     return {
         "score": 1,
         "label": _score_to_label(1),
+        "unavailable": True,
         "rationale": rationale,
         "sub_questions": [
             {
@@ -471,9 +475,17 @@ def _build_fallback_theme(theme_spec: Dict[str, Any], rationale: str) -> Dict[st
     }
 
 
+def llm_failures(themes: Dict[str, Any]) -> Dict[str, str]:
+    """theme -> reason, for every theme whose verdict is a fallback rather than a model answer."""
+    return {k: str(v.get("rationale") or "unavailable") for k, v in (themes or {}).items()
+            if isinstance(v, dict) and v.get("unavailable")}
+
+
 def _normalize_theme_payload(theme_spec: Dict[str, Any], theme_payload: Any, fallback_rationale: str) -> Dict[str, Any]:
     if not isinstance(theme_payload, dict):
         return _build_fallback_theme(theme_spec, fallback_rationale)
+    if theme_payload.get("unavailable"):  # already a fallback (LLM error): keep the flag and its reason
+        return _build_fallback_theme(theme_spec, str(theme_payload.get("rationale") or fallback_rationale))
 
     score = _normalize_score(theme_payload.get("score"))
     rationale = str(theme_payload.get("rationale") or fallback_rationale).strip()
@@ -1137,6 +1149,7 @@ def run_verification(
         "checklist_items": [],  # keep empty; this flow focuses on thematic verdicts
         "questions": questions,
         "grounding_notice": grounding_notice,
+        "llm_failures": llm_failures(themes),
     }
 
 
@@ -1341,6 +1354,13 @@ def run_verification_stream(
             "result": themes[theme_key],
             "skipped": False,
         }
+        if themes[theme_key].get("unavailable"):
+            yield {
+                "type": "warning",
+                "code": "llm_unavailable",
+                "theme": theme_key,
+                "message": f"AI review unavailable for '{theme_spec['label']}': {themes[theme_key]['rationale']}",
+            }
 
     # Final result
     final_result = {
@@ -1355,6 +1375,7 @@ def run_verification_stream(
         "checklist_items": [],
         "questions": questions,
         "grounding_notice": grounding_notice,
+        "llm_failures": llm_failures(themes),
     }
 
     yield {
