@@ -75,6 +75,12 @@ The closing gate now includes **loading the page in a browser**: `python scripts
 must print a verdict and a clean console. Reason: 6ba084a shipped a JavaScript syntax error that killed the upload
 while 814 tests, Bandit, pip-audit and CI were all green (step 37). `tests/test_static_js_syntax.py` guards the parse.
 
+## Deployment (2026-09-13)
+Argo CD scaffold on main: `argocd/application.yaml` → `k8s/overlays/prod-remote` (Anthropic by default). CI `publish` job
+pushes `ghcr.io/nave121/etiqtech:{main,sha-*}`. Razy owns: Secrets (`etiqtech-app`, `etiqtech-llm`), Cloudflare
+Tunnel/Access, GHCR package visibility, setting `ALLOWED_ORIGINS`. Runbook: `k8s/README.md`. Old name `ethicchecker`
+removed everywhere but this log.
+
 ## Remote
 Pushed to origin/main 2026-09-06 (cdfc44f..2603558). CI on main **green** for the first time (run 34059532894); the
 first push was red on a sprint test that assumed the optional anthropic SDK was installed — fixed in 2603558 by running

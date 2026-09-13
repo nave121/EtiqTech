@@ -1,4 +1,4 @@
-# In-cluster Ollama: the local-first default that k8s/ethicchecker.yaml targets.
+# In-cluster Ollama: the local-first default that k8s/app.yaml targets.
 # Label app=ollama is what the NetworkPolicy egress rule matches.
 # Size the node/GPU for your model; qwen3.5:35b wants ~24 GB of VRAM/unified memory.
 apiVersion: v1

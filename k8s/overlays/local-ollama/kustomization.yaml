@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Privacy-complete variant: base + an in-cluster Ollama on a GPU node (~24 GB VRAM for qwen3.5:35b).
+# After sync: kubectl -n etiqtech exec deploy/ollama -- ollama pull qwen3.5:35b
+resources:
+  - ../../base
+  - ollama.yaml

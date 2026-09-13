@@ -15,18 +15,18 @@
 #
 #  Apply as a strategic-merge patch on top of the base:
 #    kubectl create secret generic ollama-cloud --from-literal=api-key=<key>
-#    kubectl apply -f k8s/ethicchecker.yaml
-#    kubectl patch deployment ethicchecker --patch-file k8s/overlays/remote-llm/ethicchecker-remote-llm.yaml
+#    kubectl apply -f k8s/app.yaml
+#    kubectl patch deployment etiqtech --patch-file k8s/overlays/remote-llm/deployment-patch.yaml
 # =============================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ethicchecker
+  name: etiqtech
 spec:
   template:
     spec:
       containers:
-        - name: ethicchecker
+        - name: etiqtech
           env:
             - name: OLLAMA_BASE_URL
               value: "https://ollama.com"

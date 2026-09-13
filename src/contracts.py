@@ -1,5 +1,5 @@
 """
-Inter-stage data contracts for the EthicChecker pipeline.
+Inter-stage data contracts for the EtiqTech pipeline.
 
 These Pydantic models describe the shape of data passed between pipeline stages:
 

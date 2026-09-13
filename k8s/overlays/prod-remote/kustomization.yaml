@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Production, remote LLM (Anthropic by default, OpenAI-compatible by swapping the commented block
+# in deployment-patch.yaml). Protocol text is sent to the provider: this is the deployment's
+# informed opt-in (ETIQTECH_ALLOW_REMOTE_LLM=1) and the app logs a WARNING at startup.
+#
+# Before the first sync, create out of band (never in git):
+#   Secret etiqtech-app   key SECRET_KEY        (python -c "import secrets;print(secrets.token_urlsafe(48))")
+#   Secret etiqtech-llm   key ANTHROPIC_API_KEY  (or OPENAI_API_KEY for the OpenAI block)
+# and set ALLOWED_ORIGINS below to the exact public origin (scheme + host, no path).
+namespace: etiqtech
+resources:
+  - ../../base
+images:
+  - name: etiqtech
+    newName: ghcr.io/nave121/etiqtech
+    newTag: main   # pin to a sha-<short> tag from the CI "publish" job for reproducible rollouts
+patches:
+  - path: deployment-patch.yaml
+  - path: network-policy-patch.yaml

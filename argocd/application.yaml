@@ -1,0 +1,29 @@
+# Argo CD Application for EtiqTech, production overlay (remote LLM).
+# Apply once in the Argo CD namespace; Argo then owns k8s/overlays/prod-remote on main.
+#   kubectl apply -f argocd/application.yaml
+# Prerequisites (out of band, see k8s/README.md): namespace secrets etiqtech-app and etiqtech-llm,
+# ALLOWED_ORIGINS set to the real public origin in the overlay, Cloudflare Access (or equivalent)
+# in front of Service etiqtech:80.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: etiqtech
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/nave121/EtiqTech
+    targetRevision: main
+    path: k8s/overlays/prod-remote
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: etiqtech
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Ollama Cloud variant. Read the header of deployment-patch.yaml first: protocol text
+# leaves the cluster. Needs Secret ollama-cloud (key api-key) created out of band, and the
+# egress relaxation in ../prod-remote/network-policy-patch.yaml (copy it here if you use this).
+resources:
+  - ../../base
+patches:
+  - path: deployment-patch.yaml

@@ -382,3 +382,16 @@ tests at all before). Also from the review: an unscoped `text-align: right` on p
 LTR shell → `text-align: start`; `browser_smoke.py` now waits for Chrome and deletes its temp profile (two leaked
 profiles from earlier runs removed). Dead template `server/templates/index.html` still says rtl; no route renders it.
 Suite 824 passed / 2 skipped; browser smoke clean on the new build.
+
+## Step 39 (2026-09-13) — Argo CD deployment scaffold, remote LLM, old name gone
+Razy: deploy via Argo; he owns secrets and ingress, wants remote Anthropic/OpenAI and GHCR. Built, not applied:
+`k8s/` is now kustomize — `base/` (app, rbac, local-first NetworkPolicy), `overlays/local-ollama` (GPU, privacy-complete),
+`overlays/remote-llm` (Ollama Cloud, unchanged semantics), `overlays/prod-remote` (the Argo target: Anthropic default with
+an OpenAI block commented, Secrets `etiqtech-app`/`etiqtech-llm` by reference, `PROXY_FIX=1` + `ALLOWED_ORIGINS`
+placeholder, feedback store off, egress opened to 443 non-private, image `ghcr.io/nave121/etiqtech`). `argocd/application.yaml`
+points at that overlay with automated prune/self-heal. CI gains a `publish` job (main only, after the four gates) pushing
+`sha-<short>` and `main` tags to GHCR with the workflow token. `k8s/README.md` is the operator document: prerequisites,
+Secret commands, every env var, deploy and verification commands. All four kustomize targets render with kubectl.
+Razy mid-build: "ethicchecker — this was the old name!" Renamed every k8s object, file and the Argo app to `etiqtech`
+(plus one docstring in src/contracts.py). Nothing was deployed yet, so no selector churn. Repo-wide grep clean.
+Not done (his lane, documented): Secrets, Cloudflare Tunnel/Access, package visibility on GHCR, the real `ALLOWED_ORIGINS`.

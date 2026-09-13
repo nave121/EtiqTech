@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ethicchecker
+  name: etiqtech
   labels:
-    app: ethicchecker
+    app: etiqtech
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ethicchecker
+      app: etiqtech
   template:
     metadata:
       labels:
-        app: ethicchecker
+        app: etiqtech
     spec:
-      serviceAccountName: ethicchecker
+      serviceAccountName: etiqtech
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 1000
       containers:
-        - name: ethicchecker
-          image: ethicchecker:local  # Replace with your registry image
+        - name: etiqtech
+          image: etiqtech:local  # Replace with your registry image
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
@@ -87,10 +87,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ethicchecker
+  name: etiqtech
 spec:
   selector:
-    app: ethicchecker
+    app: etiqtech
   ports:
     - port: 80
       targetPort: 4242

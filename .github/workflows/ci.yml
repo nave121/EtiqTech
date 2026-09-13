@@ -87,3 +87,39 @@ jobs:
             echo 'law warning present in container logs'; exit 1
           fi
           docker rm -f etiqtech
+
+  publish:
+    # Push the image Argo CD deploys. Only on main, only after tests, security, audit and the
+    # image check pass. Tags: sha-<short> (pin this in k8s/overlays/prod-remote) and main.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test, security, audit, docker]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/etiqtech
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=main
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

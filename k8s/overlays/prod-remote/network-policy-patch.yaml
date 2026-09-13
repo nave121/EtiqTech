@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: etiqtech-netpolicy
+spec:
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+    # The remote LLM provider over HTTPS. Provider IP ranges change, so this allows 443 to any
+    # non-private address; the app's own gate (ETIQTECH_ALLOW_REMOTE_LLM) and the fixed base URL
+    # decide where it actually connects. Tighten to the provider's published ranges if your CNI
+    # supports FQDN policies (Cilium, Calico Enterprise).
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
