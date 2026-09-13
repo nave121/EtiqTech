@@ -414,3 +414,10 @@ jobs for 11+ minutes (GitHub-side; status page green); run 34748953890 ran: four
 side: the setting changed on a different repo/account, or a pre-existing `etiqtech` package under nave121 not linked to
 this repository (registry answers 401 to anonymous pulls, so it is either private or absent — cannot tell from here).
 Fallback wired: the login step uses `secrets.GHCR_TOKEN` (classic PAT, write:packages) when present, else GITHUB_TOKEN.
+
+## Step 42 (2026-09-13) — image published
+Razy re-authenticated gh as nave121 and added package scopes. Found two private container packages from 2026-03-21,
+`etiqtech` and `ethicchecker`, linked to no repository — GHCR refuses a workflow token pushing into an unlinked package,
+which explains every `write_package` denial (the workflow-permission setting was already `write`). With his OK both
+were deleted via the API; the next run (34763184075) went fully green and created `ghcr.io/nave121/etiqtech` linked to
+nave121/EtiqTech, public, tags `sha-fca384c` and `main`. Overlay pinned to `sha-fca384c`; README corrected.
