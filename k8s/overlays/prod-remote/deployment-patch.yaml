@@ -17,32 +17,34 @@ spec:
             - name: PROXY_FIX              # behind Cloudflare / an ingress: rate limits per client, not per proxy
               value: "1"
             - name: ALLOWED_ORIGINS        # REQUIRED with PROXY_FIX or every upload is refused as cross-site
-              value: "https://etiq.example.org"
+              # אטיק-טק.כאוס.ישראל in punycode: the Origin header is ASCII-only, so the
+              # Unicode form would never match. Keep both in sync if the hostname changes.
+              value: "https://xn----zhcybd8fc.xn--4dbkq0a.xn--4dbrk0ce"
             - name: LOG_LEVEL
               value: "INFO"
             - name: ETIQTECH_FEEDBACK      # thumbs up/down store lives on emptyDir here; "1" + a PVC on /app/output if you want it kept
               value: "0"
-            # --- LLM: Anthropic (default) ---
+            # --- LLM: OpenAI ---
             - name: LLM_PROVIDER
-              value: "anthropic"
+              value: "openai"
             - name: ETIQTECH_ALLOW_REMOTE_LLM   # the informed opt-in; protocol text goes to the provider
               value: "1"
-            - name: ANTHROPIC_API_KEY
+            - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: etiqtech-llm
-                  key: ANTHROPIC_API_KEY
-            - name: ANTHROPIC_MODEL
-              value: "claude-opus-5"
-            # --- LLM: OpenAI-compatible instead — replace the Anthropic block with: ---
+                  key: OPENAI_API_KEY
+            - name: OPENAI_MODEL           # required, no default
+              value: "gpt-5.6-luna"
+            # - name: OPENAI_BASE_URL      # default https://api.openai.com/v1; point at vLLM/LM Studio for a private server
+            #   value: "https://api.openai.com/v1"
+            # --- LLM: Anthropic instead — replace the OpenAI block with: ---
             # - name: LLM_PROVIDER
-            #   value: "openai"
+            #   value: "anthropic"
             # - name: ETIQTECH_ALLOW_REMOTE_LLM
             #   value: "1"
-            # - name: OPENAI_API_KEY
-            #   valueFrom: {secretKeyRef: {name: etiqtech-llm, key: OPENAI_API_KEY}}
-            # - name: OPENAI_MODEL          # required, no default
-            #   value: "gpt-5"
-            # - name: OPENAI_BASE_URL       # default https://api.openai.com/v1; point at vLLM/LM Studio for a private server
-            #   value: "https://api.openai.com/v1"
+            # - name: ANTHROPIC_API_KEY
+            #   valueFrom: {secretKeyRef: {name: etiqtech-llm, key: ANTHROPIC_API_KEY}}
+            # - name: ANTHROPIC_MODEL
+            #   value: "claude-opus-5"
             # The base's OLLAMA_* values stay harmless when LLM_PROVIDER is not ollama.
