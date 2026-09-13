@@ -471,3 +471,21 @@ Two fixes, both mine:
    `status: degraded` so monitors can tell configured from answering. Tests: `tests/test_llm_unavailable.py`.
 Two existing tests asserted "no warnings" with fake non-JSON streams and were scoped to their own warning codes.
 Suite 837 passed / 2 skipped; browser smoke clean. Deploy agent: bump `newTag` to the sha this push publishes.
+
+## Step 47 (2026-09-13) — review of f92079c: the flag had not reached every render path
+Sonnet traced the `unavailable` contract into the UI and found three places that still printed a grade for a failed
+theme: the detail panel ("null of 3: Inadequate"), the section badge / PDF print box (amber, "[n/a Inadequate]") and
+the printed average (null counted as 0). Also: sub-questions kept score 1 / "inadequate"; the model's own JSON could
+set `unavailable` (a prompt injected through the protocol could suppress Layer 3 that way); a pass-2 failure threw
+away a good pass-1 verdict; `/api/health?probe=llm` had no rate limit beyond the 60/min default. All fixed:
+- `label` on fallback themes and sub-questions is the literal `"unavailable"`; contracts widened accordingly, plus
+  optional `unavailable`, `reconciled`, `llm_failures`.
+- The flag is trusted only on dicts this module built (`PreNormalized` sentinel type); `_normalize_theme_payload`
+  rebuilds anything from the model, so an injected key is dropped (test).
+- Pass-2 failure keeps the blind-pass verdict, appends the reason to the rationale, sets `reconciled: false`, and the
+  stream emits `warning/llm_reconcile_unavailable` (test). Fallback wording no longer says "defaulting to inadequate".
+- UI: print summary, detail panel and section/print badges gate on `isUnavailable`; grey `unavailable` class for the
+  print box; failed themes excluded from the printed average.
+- `/api/health?probe=llm` limited to 2/min via `exempt_when` on the probe query only; plain health unaffected (test).
+- `OPENAI_BASE_URL` without a scheme now logs a warning (would silently pick legacy parameters).
+Suite 841 passed / 2 skipped; browser smoke clean.

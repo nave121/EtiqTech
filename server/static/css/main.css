@@ -1737,3 +1737,9 @@ body {
     color: var(--status-error, #b91c1c);
     font-weight: 600;
 }
+.print-llm-box.unavailable,
+.llm-verdict-badge.unavailable {
+    background-color: #e5e7eb;
+    border-left: 3px solid #6b7280;
+    color: #374151;
+}

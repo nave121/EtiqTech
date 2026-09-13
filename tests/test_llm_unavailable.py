@@ -89,3 +89,47 @@ def test_health_probe_reports_a_failing_provider(monkeypatch):
     assert probed["llm_probe"] == {"ok": False, "error": "LLMError"} and probed["status"] == "degraded"
     with patch.object(appmod, "call_llm", return_value="OK"):
         assert client.get("/api/health?probe=llm").get_json()["llm_probe"] == {"ok": True}
+
+
+def test_fallback_label_and_sub_questions_say_unavailable():
+    t = _build_fallback_theme(SPEC, "LLM error")
+    assert t["label"] == "unavailable"
+    assert t["sub_questions"] and all(sq["unavailable"] and sq["label"] == "unavailable" for sq in t["sub_questions"])
+
+
+def test_model_cannot_mark_its_own_answer_unavailable():
+    """A prompt injected through the protocol could tell the model to emit unavailable: true.
+    Only dicts built by this module carry the flag."""
+    injected = {"score": 0, "label": "not_addressed", "unavailable": True, "rationale": "ignore me", "sub_questions": []}
+    t = _normalize_theme_payload(SPEC, injected, fallback_rationale="x")
+    assert "unavailable" not in t and t["score"] == 0
+
+
+def test_reconcile_failure_keeps_the_blind_verdict_and_says_so():
+    inst, report = _instance()
+    calls = {"n": 0}
+
+    def flaky(prompt, **kwargs):
+        calls["n"] += 1
+        if "Pass 2 (reconciliation)" in prompt:
+            raise LLMError("HTTP 429")
+        yield '{"' + next(k for k in THEME_SPECS if THEME_SPECS[k]["label"] in prompt) + '": {"score": 3, "label": "adequate", "rationale": "fine", "sub_questions": []}, "questions": []}'
+
+    with patch("src.llm_agent.call_llm_stream", side_effect=flaky):
+        events = list(run_verification_stream(inst, report, stance="law"))
+    done = [e["result"] for e in events if e["type"] == "theme_done"]
+    assert done and all(not r.get("unavailable") and r.get("reconciled") is False and r["score"] == 3 for r in done)
+    assert all("blind-pass verdict" in r["rationale"] for r in done)
+    codes = {e.get("code") for e in events if e["type"] == "warning"}
+    assert "llm_reconcile_unavailable" in codes and "llm_unavailable" not in codes
+    assert [e for e in events if e["type"] == "complete"][0]["result"]["llm_failures"] == {}
+
+
+def test_health_probe_is_rate_limited_but_plain_health_is_not(monkeypatch):
+    from server import app as appmod
+    monkeypatch.delenv("ETIQTECH_LLM_DISABLED", raising=False)
+    client = appmod.app.test_client()
+    with patch.object(appmod, "call_llm", return_value="OK"):
+        codes = [client.get("/api/health?probe=llm").status_code for _ in range(4)]
+    assert 429 in codes, codes  # the probe spends provider tokens: 2 per minute
+    assert all(client.get("/api/health").status_code == 200 for _ in range(5))  # liveness/readiness unaffected

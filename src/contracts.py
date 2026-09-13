@@ -79,8 +79,9 @@ class LinterResult(BaseModel):
 class ThemeSubQuestionResult(BaseModel):
     question: str = Field(min_length=1)
     score: Literal[0, 1, 2, 3]
-    label: Literal["not_addressed", "inadequate", "partially_adequate", "adequate"]
+    label: Literal["not_addressed", "inadequate", "partially_adequate", "adequate", "unavailable"]
     rationale: str = Field(min_length=1)
+    unavailable: bool = False  # no model verdict; score is a placeholder, label says "unavailable"
 
 
 class GroundingRef(BaseModel):
@@ -96,18 +97,20 @@ class GroundingRef(BaseModel):
 
 class ThemeVerdict(BaseModel):
     score: Literal[0, 1, 2, 3]
-    label: Literal["not_addressed", "inadequate", "partially_adequate", "adequate"]
+    label: Literal["not_addressed", "inadequate", "partially_adequate", "adequate", "unavailable"]
     rationale: str = Field(min_length=1)
     sub_questions: list[ThemeSubQuestionResult] = Field(default_factory=list)
     grounding: list[GroundingRef] = Field(default_factory=list)
+    unavailable: bool = False        # the LLM call failed / returned nothing usable: not a verdict
+    reconciled: Optional[bool] = None  # False when pass 2 failed and this is the blind-pass verdict
 
 
 class ThemeMetadata(BaseModel):
     pass1_changed: bool
     pass1_score: Literal[0, 1, 2, 3]
     final_score: Literal[0, 1, 2, 3]
-    pass1_label: Literal["not_addressed", "inadequate", "partially_adequate", "adequate"]
-    final_label: Literal["not_addressed", "inadequate", "partially_adequate", "adequate"]
+    pass1_label: Literal["not_addressed", "inadequate", "partially_adequate", "adequate", "unavailable"]
+    final_label: Literal["not_addressed", "inadequate", "partially_adequate", "adequate", "unavailable"]
     new_questions_added: bool
 
 
@@ -131,6 +134,7 @@ class VerifierResult(BaseModel):
     questions: list[dict[str, Any]]
     checklist_items: list[dict[str, Any]] = Field(default_factory=list)
     grounding_notice: Optional[str] = None  # set when retrieval degraded (lexical) or was unavailable
+    llm_failures: dict[str, str] = Field(default_factory=dict)  # theme -> reason, for every unavailable theme
 
 
 # ---------------------------------------------------------------------------

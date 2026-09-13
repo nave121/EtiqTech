@@ -454,25 +454,48 @@ def _normalize_label(value: Any, score: int) -> str:
     return _score_to_label(score)
 
 
+class PreNormalized(dict):
+    """A theme dict built by this module (not parsed from model output). _normalize_theme_payload
+    passes it through untouched. Model JSON can never be an instance of this class, so a model —
+    or a prompt injected through the reviewed protocol — cannot mark its own answer 'unavailable'
+    or 'unreconciled'."""
+
+
+class FallbackTheme(PreNormalized):
+    """No usable LLM verdict for this theme."""
+
+
 def _build_fallback_theme(theme_spec: Dict[str, Any], rationale: str) -> Dict[str, Any]:
-    """No usable LLM verdict for this theme. `unavailable` marks it so the UI shows "AI review
-    unavailable" instead of a grade and the summary excludes it: an LLM failure must never look
-    like a verdict. The numeric score stays for consumers that expect one."""
-    return {
+    """No usable LLM verdict. `unavailable` makes the UI show "AI review unavailable" instead of a
+    grade and keeps the theme out of every count: an LLM failure must never look like a verdict.
+    The numeric score stays only for consumers that expect an int; label says what it is."""
+    return FallbackTheme({
         "score": 1,
-        "label": _score_to_label(1),
+        "label": "unavailable",
         "unavailable": True,
         "rationale": rationale,
         "sub_questions": [
             {
                 "question": question,
                 "score": 1,
-                "label": _score_to_label(1),
-                "rationale": "LLM response was unavailable, so this sub-question defaults to inadequate for manual review.",
+                "label": "unavailable",
+                "unavailable": True,
+                "rationale": "No AI verdict for this sub-question (the model call failed or returned nothing usable).",
             }
             for question in theme_spec.get("sub_questions") or []
         ],
-    }
+    })
+
+
+def _pass1_or_fallback(theme_spec: Dict[str, Any], pass1_theme: Dict[str, Any], reason: str) -> Dict[str, Any]:
+    """Pass 2 (reconciliation with the rule checks) failed. If pass 1 produced a real verdict, show
+    it and say it is unreconciled rather than throwing a good answer away; otherwise no verdict."""
+    if isinstance(pass1_theme, dict) and not pass1_theme.get("unavailable"):
+        kept = PreNormalized(dict(pass1_theme))
+        kept["reconciled"] = False
+        kept["rationale"] = f"{kept.get('rationale') or ''} (Reconciliation with the rule checks failed: {reason}; this is the blind-pass verdict.)".strip()
+        return kept
+    return _build_fallback_theme(theme_spec, f"LLM error during reconciliation: {reason}")
 
 
 def llm_failures(themes: Dict[str, Any]) -> Dict[str, str]:
@@ -484,8 +507,8 @@ def llm_failures(themes: Dict[str, Any]) -> Dict[str, str]:
 def _normalize_theme_payload(theme_spec: Dict[str, Any], theme_payload: Any, fallback_rationale: str) -> Dict[str, Any]:
     if not isinstance(theme_payload, dict):
         return _build_fallback_theme(theme_spec, fallback_rationale)
-    if theme_payload.get("unavailable"):  # already a fallback (LLM error): keep the flag and its reason
-        return _build_fallback_theme(theme_spec, str(theme_payload.get("rationale") or fallback_rationale))
+    if isinstance(theme_payload, PreNormalized):  # built here, not by the model: keep as is
+        return theme_payload
 
     score = _normalize_score(theme_payload.get("score"))
     rationale = str(theme_payload.get("rationale") or fallback_rationale).strip()
@@ -1038,7 +1061,7 @@ def run_verification(
             grounding_hits=hits,
         )
         fallback_rationale = (
-            "LLM did not return a usable graded result; defaulting to inadequate."
+            "No AI verdict: the model did not return a usable graded result."
         )
         try:
             if use_two_step:
@@ -1082,7 +1105,7 @@ def run_verification(
             grounding_hits=hits,
         )
         reconcile_fallback = (
-            "LLM did not return a usable reconciled graded result; defaulting to inadequate."
+            "No AI verdict: the model did not return a usable reconciled result."
         )
         try:
             if use_two_step:
@@ -1100,9 +1123,9 @@ def run_verification(
                     temperature=temperature,
                 )
             reconcile_parsed = parse_llm_json(raw)
-        except Exception:
+        except Exception as e:
             reconcile_parsed = {
-                theme_key: _build_fallback_theme(theme_spec, reconcile_fallback),
+                theme_key: _pass1_or_fallback(theme_spec, pass1_themes[theme_key], type(e).__name__),
                 "questions": [],
             }
 
@@ -1218,7 +1241,7 @@ def run_verification_stream(
         # Stream tokens (or fall back to two-step non-streaming if OLLAMA_TWO_STEP=1)
         full_response = ""
         use_two_step = os.getenv("OLLAMA_TWO_STEP", "").lower() in ("1", "true")
-        fallback_rationale = "LLM streaming failed; defaulting to inadequate for manual review."
+        fallback_rationale = "No AI verdict: the model call failed."
         try:
             if use_two_step:
                 # Two-step does not support streaming; emit full response as a single token.
@@ -1281,7 +1304,7 @@ def run_verification_stream(
 
         full_response = ""
         reconcile_fallback = (
-            "LLM streaming failed during reconciliation; defaulting to inadequate for manual review."
+            "No AI verdict: the model call failed during reconciliation."
         )
         try:
             if use_two_step:
@@ -1313,10 +1336,7 @@ def run_verification_stream(
             reconcile_parsed = parse_llm_json(full_response)
         except Exception as e:
             reconcile_parsed = {
-                theme_key: _build_fallback_theme(
-                    theme_spec,
-                    f"LLM error: {type(e).__name__}",
-                ),
+                theme_key: _pass1_or_fallback(theme_spec, pass1_themes[theme_key], type(e).__name__),
                 "questions": [],
             }
 
@@ -1360,6 +1380,13 @@ def run_verification_stream(
                 "code": "llm_unavailable",
                 "theme": theme_key,
                 "message": f"AI review unavailable for '{theme_spec['label']}': {themes[theme_key]['rationale']}",
+            }
+        elif themes[theme_key].get("reconciled") is False:
+            yield {
+                "type": "warning",
+                "code": "llm_reconcile_unavailable",
+                "theme": theme_key,
+                "message": f"'{theme_spec['label']}': showing the blind-pass verdict; reconciliation with the rule checks failed.",
             }
 
     # Final result

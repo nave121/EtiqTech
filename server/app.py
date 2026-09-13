@@ -274,6 +274,7 @@ def analyze():
 
 
 @app.route('/api/health', methods=['GET'])
+@limiter.limit("2 per minute", exempt_when=lambda: request.args.get('probe') != 'llm')  # the probe spends provider tokens
 def health():
     """Health check. law_loaded=false means the runtime law corpus is missing (see resources/law/).
 

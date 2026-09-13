@@ -514,7 +514,10 @@ def _openai_param_style() -> str:
     style = os.getenv("OPENAI_PARAM_STYLE", "auto").strip().lower()
     if style in ("modern", "legacy"):
         return style
-    host = (urlsplit(os.getenv(PROVIDERS["openai"]["base_url_env"], PROVIDERS["openai"]["base_url_default"])).hostname or "").lower()
+    raw = os.getenv(PROVIDERS["openai"]["base_url_env"], PROVIDERS["openai"]["base_url_default"])
+    host = (urlsplit(raw).hostname or "").lower()
+    if not host:
+        logger.warning("OPENAI_BASE_URL has no parsable host (missing scheme?); using legacy parameters")
     return "modern" if host == "api.openai.com" or host.endswith(".openai.com") else "legacy"
 
 

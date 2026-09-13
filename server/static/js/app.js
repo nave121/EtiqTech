@@ -295,17 +295,19 @@
         // LLM theme scores
         const themeKeys = Object.keys(llmResults);
         if (themeKeys.length > 0) {
-            html += `<br><br><strong>LLM Review (${themeKeys.length} themes):</strong><br>`;
+            const gradedKeys = themeKeys.filter((t) => !isUnavailable(llmResults[t]));
+            const failedKeys = themeKeys.filter((t) => isUnavailable(llmResults[t]));
+            html += `<br><br><strong>LLM Review (${gradedKeys.length} of ${themeKeys.length} themes graded):</strong><br>`;
+            if (failedKeys.length) html += `<em>AI review unavailable for ${failedKeys.length} theme(s); they carry no grade and are not counted.</em><br>`;
             let totalScore = 0;
             themeKeys.forEach(theme => {
                 const result = llmResults[theme];
                 const meta = getThemeGradeMeta(result);
-                const scoreLabel = formatGradeLabel(result.label, meta.score);
-                totalScore += meta.score;
+                const scoreLabel = isUnavailable(result) ? meta.label : formatGradeLabel(result.label, meta.score);
+                if (!isUnavailable(result)) totalScore += meta.score;
                 html += `&bull; ${escapeHtml(formatThemeName(theme))}: ${meta.short} ${escapeHtml(scoreLabel)}<br>`;
             });
-            const avg = (totalScore / themeKeys.length).toFixed(1);
-            html += `<strong>Average: ${avg}/3</strong>`;
+            if (gradedKeys.length) html += `<strong>Average: ${(totalScore / gradedKeys.length).toFixed(1)}/3</strong>`;
         }
 
         // Layer 3 results
@@ -1005,7 +1007,7 @@
         let html = `
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
                 <span style="padding: 2px 10px; font-size: 0.6875rem; font-weight: 600; border-radius: 4px; background: ${meta.color}; color: white;">
-                    ${meta.score} of 3: ${escapeHtml(scoreLabel)}
+                    ${isUnavailable(result) ? escapeHtml(meta.label) : `${meta.score} of 3: ${escapeHtml(scoreLabel)}`}
                 </span>
             </div>
             <div class="detail-meta">${escapeHtml(theme)} · advisory · ${TOTAL_LLM_THEMES} topics</div>
@@ -1307,11 +1309,11 @@
         if (section.querySelector(`.llm-verdict-badge[data-theme="${theme}"]`)) return;
 
         const meta = getThemeGradeMeta(result);
-        const scoreLabel = formatGradeLabel(result.label, meta.score);
+        const scoreLabel = isUnavailable(result) ? meta.label : formatGradeLabel(result.label, meta.score);
 
         // Add LLM styling only if no lint issues
         if (!section.classList.contains('has-error') && !section.classList.contains('has-warning')) {
-            if (meta.score >= 3) {
+            if (meta.score !== null && meta.score >= 3) {
                 section.classList.add('has-llm-ok');
             } else {
                 section.classList.add('has-llm-warning');
@@ -1322,7 +1324,7 @@
         const existingBadges = section.querySelectorAll('.llm-verdict-badge').length;
         const badge = document.createElement('button');
         badge.type = 'button';
-        badge.className = `llm-verdict-badge ${meta.score >= 3 ? 'ok' : 'needs-fixes'}`;
+        badge.className = `llm-verdict-badge ${meta.score === null ? 'unavailable' : meta.score !== null && meta.score >= 3 ? 'ok' : 'needs-fixes'}`;
         badge.dataset.theme = theme;
         badge.textContent = `${meta.short} ${formatThemeName(theme).split(' ')[0]}`;
         badge.style.background = meta.color;
@@ -1343,7 +1345,7 @@
         if (!addPrintBlock) return;
         const printDiv = document.createElement('div');
         printDiv.className = 'print-only-details';
-        const verdictClass = meta.score >= 3 ? 'ok' : 'needs-fixes';
+        const verdictClass = meta.score === null ? 'unavailable' : meta.score !== null && meta.score >= 3 ? 'ok' : 'needs-fixes';
 
         let printDetailsHtml = `
             <div class="print-llm-box ${verdictClass}">
