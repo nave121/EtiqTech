@@ -1134,6 +1134,8 @@ def run_verification(
             if isinstance(reconcile_parsed, dict)
             else None
         )
+        if not isinstance(theme_payload, dict):  # pass 2 answered but not about this theme: keep pass 1
+            theme_payload = _pass1_or_fallback(theme_spec, pass1_themes[theme_key], "pass 2 returned no verdict for this theme")
         themes[theme_key] = _normalize_theme_payload(
             theme_spec,
             theme_payload,
@@ -1345,6 +1347,8 @@ def run_verification_stream(
             if isinstance(reconcile_parsed, dict)
             else None
         )
+        if not isinstance(theme_payload, dict):  # pass 2 answered but not about this theme: keep pass 1
+            theme_payload = _pass1_or_fallback(theme_spec, pass1_themes[theme_key], "pass 2 returned no verdict for this theme")
         themes[theme_key] = _normalize_theme_payload(
             theme_spec,
             theme_payload,

@@ -489,3 +489,10 @@ away a good pass-1 verdict; `/api/health?probe=llm` had no rate limit beyond the
 - `/api/health?probe=llm` limited to 2/min via `exempt_when` on the probe query only; plain health unaffected (test).
 - `OPENAI_BASE_URL` without a scheme now logs a warning (would silently pick legacy parameters).
 Suite 841 passed / 2 skipped; browser smoke clean.
+
+## Step 48 (2026-09-13) — review of 6ffac2f: no blockers; one gap closed
+Reviewer traced every UI consumer of the grade meta: none can print a numeric grade, "Inadequate" or null for a failed
+theme; sentinel and contracts confirmed; probe limit runs with request context and keys on client IP. Gap closed: a
+reconcile pass that returned valid JSON without the theme's key went to a fresh fallback instead of keeping pass 1 —
+both paths now route that through `_pass1_or_fallback` (test). Note kept: the reviewer's local run used flask-limiter
+3.12 (no project venv); CI and the earlier fresh venv ran the pinned 4.1.1 green. Suite 842 passed / 2 skipped.

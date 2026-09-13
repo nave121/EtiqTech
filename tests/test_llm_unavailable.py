@@ -133,3 +133,18 @@ def test_health_probe_is_rate_limited_but_plain_health_is_not(monkeypatch):
         codes = [client.get("/api/health?probe=llm").status_code for _ in range(4)]
     assert 429 in codes, codes  # the probe spends provider tokens: 2 per minute
     assert all(client.get("/api/health").status_code == 200 for _ in range(5))  # liveness/readiness unaffected
+
+
+def test_reconcile_output_without_the_theme_keeps_pass1(monkeypatch):
+    inst, report = _instance()
+
+    def partial(prompt, **kwargs):
+        if "Pass 2 (reconciliation)" in prompt:
+            yield '{"questions": []}'  # valid JSON, theme missing, no exception
+        else:
+            yield '{"' + next(k for k in THEME_SPECS if THEME_SPECS[k]["label"] in prompt) + '": {"score": 2, "label": "partially_adequate", "rationale": "ok", "sub_questions": []}, "questions": []}'
+
+    with patch("src.llm_agent.call_llm_stream", side_effect=partial):
+        events = list(run_verification_stream(inst, report, stance="law"))
+    done = [e["result"] for e in events if e["type"] == "theme_done"]
+    assert done and all(r["score"] == 2 and r.get("reconciled") is False and not r.get("unavailable") for r in done)
