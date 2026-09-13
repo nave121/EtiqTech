@@ -21,7 +21,7 @@ COPY examples/known-good/ examples/known-good/
 COPY examples/head-to-head/ examples/head-to-head/
 
 # Non-root user for security
-RUN addgroup --system app && adduser --system --group app \
+RUN addgroup --system --gid 1000 app && adduser --system --uid 1000 --gid 1000 app \
     && mkdir -p /app/output && chown -R app:app /app/output
 USER app
 
