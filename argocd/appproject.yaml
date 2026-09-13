@@ -1,0 +1,28 @@
+# Scopes what the etiqtech Application may touch: one namespace on this cluster, this repo, and
+# only the kinds the manifests actually use. Apply before application.yaml.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: etiqtech
+  namespace: argocd
+spec:
+  description: EtiqTech protocol checker
+  sourceRepos:
+    - https://github.com/nave121/EtiqTech
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: etiqtech
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace   # CreateNamespace=true needs this; drop it if you create the namespace yourself
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ServiceAccount
+    - group: ""
+      kind: PersistentVolumeClaim
+    - group: apps
+      kind: Deployment
+    - group: networking.k8s.io
+      kind: NetworkPolicy

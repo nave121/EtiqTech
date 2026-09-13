@@ -395,3 +395,13 @@ Secret commands, every env var, deploy and verification commands. All four kusto
 Razy mid-build: "ethicchecker — this was the old name!" Renamed every k8s object, file and the Argo app to `etiqtech`
 (plus one docstring in src/contracts.py). Nothing was deployed yet, so no selector churn. Repo-wide grep clean.
 Not done (his lane, documented): Secrets, Cloudflare Tunnel/Access, package visibility on GHCR, the real `ALLOWED_ORIGINS`.
+
+## Step 40 (2026-09-13) — review of 81b98a4 + first publish run
+Review FIX applied: the prod egress `except` list now also blocks 169.254.0.0/16 (cloud metadata) and 100.64.0.0/10
+(shared address space) — a pod that parses untrusted uploads must not reach IMDS even on 443. NOTEs applied: a scoped
+`argocd/appproject.yaml` (one repo, one namespace, whitelisted kinds) replaces `project: default`; stale `kubectl apply -f`
+paths in the Ollama Cloud patch header; README says a floating `main` tag needs a rollout restart to pick up a new image.
+CI on 81b98a4: test/security/audit/docker green; **publish failed** with `denied: permission_denied: write_package` on
+the first push to ghcr.io/nave121/etiqtech. The job's token permissions are correct (`packages: write`); the denial is on
+the GitHub side (repository → Settings → Actions → General → Workflow permissions must allow write, or an existing
+`etiqtech` package under the user must grant this repository write access). Razy's lane; documented in k8s/README.md.

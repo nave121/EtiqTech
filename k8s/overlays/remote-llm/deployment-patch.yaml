@@ -10,13 +10,12 @@
 #  The app enforces this: without ETIQTECH_ALLOW_REMOTE_LLM=1 it refuses to
 #  send anything to a non-local host. Setting the flag is your informed opt-in
 #  and is logged as a WARNING at startup. Remove the NetworkPolicy egress
-#  restriction (k8s/network-policy.yaml) or add an egress rule for the
+#  restriction (k8s/base/network-policy.yaml) or add an egress rule for the
 #  provider, or the connection will be blocked anyway.
 #
-#  Apply as a strategic-merge patch on top of the base:
+#  Apply via the overlay (kustomize):
 #    kubectl create secret generic ollama-cloud --from-literal=api-key=<key>
-#    kubectl apply -f k8s/app.yaml
-#    kubectl patch deployment etiqtech --patch-file k8s/overlays/remote-llm/deployment-patch.yaml
+#    kubectl apply -k k8s/overlays/remote-llm
 # =============================================================================
 apiVersion: apps/v1
 kind: Deployment
