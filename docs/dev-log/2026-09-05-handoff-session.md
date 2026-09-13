@@ -431,3 +431,15 @@ multi-arch (QEMU + buildx, linux/amd64 + linux/arm64). Run 34763703890 green; `s
 platforms (plus the two `unknown/unknown` provenance entries buildx adds; containerd ignores them). Native arm64 pull:
 uid 1000, aarch64. Overlay pinned to `sha-586cc30`. Review FIX applied: README no longer states "public" as a rule —
 it is what happened once; GitHub documents private as the personal-account default, so the operator checks visibility.
+
+## Step 44 (2026-09-13) — Dependabot: 15 PRs resolved in one pass
+Razy: "close all dependabot alarms" while he deploys. No open security alerts. 15 PRs, most with CI red from before the
+anthropic-gate fix. Instead of 15 rebases: all proposed versions applied on main in one commit — pip (lxml 6.1.3,
+pytest 9.1.1, mypy 2.3.1, requests 2.34.2, werkzeug 3.1.8, pydantic 2.13.5, hypothesis 6.167.1, gunicorn 26.2.0,
+flask-limiter 4.1.1), actions (checkout v7, setup-python v7, upload-artifact v7), base image python 3.14-slim at the
+digest from PR #16. Verified in a fresh venv: 823 passed / 3 skipped (the extra skip is the anthropic SDK test, the venv
+has no SDK); pip-audit clean; image built on 3.14, booted under the pod security context, upload 200. One real find:
+gunicorn 26 opens a control socket under $HOME and logs `[ERROR] Control server error: Read-only file system:
+'/nonexistent'` in the read-only container — serving unaffected; disabled via `control_socket_disable = True` in
+gunicorn.conf.py, log clean. Dependabot closes its PRs itself once main carries the versions; #13 (flask 3.1.3) and
+#14 (lxml 6.1.0) were already satisfied by main before this.

@@ -35,3 +35,7 @@ worker_class = "gthread"
 threads = int(os.getenv("GUNICORN_THREADS", "64"))
 timeout = 300
 keepalive = 5
+
+# gunicorn >= 26 opens a control socket under $HOME by default; the image runs read-only with no
+# home and nothing here uses the control API, so turn it off instead of pointing it at /tmp.
+control_socket_disable = True
