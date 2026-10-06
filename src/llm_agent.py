@@ -41,6 +41,7 @@ THEME_SPECS: Dict[str, Dict[str, Any]] = {
         "label": "3Rs / Alternatives Search",
         "ref_prefixes": ["alts:"],
         "analysis_keys": ["alternatives"],
+        "instance_keys": ["alternatives_search", "summaries"],
         "sub_questions": [
             "Is a non-duplication assurance present?",
             "Does the narrative address Replacement, Reduction, AND Refinement separately?",
@@ -60,6 +61,7 @@ THEME_SPECS: Dict[str, Dict[str, Any]] = {
         "label": "Animal numbers and justification",
         "ref_prefixes": ["animals:", "N:"],
         "analysis_keys": ["summary"],
+        "instance_keys": ["animals_total", "n_justification", "experiments.animals", "experiments.n_justification_detail", "experiments.fate"],
         "sub_questions": [
             "Is a formal power analysis (alpha, power, effect size) or a reference to published precedent cited?",
             "Is the stated N consistent with the statistical analysis plan described?",
@@ -77,6 +79,7 @@ THEME_SPECS: Dict[str, Dict[str, Any]] = {
         "label": "Severity, monitoring, analgesia",
         "ref_prefixes": ["severity:", "postop:", "surgery:"],
         "analysis_keys": ["summary", "experiments"],
+        "instance_keys": ["experiments.procedure_timeline", "experiments.pain_category_structured", "experiments.severity_level_1_to_5", "experiments.monitoring", "experiments.analgesia", "experiments.analgesia_used", "experiments.analgesia_justification_for_omission", "experiments.anesthesia_used", "experiments.anesthesia_drugs"],
         "sub_questions": [
             "Does the assigned severity level match the procedures described?",
             "Is the USDA pain category (B/C/D/E) assigned and consistent with described procedures?",
@@ -96,6 +99,7 @@ THEME_SPECS: Dict[str, Dict[str, Any]] = {
         "label": "Euthanasia and humane endpoints",
         "ref_prefixes": ["euthanasia:", "endpoints:", "postop:"],
         "analysis_keys": ["experiments"],
+        "instance_keys": ["experiments.animals", "experiments.humane_endpoints", "experiments.euthanasia", "experiments.fate", "experiments.monitoring"],
         "sub_questions": [
             "Is the euthanasia method AVMA-compliant for the species described?",
             "Is the euthanasia method listed as Acceptable, not merely Conditionally Acceptable, for this species when the protocol implies routine use?",
@@ -116,6 +120,7 @@ THEME_SPECS: Dict[str, Dict[str, Any]] = {
         "label": "Harm-benefit analysis",
         "ref_prefixes": ["severity:", "N:", "alts:"],
         "analysis_keys": ["summary", "experiments", "alternatives"],
+        "instance_keys": ["summaries", "alternatives_search", "experiments.question", "experiments.pain_category_structured", "experiments.severity_level_1_to_5", "experiments.humane_endpoints", "experiments.fate"],
         "sub_questions": [
             "Are the scientific or medical benefits of the research clearly stated?",
             "Are the harms to animals (pain, distress, death) clearly identified and proportionate to the stated benefit?",
@@ -135,6 +140,7 @@ THEME_SPECS: Dict[str, Dict[str, Any]] = {
         "label": "Sex choice and reuse",
         "ref_prefixes": ["sex:", "colony", "reuse:"],
         "analysis_keys": ["summary"],
+        "instance_keys": ["experiments.animals", "experiments.rationale_species_strain_sex", "experiments.reuse_or_prior_procedures"],
         "sub_questions": [
             "If only one sex is used, is the single-sex design scientifically justified rather than based on convenience?",
             "If animals are reused across experiments, has cumulative suffering been considered and documented?",
@@ -150,6 +156,7 @@ THEME_SPECS: Dict[str, Dict[str, Any]] = {
         "label": "Housing and husbandry",
         "ref_prefixes": ["housing:", "restraint:", "permits:field-study"],
         "analysis_keys": ["experiments"],
+        "instance_keys": ["experiments.animals", "experiments.housing", "experiments.monitoring"],
         "sub_questions": [
             "Are housing conditions specified (group versus single housing, cage type, enrichment)?",
             "Is social housing appropriate for the species and experimental model?",
@@ -167,6 +174,7 @@ THEME_SPECS: Dict[str, Dict[str, Any]] = {
         "label": "Scientific coherence",
         "ref_prefixes": ["N:", "animals:"],
         "analysis_keys": ["summary", "experiments"],
+        "instance_keys": ["summaries", "animals_total", "experiments.question", "experiments.animals", "experiments.rationale_species_strain_sex", "experiments.procedure_timeline"],
         "sub_questions": [
             "Are group labels consistent between the scientific summary and the experiments table?",
             "Does the total N in animals_total match or reconcile with the sum across experiments?",
@@ -184,6 +192,7 @@ THEME_SPECS: Dict[str, Dict[str, Any]] = {
         "label": "Personnel and training",
         "ref_prefixes": ["pi:", "participant:"],
         "analysis_keys": ["summary"],
+        "instance_keys": ["participants", "pi", "experiments.procedure_timeline"],
         "sub_questions": [
             "Do all listed personnel have training records for the procedures described?",
             "Is species-specific training documented for the animal types used?",
@@ -200,6 +209,7 @@ THEME_SPECS: Dict[str, Dict[str, Any]] = {
         "label": "Surgical standards and post-operative care",
         "ref_prefixes": ["postop:", "surgery:"],
         "analysis_keys": ["experiments"],
+        "instance_keys": ["experiments.procedure_timeline", "experiments.anesthesia_drugs", "experiments.analgesia", "experiments.monitoring"],
         "sub_questions": [
             "Is aseptic technique described for survival surgery?",
             "Is the distinction between major and minor surgery clearly made?",
@@ -217,6 +227,7 @@ THEME_SPECS: Dict[str, Dict[str, Any]] = {
         "label": "Hazardous agents and personnel safety",
         "ref_prefixes": ["special:biosafety", "gma:ibc", "hazard:ehs", "hazard:radiation"],
         "analysis_keys": ["summary", "experiments"],
+        "instance_keys": ["summaries", "postmortem_processing", "experiments.procedure_timeline", "experiments.regulatory_requirement"],
         "sub_questions": [
             "Are hazardous agents (biological, chemical, radiological) identified in the protocol?",
             "Is Environmental Health & Safety (EH&S) consultation documented?",
@@ -235,6 +246,7 @@ THEME_SPECS: Dict[str, Dict[str, Any]] = {
         "label": "Writing quality and language",
         "ref_prefixes": [],
         "analysis_keys": ["summary", "experiments", "alternatives"],
+        "instance_keys": ["summaries", "alternatives_search", "experiments.question", "experiments.procedure_timeline"],
         "sub_questions": [
             "Is the protocol written in English throughout (excluding form headers)?",
             "Are there any answer fields containing Hebrew text that should have been written in English?",
@@ -414,6 +426,32 @@ def _slice_analysis(analysis: Dict[str, Any], keys: List[str]) -> Dict[str, Any]
     if not analysis:
         return {}
     return {k: analysis.get(k) for k in keys if k in analysis}
+
+
+def _redact_training(rows: Any) -> List[Dict[str, Any]]:
+    return [{k: r.get(k) for k in ("issuer", "animal_scope", "date")} for r in rows or [] if isinstance(r, dict)]
+
+
+def _slice_instance(instance: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
+    """The protocol fields a theme judges. An allowlist, so personal identifiers stay out:
+    `pi` becomes its training only, participants lose name / ID / certificate number, and
+    pi_declaration, third_party and header are never listed by any theme."""
+    out: Dict[str, Any] = {}
+    exp_fields = [k.split(".", 1)[1] for k in keys if k.startswith("experiments.")]
+    for k in keys:
+        if k.startswith("experiments.") or k not in instance:
+            continue
+        if k == "pi":
+            out["pi_training"] = _redact_training((instance["pi"] or {}).get("training"))
+        elif k == "participants":
+            out[k] = [{"role": p.get("role"), "certified": p.get("certified"), "training": _redact_training(p.get("training"))}
+                      for p in instance[k] or [] if isinstance(p, dict)]
+        else:
+            out[k] = instance[k]
+    if exp_fields:
+        out["experiments"] = [{"label": e.get("label"), **{f: e[f] for f in exp_fields if f in e}}
+                              for e in instance.get("experiments") or [] if isinstance(e, dict)]
+    return out
 
 
 def _score_to_label(score: int) -> str:
@@ -685,8 +723,9 @@ def _build_theme_prompt(
                     f"'{theme_spec['label']}' on this animal experiment request."
                 ),
                 (
-                    "Use only the raw protocol, law excerpt, head-to-head committee notes, AVMA "
-                    "grounding when provided, and the analysis signals below. Do not assume any "
+                    "Use only the protocol excerpt, law excerpt, head-to-head committee notes, AVMA "
+                    "grounding when provided, and the analysis signals below. Judge from what the "
+                    "protocol text says; treat an empty or missing field as missing. Do not assume any "
                     "prior automated review exists. Respond ONLY with valid JSON."
                 ),
                 "Do not return binary verdicts or confidence ratings.",
@@ -726,9 +765,14 @@ def _build_theme_prompt(
             ]
         )
 
+    instance_str = json.dumps(
+        _slice_instance(instance, theme_spec.get("instance_keys", [])), ensure_ascii=False, separators=(",", ":")
+    )
     prompt_lines.extend(
         [
             avma_grounding_block,
+            "Protocol excerpt (fields for this theme; personal identifiers removed):\n"
+            f"```json\n{instance_str}\n```\n",
             "Analysis signals (subset):\n"
             f"```json\n{analysis_str}\n```\n",
             f"{_format_rubric_examples(theme_spec)}\n",
