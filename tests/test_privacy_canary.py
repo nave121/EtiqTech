@@ -58,6 +58,12 @@ def quiet_llm(monkeypatch, marker):
     monkeypatch.setenv("LAYER3_SAMPLING_RATE", "0")
 
 
+@pytest.fixture(params=["1", "12"], ids=["serial", "parallel"])
+def layer2_pool(request, monkeypatch):
+    """Run Layer 2 both serially and on the thread pool: worker threads must not leak either."""
+    monkeypatch.setenv("LLM_PARALLEL", request.param)
+
+
 def _assert_clean(marker, caplog, capfd):
     out, err = capfd.readouterr()
     assert marker not in caplog.text, "marker leaked into a log record"
@@ -65,7 +71,7 @@ def _assert_clean(marker, caplog, capfd):
     assert marker not in err, "marker leaked to stderr"
 
 
-def test_pipeline_functions_never_log_protocol_text(marker, quiet_llm, caplog, capfd):
+def test_pipeline_functions_never_log_protocol_text(marker, quiet_llm, caplog, capfd, layer2_pool):
     caplog.set_level(logging.DEBUG)
     html = FIXTURE.read_text(encoding="utf-8").replace(INSTITUTION, marker)
     assert marker in html
@@ -107,7 +113,7 @@ def test_http_api_never_logs_protocol_text(marker, quiet_llm, caplog, capfd):
     _assert_clean(marker, caplog, capfd)
 
 
-def test_llm_failure_path_never_logs_prompt(marker, monkeypatch, caplog, capfd):
+def test_llm_failure_path_never_logs_prompt(marker, monkeypatch, caplog, capfd, layer2_pool):
     """When the LLM call blows up, the exception text is shown to the user, not logged."""
     caplog.set_level(logging.DEBUG)
     html = FIXTURE.read_text(encoding="utf-8").replace(INSTITUTION, marker)
@@ -123,7 +129,7 @@ def test_llm_failure_path_never_logs_prompt(marker, monkeypatch, caplog, capfd):
     _assert_clean(marker, caplog, capfd)
 
 
-def test_canary_detects_a_leak(marker, monkeypatch, caplog, capfd):
+def test_canary_detects_a_leak(marker, monkeypatch, caplog, capfd, layer2_pool):
     """Prove the harness bites: an LLM wrapper that logs its prompt must be caught."""
     caplog.set_level(logging.DEBUG)
     html = FIXTURE.read_text(encoding="utf-8").replace(INSTITUTION, marker)
@@ -135,6 +141,7 @@ def test_canary_detects_a_leak(marker, monkeypatch, caplog, capfd):
         leaky_logger.debug("sending prompt: %s", prompt)  # the kind of line this test exists to forbid
         return iter([_fake_llm_response(marker)])
     monkeypatch.setattr(llm_agent, "call_llm_stream", leaky)
+    monkeypatch.setattr(llm_agent, "call_llm", lambda p, **k: "".join(leaky(p, **k)))
     list(llm_agent.run_verification_stream(instance, report))
     with pytest.raises(AssertionError, match="log record"):
         _assert_clean(marker, caplog, capfd)

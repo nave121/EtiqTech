@@ -1254,6 +1254,12 @@
         const theme = data.theme;
         llmResults[theme] = result;
 
+        // Themes may finish out of order (parallel providers): the bar counts finished themes
+        if (data.progress && data.total) {
+            llmProgressFill.style.width = `${(data.progress / data.total) * 100}%`;
+            llmProgressText.textContent = `${data.progress} of ${data.total} topics`;
+        }
+
         // Add verdict badge to relevant document sections
         addLLMVerdictToDocument(theme, result);
 
