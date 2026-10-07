@@ -52,6 +52,14 @@ def test_embedding_search_ranks_by_similarity_and_filters(retriever):
     assert [h.id for h in mouse] == ["c"]  # zebrafish record filtered out; species-agnostic would pass
 
 
+def test_fresh_host_uses_embeddings(retriever, monkeypatch):
+    # monotonic() counts from boot; a CI VM can reach this test <60s after boot, which must not
+    # read as "a failure happened within the retry window" (the CI flake on this file).
+    monkeypatch.setattr(retrieval.time, "monotonic", lambda: 30.0)
+    hits = retriever.search("search for alternatives databases replacement", k=2)
+    assert hits[0].method == "embedding", retriever.last_error
+
+
 def test_species_agnostic_records_match_any_species(retriever):
     hits = retriever.search("euthanasia endpoints", k=4, species=["rat"])
     assert "b" in {h.id for h in hits}
