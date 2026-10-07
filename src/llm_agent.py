@@ -1,11 +1,13 @@
 import json
 import logging
 import os
+import queue
 import re
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
 
-from .llm_clients import LLMError, call_llm, call_llm_stream, call_llm_two_step, context_budget_warning
+from .llm_clients import LLMError, call_llm, call_llm_stream, call_llm_two_step, context_budget_warning, provider_name
 from .retrieval import format_grounding_block, get_retriever, grounding_enabled, grounding_refs
 from .rules import PACKS, active_pack
 from .schema import IACUC_SCHEMA_V2
@@ -1178,6 +1180,108 @@ def run_verification(
     }
 
 
+def _parallel_themes(provider: Optional[str]) -> int:
+    """How many themes run at once. Remote APIs take concurrent calls; a local Ollama GPU
+    serves one at a time, so it stays serial (and keeps the live token stream)."""
+    raw = os.getenv("LLM_PARALLEL", "").strip()
+    if raw.isdigit() and int(raw) > 0:
+        return int(raw)
+    try:
+        name = provider_name(provider)
+    except LLMError:
+        return 1
+    return 12 if name in ("openai", "anthropic") else 1
+
+
+def _review_theme(
+    theme_key: str,
+    theme_spec: Dict[str, Any],
+    instance: Dict[str, Any],
+    lint_report: Dict[str, Any],
+    *,
+    progress: int,
+    total: int,
+    provider: Optional[str],
+    model: Optional[str],
+    temperature: float,
+    stream_tokens: bool,
+    grounded: bool,
+) -> Generator[Dict[str, Any], None, Dict[str, Any]]:
+    """Blind pass then reconcile for one theme. Yields its SSE events; returns its results."""
+    yield {"type": "theme_start", "theme": theme_key, "label": theme_spec["label"], "progress": progress, "total": total}
+
+    hits, notice = _retrieve_grounding(theme_key, instance) if grounded else ([], None)
+    if notice:
+        yield {"type": "warning", "code": "grounding", "theme": theme_key, "message": notice}
+
+    use_two_step = os.getenv("OLLAMA_TWO_STEP", "").lower() in ("1", "true")
+
+    def ask(prompt: str) -> Generator[Dict[str, Any], None, str]:
+        # Two-step does not stream; parallel mode does not stream either (12 themes would interleave).
+        if use_two_step:
+            text = call_llm_two_step(prompt, provider=provider, model=model, temperature=temperature)
+        elif not stream_tokens:
+            return call_llm(prompt, provider=provider, model=model, temperature=temperature)
+        else:
+            text = ""
+            for token in call_llm_stream(prompt, provider=provider, model=model, temperature=temperature):
+                text += token
+                yield {"type": "token", "theme": theme_key, "token": token}
+            return text
+        yield {"type": "token", "theme": theme_key, "token": text}
+        return text
+
+    blind_prompt = _build_theme_prompt(theme_key, theme_spec, instance, lint_report, pass_name="blind", grounding_hits=hits)
+    warning = context_budget_warning(blind_prompt, label=f"Layer 2 / {theme_spec['label']}")
+    if warning:
+        yield {**warning, "theme": theme_key}
+
+    try:
+        blind_parsed = parse_llm_json((yield from ask(blind_prompt)))
+    except Exception as e:
+        blind_parsed = {theme_key: _build_fallback_theme(theme_spec, f"LLM error: {type(e).__name__}"), "questions": []}
+
+    blind_theme_payload = blind_parsed.get(theme_key) if isinstance(blind_parsed, dict) else None
+    pass1_theme = _normalize_theme_payload(
+        theme_spec, blind_theme_payload, fallback_rationale="No AI verdict: the model call failed."
+    )
+    pass1_questions = _normalize_questions(blind_parsed.get("questions")) if isinstance(blind_parsed, dict) else []
+
+    reconcile_prompt = _build_theme_prompt(
+        theme_key, theme_spec, instance, lint_report, pass_name="reconcile",
+        pass1_theme=pass1_theme, pass1_questions=pass1_questions, grounding_hits=hits,
+    )
+    try:
+        reconcile_parsed = parse_llm_json((yield from ask(reconcile_prompt)))
+    except Exception as e:
+        reconcile_parsed = {theme_key: _pass1_or_fallback(theme_spec, pass1_theme, type(e).__name__), "questions": []}
+
+    theme_payload = reconcile_parsed.get(theme_key) if isinstance(reconcile_parsed, dict) else None
+    if not isinstance(theme_payload, dict):  # pass 2 answered but not about this theme: keep pass 1
+        theme_payload = _pass1_or_fallback(theme_spec, pass1_theme, "pass 2 returned no verdict for this theme")
+    theme = _normalize_theme_payload(
+        theme_spec, theme_payload, fallback_rationale="No AI verdict: the model call failed during reconciliation."
+    )
+    theme["grounding"] = grounding_refs(hits)
+    pass2_questions = _normalize_questions(reconcile_parsed.get("questions")) if isinstance(reconcile_parsed, dict) else []
+
+    yield {"type": "theme_done", "theme": theme_key, "label": theme_spec["label"], "result": theme, "skipped": False}
+    if theme.get("unavailable"):
+        yield {
+            "type": "warning", "code": "llm_unavailable", "theme": theme_key,
+            "message": f"AI review unavailable for '{theme_spec['label']}': {theme['rationale']}",
+        }
+    elif theme.get("reconciled") is False:
+        yield {
+            "type": "warning", "code": "llm_reconcile_unavailable", "theme": theme_key,
+            "message": f"'{theme_spec['label']}': showing the blind-pass verdict; reconciliation with the rule checks failed.",
+        }
+    return {
+        "theme": theme, "pass1_theme": pass1_theme, "notice": notice,
+        "pass1_questions": pass1_questions, "pass2_questions": pass2_questions,
+    }
+
+
 def run_verification_stream(
     instance: Dict[str, Any],
     lint_report: Dict[str, Any],
@@ -1190,210 +1294,83 @@ def run_verification_stream(
     """
     Execute verification with streaming updates.
 
+    Themes run on a pool of _parallel_themes(provider) threads. With one thread they run in
+    order and stream tokens, as before; with more, themes finish in any order, no tokens are
+    streamed, and `progress` on theme_start/theme_done counts finished themes. The final
+    result is always assembled in THEME_SPECS order.
+
     Yields events:
-    - {"type": "theme_start", "theme": "theme_key", "label": "Theme Label"}
-    - {"type": "token", "theme": "theme_key", "token": "..."}
-    - {"type": "theme_done", "theme": "theme_key", "result": {...}}
+    - {"type": "theme_start", "theme": "theme_key", "label": "Theme Label", "progress": n, "total": N}
+    - {"type": "token", "theme": "theme_key", "token": "..."}   (serial only)
+    - {"type": "theme_done", "theme": "theme_key", "result": {...}, "progress": n, "total": N}
     - {"type": "complete", "result": {...}}
     """
+    specs = active_theme_specs()
+    total_themes = len(specs)
+    workers = min(_parallel_themes(provider), total_themes) or 1
+    grounded = grounding_enabled()
+    events: "queue.Queue[tuple]" = queue.Queue()
+
+    def drive(gen: Generator[Dict[str, Any], None, Dict[str, Any]], theme_key: str) -> None:
+        try:
+            while True:
+                events.put(("event", next(gen)))
+        except StopIteration as stop:
+            events.put(("done", theme_key, stop.value))
+        except BaseException as exc:  # a bug, not an LLM failure (those are handled per theme): surface it
+            events.put(("error", exc))
+
+    # ponytail: one pool per review; many concurrent reviewers multiply calls to the provider. Add a
+    # process-wide semaphore if the provider starts rate-limiting.
+    pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="l2-theme")
+    results: Dict[str, Dict[str, Any]] = {}
+    seen_once: set = set()  # grounding / context-budget warnings: once per stream, not once per theme
+    try:
+        for i, (theme_key, theme_spec) in enumerate(specs.items(), start=1):
+            gen = _review_theme(
+                theme_key, theme_spec, instance, lint_report, progress=i, total=total_themes,
+                provider=provider, model=model, temperature=temperature,
+                stream_tokens=workers == 1, grounded=grounded,
+            )
+            pool.submit(drive, gen, theme_key)
+        while len(results) < total_themes:
+            item = events.get()
+            if item[0] == "error":
+                raise item[1]
+            if item[0] == "done":
+                results[item[1]] = item[2]
+                continue
+            event = item[1]
+            code = event.get("code")
+            if code in ("grounding", "context_budget"):
+                if code in seen_once:
+                    continue
+                seen_once.add(code)
+            if event["type"] == "theme_done":
+                event["progress"], event["total"] = len(results) + 1, total_themes
+            elif event["type"] == "theme_start" and workers > 1:
+                event["progress"] = len(results)
+            yield event
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)  # client gone: drop queued themes, let running calls end
+
     themes: Dict[str, Any] = {}
     pass1_themes: Dict[str, Any] = {}
     theme_metadata: Dict[str, Any] = {}
     questions: List[Dict[str, Any]] = []
     disagreement_theme_keys: List[str] = []
-
-    total_themes = len(active_theme_specs())
-    processed = 0
-    budget_warned = False  # one warning per stream is enough; theme prompts are all about the same size
     grounding_notice: Optional[str] = None
-    grounded = grounding_enabled()
-
-    for theme_key, theme_spec in active_theme_specs().items():
-        processed += 1
-
-        # Emit theme start
-        yield {
-            "type": "theme_start",
-            "theme": theme_key,
-            "label": theme_spec["label"],
-            "progress": processed,
-            "total": total_themes,
-        }
-
-        hits, notice = _retrieve_grounding(theme_key, instance) if grounded else ([], None)
-        if notice and not grounding_notice:
-            grounding_notice = notice
-            yield {"type": "warning", "code": "grounding", "theme": theme_key, "message": notice}
-
-        blind_prompt = _build_theme_prompt(
-            theme_key,
-            theme_spec,
-            instance,
-            lint_report,
-            pass_name="blind",
-            grounding_hits=hits,
-        )
-
-        if not budget_warned:
-            warning = context_budget_warning(blind_prompt, label=f"Layer 2 / {theme_spec['label']}")
-            if warning:
-                budget_warned = True
-                yield {**warning, "theme": theme_key}
-
-        # Stream tokens (or fall back to two-step non-streaming if OLLAMA_TWO_STEP=1)
-        full_response = ""
-        use_two_step = os.getenv("OLLAMA_TWO_STEP", "").lower() in ("1", "true")
-        fallback_rationale = "No AI verdict: the model call failed."
-        try:
-            if use_two_step:
-                # Two-step does not support streaming; emit full response as a single token.
-                full_response = call_llm_two_step(
-                    blind_prompt,
-                    provider=provider,
-                    model=model,
-                    temperature=temperature,
-                )
-                yield {
-                    "type": "token",
-                    "theme": theme_key,
-                    "token": full_response,
-                }
-            else:
-                for token in call_llm_stream(
-                    blind_prompt,
-                    provider=provider,
-                    model=model,
-                    temperature=temperature,
-                ):
-                    full_response += token
-                    yield {
-                        "type": "token",
-                        "theme": theme_key,
-                        "token": token,
-                    }
-
-            blind_parsed = parse_llm_json(full_response)
-        except Exception as e:
-            blind_parsed = {
-                theme_key: _build_fallback_theme(theme_spec, f"LLM error: {type(e).__name__}"),
-                "questions": [],
-            }
-
-        blind_theme_payload = (
-            blind_parsed.get(theme_key) if isinstance(blind_parsed, dict) else None
-        )
-        pass1_themes[theme_key] = _normalize_theme_payload(
-            theme_spec,
-            blind_theme_payload,
-            fallback_rationale=fallback_rationale,
-        )
-        pass1_questions = (
-            _normalize_questions(blind_parsed.get("questions"))
-            if isinstance(blind_parsed, dict)
-            else []
-        )
-
-        reconcile_prompt = _build_theme_prompt(
-            theme_key,
-            theme_spec,
-            instance,
-            lint_report,
-            pass_name="reconcile",
-            pass1_theme=pass1_themes[theme_key],
-            pass1_questions=pass1_questions,
-            grounding_hits=hits,
-        )
-
-        full_response = ""
-        reconcile_fallback = (
-            "No AI verdict: the model call failed during reconciliation."
-        )
-        try:
-            if use_two_step:
-                full_response = call_llm_two_step(
-                    reconcile_prompt,
-                    provider=provider,
-                    model=model,
-                    temperature=temperature,
-                )
-                yield {
-                    "type": "token",
-                    "theme": theme_key,
-                    "token": full_response,
-                }
-            else:
-                for token in call_llm_stream(
-                    reconcile_prompt,
-                    provider=provider,
-                    model=model,
-                    temperature=temperature,
-                ):
-                    full_response += token
-                    yield {
-                        "type": "token",
-                        "theme": theme_key,
-                        "token": token,
-                    }
-
-            reconcile_parsed = parse_llm_json(full_response)
-        except Exception as e:
-            reconcile_parsed = {
-                theme_key: _pass1_or_fallback(theme_spec, pass1_themes[theme_key], type(e).__name__),
-                "questions": [],
-            }
-
-        theme_payload = (
-            reconcile_parsed.get(theme_key)
-            if isinstance(reconcile_parsed, dict)
-            else None
-        )
-        if not isinstance(theme_payload, dict):  # pass 2 answered but not about this theme: keep pass 1
-            theme_payload = _pass1_or_fallback(theme_spec, pass1_themes[theme_key], "pass 2 returned no verdict for this theme")
-        themes[theme_key] = _normalize_theme_payload(
-            theme_spec,
-            theme_payload,
-            fallback_rationale=reconcile_fallback,
-        )
-        themes[theme_key]["grounding"] = grounding_refs(hits)
-        pass2_questions = (
-            _normalize_questions(reconcile_parsed.get("questions"))
-            if isinstance(reconcile_parsed, dict)
-            else []
-        )
-        metadata = _build_theme_metadata(
-            pass1_themes[theme_key],
-            themes[theme_key],
-            pass1_questions,
-            pass2_questions,
-        )
+    for theme_key in specs:
+        r = results[theme_key]
+        themes[theme_key] = r["theme"]
+        pass1_themes[theme_key] = r["pass1_theme"]
+        grounding_notice = grounding_notice or r["notice"]
+        metadata = _build_theme_metadata(r["pass1_theme"], r["theme"], r["pass1_questions"], r["pass2_questions"])
         theme_metadata[theme_key] = metadata
         if metadata["pass1_changed"]:
             disagreement_theme_keys.append(theme_key)
-        questions = _merge_questions(questions, pass1_questions, pass2_questions)
+        questions = _merge_questions(questions, r["pass1_questions"], r["pass2_questions"])
 
-        yield {
-            "type": "theme_done",
-            "theme": theme_key,
-            "label": theme_spec["label"],
-            "result": themes[theme_key],
-            "skipped": False,
-        }
-        if themes[theme_key].get("unavailable"):
-            yield {
-                "type": "warning",
-                "code": "llm_unavailable",
-                "theme": theme_key,
-                "message": f"AI review unavailable for '{theme_spec['label']}': {themes[theme_key]['rationale']}",
-            }
-        elif themes[theme_key].get("reconciled") is False:
-            yield {
-                "type": "warning",
-                "code": "llm_reconcile_unavailable",
-                "theme": theme_key,
-                "message": f"'{theme_spec['label']}': showing the blind-pass verdict; reconciliation with the rule checks failed.",
-            }
-
-    # Final result
     final_result = {
         "themes": themes,
         "pass1_themes": pass1_themes,
