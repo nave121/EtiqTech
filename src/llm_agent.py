@@ -635,7 +635,7 @@ def _build_expected_theme_shape(theme_key: str) -> Dict[str, Any]:
             {
                 "field_path": "json.path",
                 "question": "clarification you would ask the PI",
-                "blocking": True,
+                "blocking": "true only if the committee could not approve the protocol without this answer, else false",
             }
         ],
     }
@@ -816,7 +816,8 @@ def _normalize_questions(payload: Any) -> List[Dict[str, Any]]:
         question = {
             "field_path": str(item.get("field_path") or "").strip(),
             "question": str(item.get("question") or "").strip(),
-            "blocking": bool(item.get("blocking")),
+            # strict: a model echoing the instruction string must not read as blocking
+            "blocking": item.get("blocking") is True or str(item.get("blocking")).strip().lower() == "true",
         }
         if not question["question"]:
             continue
@@ -839,6 +840,13 @@ def _merge_questions(*question_lists: List[Dict[str, Any]]) -> List[Dict[str, An
             seen.add(signature)
             merged.append(question)
     return merged
+
+
+def _final_questions(theme: Dict[str, Any], pass1_questions: List[Dict[str, Any]],
+                     pass2_questions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Pass 2 rewrites pass 1's questions with the rule checks in hand, so its list replaces pass 1's
+    (merging both kept near-duplicates). Pass 1's list stands only when reconciliation failed."""
+    return pass1_questions if theme.get("reconciled") is False else pass2_questions
 
 
 def _build_theme_metadata(
@@ -1206,7 +1214,7 @@ def run_verification(
         if metadata["pass1_changed"]:
             disagreement_theme_keys.append(theme_key)
 
-        questions = _merge_questions(questions, pass1_questions, pass2_questions)
+        questions = _merge_questions(questions, _final_questions(themes[theme_key], pass1_questions, pass2_questions))
 
     return {
         "themes": themes,
@@ -1413,7 +1421,7 @@ def run_verification_stream(
         theme_metadata[theme_key] = metadata
         if metadata["pass1_changed"]:
             disagreement_theme_keys.append(theme_key)
-        questions = _merge_questions(questions, r["pass1_questions"], r["pass2_questions"])
+        questions = _merge_questions(questions, _final_questions(r["theme"], r["pass1_questions"], r["pass2_questions"]))
 
     final_result = {
         "themes": themes,
