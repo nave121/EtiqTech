@@ -104,7 +104,7 @@ class Retriever:
         self._norms: Optional[List[float]] = None  # corpus vector norms, computed once per index load
         self._lock = threading.Lock()
         self.last_error: Optional[str] = None
-        self._failed_at: float = 0.0
+        self._failed_at: Optional[float] = None  # not 0.0: monotonic() counts from boot, so a fresh VM is "within 60s of a failure"
         self._df = Counter()
         self._doc_tokens = [Counter(_tokens(f"{r['title']} {r['text']}")) for r in self.records]
         for c in self._doc_tokens:
@@ -119,7 +119,7 @@ class Retriever:
     def _ensure_vectors(self) -> bool:
         if self._vectors is not None:
             return True
-        if time.monotonic() - self._failed_at < _env_float("RETRIEVAL_RETRY_SECONDS", 60):
+        if self._failed_at is not None and time.monotonic() - self._failed_at < _env_float("RETRIEVAL_RETRY_SECONDS", 60):
             return False  # recent failure: stay lexical for a while instead of retrying per query
         with self._lock:
             if self._vectors is not None:

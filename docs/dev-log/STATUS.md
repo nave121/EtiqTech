@@ -81,10 +81,11 @@ pushes `ghcr.io/nave121/etiqtech:{main,sha-*}` — **images live 2026-09-13**: o
 Tunnel/Access, GHCR package visibility, setting `ALLOWED_ORIGINS`. Runbook: `k8s/README.md`. Old name `ethicchecker`
 removed everywhere but this log.
 
-## Known flake
-`tests/test_retrieval.py::test_embedding_search_ranks_by_similarity_and_filters` failed once on CI (run 34768892528,
-method came back `lexical`), passed on rerun and on the six runs around it; the fake embedder is deterministic (md5),
-so the cause is not in the test data. Not chased yet; if it recurs, capture the retriever's `last_error` in the assertion.
+## Known flake (fixed 2026-10-07)
+`tests/test_retrieval.py::test_embedding_search_ranks_by_similarity_and_filters` came back `lexical` with no `last_error`
+on fresh CI VMs (run 34768892528, then three times on 2026-10-07). Cause: `Retriever._failed_at` started at `0.0` and
+`time.monotonic()` counts from boot, so a host less than 60 s up read as "an embedding failure in the retry window".
+Same bug in production on a freshly booted host. Fixed by starting `_failed_at` at `None`; `test_fresh_host_uses_embeddings` pins it.
 
 ## Remote
 Pushed to origin/main 2026-09-06 (cdfc44f..2603558). CI on main **green** for the first time (run 34059532894); the
