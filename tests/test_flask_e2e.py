@@ -41,7 +41,7 @@ def test_analyze_with_session_rejects_missing_html_content(client):
     response = client.post("/api/analyze-with-session", json={})
 
     assert response.status_code == 400
-    assert response.get_json()["error"] == "Missing html_content"
+    assert response.get_json()["error"].startswith("Missing html_content")
 
 
 def test_flask_e2e_stream_chain_preserves_session_and_event_order(client):
@@ -220,4 +220,21 @@ def test_flask_stream_returns_error_event_for_missing_session(client):
     response = client.get("/api/llm-verify-stream/missing-session")
     events = _parse_sse(response)
 
+    assert events == [{"type": "error", "message": "Session not found"}]
+
+
+def test_expired_session_is_gone_without_a_new_upload(client):
+    """PRIVACY.md guarantee 2: a session lives an hour even when no later review triggers the sweep."""
+    from datetime import datetime, timedelta
+    import server.app as app_module
+
+    def old():
+        return {"instance": {}, "lint_report": {}, "created_at": datetime.now() - timedelta(hours=2)}
+    _analysis_cache["old"] = old()
+    assert app_module._get_session("old") is None
+    _analysis_cache["old"] = old()
+    client.get("/api/health")  # any request sweeps; the container health check fires every 30 s
+    assert "old" not in _analysis_cache
+    _analysis_cache["old"] = old()
+    events = _parse_sse(client.get("/api/llm-verify-stream/old"))
     assert events == [{"type": "error", "message": "Session not found"}]

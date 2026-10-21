@@ -80,6 +80,21 @@ def remote_llm_allowed() -> bool:
     return os.getenv(REMOTE_LLM_FLAG, "").strip().lower() in ("1", "true", "yes")
 
 
+def is_ollama_cloud_model(model: str) -> bool:
+    """`gpt-oss:120b-cloud`, `kimi-k2:cloud`: the local daemon forwards these to ollama.com."""
+    return model.lower().endswith(("-cloud", ":cloud"))
+
+
+def _check_ollama_model(model: str) -> None:
+    """The URL gate sees 127.0.0.1 for a cloud model, so the model name gets the same opt-in."""
+    if is_ollama_cloud_model(model) and not remote_llm_allowed():
+        logger.error("Refusing Ollama cloud model %r: it runs on ollama.com and %s is not set", model, REMOTE_LLM_FLAG)
+        raise LLMError(
+            f"Ollama cloud models run off this machine and {REMOTE_LLM_FLAG} is not set; "
+            "refusing to send protocol text off this machine."
+        )
+
+
 # Provider registry: env var holding the base URL, its default, and a capability matrix
 # (rendered in docs/providers.md). Every provider's base URL goes through the same gate.
 PROVIDERS: Dict[str, Dict[str, Any]] = {
@@ -260,6 +275,7 @@ def _call_ollama(
     max_tokens: Optional[int],
     num_ctx: Optional[int] = None,
 ) -> str:
+    _check_ollama_model(model)
     base_url = ollama_base_url()
     endpoint = f"{base_url}/api/generate"
     timeout = _env_float("OLLAMA_TIMEOUT_SECONDS", 120)
@@ -328,6 +344,7 @@ def call_llm_two_step(
         return call_llm(prompt, provider=provider, model=model, temperature=temperature, max_tokens=max_tokens)
 
     resolved_model = model or os.getenv("OLLAMA_MODEL", "qwen3.5:35b")
+    _check_ollama_model(resolved_model)
     base_url = ollama_base_url()
     endpoint = f"{base_url}/api/chat"
     timeout = _env_float("OLLAMA_TIMEOUT_SECONDS", 300)
@@ -442,6 +459,7 @@ def _call_ollama_stream(
     num_ctx: Optional[int] = None,
 ) -> Generator[str, None, None]:
     """Stream tokens from Ollama API."""
+    _check_ollama_model(model)
     base_url = ollama_base_url()
     endpoint = f"{base_url}/api/generate"
     timeout = _env_float("OLLAMA_TIMEOUT_SECONDS", 300)

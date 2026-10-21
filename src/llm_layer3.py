@@ -24,7 +24,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
-from .llm_agent import LAW_PATH
+from .llm_agent import LAW_PATH, _slice_instance
 from .llm_clients import _env_int, call_llm, call_llm_stream, context_budget_warning
 from .xmeta_catalog import load_high_leverage_catalog
 
@@ -75,7 +75,9 @@ def _build_layer3_blind_context(instance: Dict[str, Any], lint_report: Dict[str,
     analysis = lint_report.get("analysis") or {}
     analysis_str = json.dumps(analysis, ensure_ascii=False, indent=2)
 
-    instance_str = json.dumps(instance, ensure_ascii=False, indent=2)
+    # Layer 2's slicer: no national IDs, emails or phones (pi becomes its training only)
+    sliced = _slice_instance(instance, [k for k in instance if k not in ("pi_declaration", "third_party", "header")])
+    instance_str = json.dumps(sliced, ensure_ascii=False, indent=2)
 
     return (
         f"### Israeli Animal Experimentation Law (full text)\n{law_text}\n\n"

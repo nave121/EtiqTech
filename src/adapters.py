@@ -14,6 +14,7 @@ given, else by detection, and raises ``IngestError`` with a plain message otherw
 """
 from __future__ import annotations
 
+import itertools
 import json
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -42,9 +43,11 @@ class Adapter:
 def _text(content: Content) -> str:
     if isinstance(content, bytes):
         try:
-            return content.decode("utf-8")
+            return content.decode("utf-8-sig")  # a BOM (Notepad, Excel) is not part of the content
         except UnicodeDecodeError as exc:
             raise IngestError("Could not decode file. Please ensure the file is UTF-8 encoded.") from exc
+    if not isinstance(content, str):
+        raise IngestError("Expected the file content as text.")
     return content
 
 
@@ -71,13 +74,12 @@ def schema_errors(instance: Any, limit: int = 20) -> List[str]:
     side only; an unknown validator gets a generic message rather than jsonschema's default,
     which embeds the instance value."""
     out = []
-    for err in sorted(_validator.iter_errors(instance), key=lambda e: list(map(str, e.absolute_path))):
+    # islice first: an array of 100k bad items yields 100k errors, and sorting them all took 361 MB
+    for err in sorted(itertools.islice(_validator.iter_errors(instance), limit), key=lambda e: list(map(str, e.absolute_path))):
         path = "/".join(str(p) for p in err.absolute_path) or "<root>"
         build = _SAFE_MESSAGES.get(err.validator)
         msg = build(err) if build else f"failed '{err.validator}' validation"
         out.append(f"{path}: {msg}")
-        if len(out) >= limit:
-            break
     return out
 
 
@@ -156,16 +158,27 @@ ADAPTERS: Dict[str, Adapter] = {
 }
 
 
+def _parse(adapter: Adapter, text: str) -> Dict[str, Any]:
+    try:
+        return adapter.parse(text)
+    except IngestError:
+        raise
+    except (ValueError, AttributeError, TypeError, LookupError):
+        # The parser's messages quote the offending cell ("invalid literal for int(): '420 בערך'"): drop the
+        # cause so it can never be chained into a log, and give the user a plain sentence.
+        raise IngestError("Could not parse the file. Check that it is an unmodified export.") from None
+
+
 def ingest(content: Content, filename: Optional[str] = None) -> Tuple[Dict[str, Any], str]:
     """Return (instance, adapter_name). Raises IngestError on unsupported or invalid input."""
     text = _text(content)
     ext = (filename or "").rsplit(".", 1)[-1].lower() if filename and "." in filename else None
     for adapter in ADAPTERS.values():
         if ext and ext in adapter.extensions:
-            return adapter.parse(text), adapter.name
+            return _parse(adapter, text), adapter.name
     if ext:
         raise IngestError("Invalid file type. Please upload an HTML export or a canonical JSON instance.")
     for adapter in ADAPTERS.values():
         if adapter.detect(text):
-            return adapter.parse(text), adapter.name
+            return _parse(adapter, text), adapter.name
     raise IngestError("Unrecognized input: expected an HTML export or a canonical JSON instance.")
