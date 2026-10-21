@@ -96,3 +96,29 @@ def test_a_bug_in_a_worker_surfaces(monkeypatch, protocol, fake_llm):
 def test_pool_size_defaults(monkeypatch, provider, env, expected):
     monkeypatch.setenv("LLM_PARALLEL", env)
     assert llm_agent._parallel_themes(provider) == expected
+
+
+@pytest.mark.parametrize("parallel", [12, 1])
+def test_closed_stream_stops_spending(monkeypatch, protocol, parallel):
+    """A closed tab used to let every running theme finish both passes: 24 paid calls for nobody (2 serially)."""
+    import threading
+    calls = []
+
+    def slow(p, **_):
+        calls.append(1)
+        time.sleep(0.1)
+        return _answer(p)
+
+    def slow_stream(p, **_):
+        yield from slow(p)
+    monkeypatch.setattr(llm_agent, "call_llm", slow)
+    monkeypatch.setattr(llm_agent, "call_llm_stream", slow_stream)
+    monkeypatch.setenv("LLM_PARALLEL", str(parallel))
+    gen = llm_agent.run_verification_stream(*protocol)
+    next(gen)
+    gen.close()
+    for t in threading.enumerate():
+        if t.name.startswith("l2-theme"):
+            t.join(5)
+    in_flight = min(parallel, len(llm_agent.active_theme_specs()))
+    assert len(calls) <= in_flight, len(calls)  # at most the blind call each running theme had started

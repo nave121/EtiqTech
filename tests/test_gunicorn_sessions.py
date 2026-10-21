@@ -43,7 +43,6 @@ def gunicorn_url():
         "PYTHONPATH": str(REPO_ROOT),
         "OLLAMA_BASE_URL": "http://127.0.0.1:1",  # closed port: connection refused immediately
         "OLLAMA_TIMEOUT_SECONDS": "2",
-        "LAYER3_SAMPLING_RATE": "0",
         "RATELIMIT_ENABLED": "false",  # 50 POSTs in a row would trip the 10/min analyze limit
     }
     # stderr goes to a file, never a PIPE: an undrained pipe fills up under gunicorn's

@@ -167,11 +167,10 @@ class HumanEyeResult(BaseModel):
     sections: list[HumanEyeSection]
     pass1_sections: list[HumanEyeSection] = Field(default_factory=list)
     cross_reference_issues: list[CrossRefIssue] = Field(default_factory=list)
-    overall_verdict: Literal["approve", "revise_minor", "revise_major", "reject"]
-    risk_profile: Literal["low", "medium", "high", "critical"]
+    overall_verdict: Literal["approve", "revise_minor", "revise_major", "reject", "unavailable"]  # unavailable: the AI did not answer
+    risk_profile: Literal["low", "medium", "high", "critical", ""]
     summary: str
     disagreement_summary: Layer3DisagreementSummary = Field(
         default_factory=Layer3DisagreementSummary
     )
-    triggered_by: str = ""   # reason string from should_trigger_layer3
-    skipped: bool = False
+    triggered_by: str = ""   # "always": Layer 3 runs on every protocol

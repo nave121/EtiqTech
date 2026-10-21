@@ -3,6 +3,7 @@ import logging
 import os
 import queue
 import re
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
@@ -979,11 +980,10 @@ def _strip_code_fence(payload: str) -> str:
     """Strip markdown code fences from payload, handling various positions."""
     payload = payload.strip()
 
-    # Pattern to match ```json or ``` blocks
-    # This extracts content from inside code fences
-    code_block_match = re.search(r'```(?:json)?\s*\n?(.*?)\n?```', payload, flags=re.DOTALL)
-    if code_block_match:
-        return code_block_match.group(1).strip()
+    # The LAST fenced block: models often echo the answer shape (or a draft) before the answer itself
+    blocks = re.findall(r'```(?:json)?\s*\n?(.*?)\n?```', payload, flags=re.DOTALL)
+    if blocks:
+        return blocks[-1].strip()
 
     # Fallback: if starts with ```, use line-based stripping
     if payload.startswith("```"):
@@ -1258,6 +1258,7 @@ def _review_theme(
     temperature: float,
     stream_tokens: bool,
     grounded: bool,
+    cancelled: threading.Event,
 ) -> Generator[Dict[str, Any], None, Dict[str, Any]]:
     """Blind pass then reconcile for one theme. Yields its SSE events; returns its results."""
     yield {"type": "theme_start", "theme": theme_key, "label": theme_spec["label"], "progress": progress, "total": total}
@@ -1269,6 +1270,8 @@ def _review_theme(
     use_two_step = os.getenv("OLLAMA_TWO_STEP", "").lower() in ("1", "true")
 
     def ask(prompt: str) -> Generator[Dict[str, Any], None, str]:
+        if cancelled.is_set():  # parallel mode runs both passes without yielding, so drive() cannot stop pass 2
+            raise LLMError("review cancelled: the client is gone")
         # Two-step does not stream; parallel mode does not stream either (12 themes would interleave).
         if use_two_step:
             text = call_llm_two_step(prompt, provider=provider, model=model, temperature=temperature)
@@ -1362,11 +1365,13 @@ def run_verification_stream(
     workers = min(_parallel_themes(provider), total_themes) or 1
     grounded = grounding_enabled()
     events: "queue.Queue[tuple]" = queue.Queue()
+    cancelled = threading.Event()  # set when the stream ends, including a closed tab
 
     def drive(gen: Generator[Dict[str, Any], None, Dict[str, Any]], theme_key: str) -> None:
         try:
-            while True:
+            while not cancelled.is_set():
                 events.put(("event", next(gen)))
+            gen.close()  # nobody is reading: skip this theme's remaining (paid) LLM calls
         except StopIteration as stop:
             events.put(("done", theme_key, stop.value))
         except BaseException as exc:  # a bug, not an LLM failure (those are handled per theme): surface it
@@ -1382,7 +1387,7 @@ def run_verification_stream(
             gen = _review_theme(
                 theme_key, theme_spec, instance, lint_report, progress=i, total=total_themes,
                 provider=provider, model=model, temperature=temperature,
-                stream_tokens=workers == 1, grounded=grounded,
+                stream_tokens=workers == 1, grounded=grounded, cancelled=cancelled,
             )
             pool.submit(drive, gen, theme_key)
         while len(results) < total_themes:
@@ -1404,6 +1409,7 @@ def run_verification_stream(
                 event["progress"] = len(results)
             yield event
     finally:
+        cancelled.set()
         pool.shutdown(wait=False, cancel_futures=True)  # client gone: drop queued themes, let running calls end
 
     themes: Dict[str, Any] = {}

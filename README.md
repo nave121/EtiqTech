@@ -90,7 +90,7 @@ flowchart LR
     A --> I[(Canonical protocol JSON)]
     I --> L1[Layer 1 · deterministic linter<br/>59 rules, ruleset-versioned]
     I --> L2[Layer 2 · LLM themes<br/>blind → reconcile, streamed]
-    I --> L3[Layer 3 · Human Eye<br/>adversarial pass, triggered]
+    I --> L3[Layer 3 · Human Eye<br/>adversarial pass, every protocol]
     G[(Guidance corpus<br/>retrieval, cited)] -.grounding.-> L2
     O[(Local Ollama / configured provider)] -.-> L2
     O -.-> L3
@@ -111,7 +111,7 @@ EtiqTech reviews protocols in three layers:
 |-------|------|-----|-----------|
 | **Layer 1 — Linter** | Deterministic rule checks | 36+ rules checking structure, law compliance, AVMA euthanasia matrix | Yes |
 | **Layer 2 — LLM Themes** | Semantic review across 12 themes | Dual-pass: blind review then reconciliation with linter findings | Optional (needs Ollama) |
-| **Layer 3 — Human Eye** | Holistic adversarial review | Triggered when Layer 1/2 flag issues; dual-pass with cross-layer reconciliation | Auto-triggered |
+| **Layer 3 — Human Eye** | Holistic adversarial review | Runs on every protocol after Layer 2; dual-pass with cross-layer reconciliation. No answer shows as "unavailable", never as a verdict | Optional (needs an LLM) |
 
 ### Linter Profiles
 
@@ -162,9 +162,8 @@ EtiqTech reviews protocols in three layers:
 | `LLM_MAX_TOKENS` | `8192` | Max output tokens |
 | `OLLAMA_NUM_CTX` | `32768` | Context window for Layer 2 theme prompts |
 | `OLLAMA_NUM_CTX_LAYER3` | `65536` | Context window for Layer 3 (whole protocol + guidance ≈ 28k tokens). Costs roughly 0.7 GB more KV cache per concurrent Layer 3 run on a ~30B model; see docs/dev-log/layer3-context-options.md |
-| `OLLAMA_TIMEOUT_SECONDS` | `120` | Request timeout |
+| `OLLAMA_TIMEOUT_SECONDS` | `300` | Request timeout, every provider |
 | `OLLAMA_TWO_STEP` | `false` | Enable think-then-structure mode |
-| `LAYER3_SAMPLING_RATE` | `0.10` | Fraction of clean protocols to spot-check |
 | `FLASK_DEBUG` | `false` | Enable Flask debug mode |
 | `SECRET_KEY` | (random) | Required in production |
 | `PORT` | `4242` | Listen port (gunicorn.conf.py) |

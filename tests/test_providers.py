@@ -225,3 +225,28 @@ def test_anthropic_client_never_follows_redirects(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
     client = llm_clients._anthropic_client()
     assert client._client.follow_redirects is False
+
+
+def test_ollama_stream_error_line_raises_without_its_text(monkeypatch):
+    """Ollama reports a mid-stream failure as an {"error": ...} line; the stream used to end as if done."""
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    lines = [b'{"response": "{\\"a\\"", "done": false}', b'{"error": "SECRET-ECHO model ran out of memory"}']
+    monkeypatch.setattr(requests, "post", lambda *a, **k: _Resp(lines=lines))
+    with pytest.raises(LLMError) as ei:
+        list(call_llm_stream("p", provider="ollama", model="m"))
+    assert "SECRET" not in str(ei.value)
+
+
+def test_ollama_timeout_default_is_one_value(monkeypatch):
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    monkeypatch.delenv("OLLAMA_TIMEOUT_SECONDS", raising=False)
+    seen = []
+
+    def fake_post(url, **kw):
+        seen.append(kw["timeout"])
+        return _Resp(body={"response": "ok", "message": {"content": "ok"}}, lines=[b'{"response": "ok", "done": true}'])
+    monkeypatch.setattr(requests, "post", fake_post)
+    call_llm("p", provider="ollama", model="m")
+    list(call_llm_stream("p", provider="ollama", model="m"))
+    llm_clients.call_llm_two_step("p", provider="ollama", model="m")
+    assert seen == [300] * 4

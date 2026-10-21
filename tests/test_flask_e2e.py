@@ -127,14 +127,12 @@ def test_flask_e2e_stream_chain_preserves_session_and_event_order(client):
         instance,
         lint_report,
         layer2_result_arg,
-        force=False,
         **kwargs,
     ):
         captured_layer3["layer2_result"] = layer2_result_arg
-        captured_layer3["force"] = force
         yield {
             "type": "layer3_trigger",
-            "reason": "layer2_multiple_low_scores",
+            "reason": "always",
         }
         yield {
             "type": "pass_start",
@@ -159,8 +157,7 @@ def test_flask_e2e_stream_chain_preserves_session_and_event_order(client):
             "overall_verdict": "revise_minor",
             "risk_profile": "medium",
             "summary": "Route integration test completed.",
-            "triggered_by": "layer2_multiple_low_scores",
-            "skipped": False,
+            "triggered_by": "always",
         }
         yield {
             "type": "pass_done",
@@ -196,9 +193,7 @@ def test_flask_e2e_stream_chain_preserves_session_and_event_order(client):
         "server.app.run_human_eye_stream",
         side_effect=fake_layer3_stream,
     ):
-        layer3_response = client.get(
-            f"/api/human-eye-stream/{session_id}?force=1"
-        )
+        layer3_response = client.get(f"/api/human-eye-stream/{session_id}")
     layer3_events = _parse_sse(layer3_response)
 
     assert [event["type"] for event in layer3_events] == [
@@ -212,7 +207,6 @@ def test_flask_e2e_stream_chain_preserves_session_and_event_order(client):
         "complete",
     ]
     assert captured_layer3["layer2_result"] == layer2_result
-    assert captured_layer3["force"] is True
     assert layer3_events[-1]["result"]["overall_verdict"] == "revise_minor"
 
 
@@ -238,3 +232,42 @@ def test_expired_session_is_gone_without_a_new_upload(client):
     _analysis_cache["old"] = old()
     events = _parse_sse(client.get("/api/llm-verify-stream/old"))
     assert events == [{"type": "error", "message": "Session not found"}]
+
+
+def _session(client, **form):
+    import io
+    data = {"file": (io.BytesIO(_load_html().encode()), "p.html"), **form}
+    return client.post("/api/analyze-with-session", data=data, content_type="multipart/form-data").get_json()["session_id"]
+
+
+@pytest.fixture()
+def no_limits(monkeypatch):
+    import server.app as app_module
+    monkeypatch.setattr(app_module.limiter, "enabled", False)
+
+
+def test_layer2_result_is_saved_before_complete_is_sent(client, no_limits):
+    """The browser opens the Layer 3 stream as soon as `complete` arrives; the save cannot wait for the next pull."""
+    sid = _session(client)
+    result = {"themes": {}}
+    with patch("server.app.run_verification_stream", side_effect=lambda *a, **k: iter([{"type": "complete", "result": result}])):
+        chunks = iter(client.get(f"/api/llm-verify-stream/{sid}", buffered=False).response)
+        assert b'"complete"' in next(chunks)
+        assert _analysis_cache[sid].get("layer2_result") == result
+
+
+def test_browser_cannot_pick_the_model_of_a_remote_provider(client, no_limits, monkeypatch):
+    """The picker lists Ollama models; on a paid provider the configured model is the budget decision."""
+    sid = _session(client, provider="openai", model="gpt-6.1-sol")
+    models = []
+
+    def capture(prompt, **kw):
+        models.append(kw.get("model"))
+        return "{}"
+    with patch("src.llm_agent.call_llm", side_effect=capture):
+        _parse_sse(client.get(f"/api/llm-verify-stream/{sid}"))
+    assert models and set(models) == {None}  # None: call_llm uses OPENAI_MODEL
+    monkeypatch.setenv("LLM_PROVIDER", "openai")
+    assert _analysis_cache[_session(client, model="gpt-6.1-sol")]["model"] is None
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    assert _analysis_cache[_session(client, model="gemma4:e4b")]["model"] == "gemma4:e4b"

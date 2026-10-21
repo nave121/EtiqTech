@@ -13,7 +13,7 @@ from pydantic import ValidationError
 from src.contracts import HumanEyeResult
 from src.linter_renderer import lint
 from src.llm_agent import THEME_SPECS
-from src.llm_layer3 import run_human_eye, run_human_eye_stream, should_trigger_layer3
+from src.llm_layer3 import run_human_eye, run_human_eye_stream
 
 
 def _minimal_instance():
@@ -123,7 +123,7 @@ def test_human_eye_result_contract():
         return _canned_pass2_response()
 
     with patch("src.llm_layer3.call_llm", side_effect=fake_call_llm):
-        result = run_human_eye(instance, report, force=True)
+        result = run_human_eye(instance, report)
 
     try:
         HumanEyeResult.model_validate(result)
@@ -131,48 +131,17 @@ def test_human_eye_result_contract():
         pytest.fail(f"HumanEyeResult contract violated:\n{exc}")
 
 
-def test_layer3_skips_when_trigger_false():
+def test_layer3_always_runs():
+    """Razy, 2026-10-21: the second read runs on every protocol, clean ones included."""
     instance = _minimal_instance()
     report = lint(instance, profile="default")
     layer2 = _good_layer2_result()
-
-    triggered, reason = should_trigger_layer3(report, layer2, instance, sampling_rate=0.0)
-    assert not triggered, f"Expected no trigger, got reason: {reason!r}"
-
-    with patch("src.llm_layer3.call_llm") as mock_llm:
-        result = run_human_eye(instance, report, layer2, force=False)
-
-    assert result["skipped"] is True
-    mock_llm.assert_not_called()
-
-
-def test_layer3_triggers_on_layer1_errors():
-    instance = _minimal_instance()
-    report = lint(instance, profile="strict_law")
-    report["checklist"].append({
-        "status": "fail",
-        "severity": "error",
-        "message": "Synthetic test error",
-        "reference": "test:synthetic",
-        "suggested_fix": None,
-    })
-
-    triggered, reason = should_trigger_layer3(report, None, instance, sampling_rate=0.0)
-    assert triggered, "Expected trigger on layer1 errors"
-    assert reason == "layer1_errors"
-
-
-def test_layer3_triggers_on_low_score():
-    instance = _minimal_instance()
-    report = lint(instance, profile="default")
-
-    layer2 = _good_layer2_result()
-    layer2["themes"]["N_and_justification"]["score"] = 1
-    layer2["themes"]["N_and_justification"]["label"] = "inadequate"
-
-    triggered, reason = should_trigger_layer3(report, layer2, instance, sampling_rate=0.0)
-    assert triggered, "Expected trigger on low score"
-    assert reason == "layer2_low_score"
+    with patch("src.llm_layer3.call_llm", side_effect=[_canned_pass1_response(), _canned_pass2_response()]) as mock_llm:
+        result = run_human_eye(instance, report, layer2)
+    assert mock_llm.call_count == 2
+    assert result["triggered_by"] == "always" and result["overall_verdict"] == "revise_minor"
+    with patch("src.llm_layer3.call_llm_stream", side_effect=lambda *a, **k: iter(["{}"])):
+        assert list(run_human_eye_stream(instance, report, layer2))[0] == {"type": "layer3_trigger", "reason": "always"}
 
 
 def test_layer3_stream_event_sequence():
@@ -188,7 +157,7 @@ def test_layer3_stream_event_sequence():
             yield ch
 
     with patch("src.llm_layer3.call_llm_stream", side_effect=fake_stream):
-        events = list(run_human_eye_stream(instance, report, force=True))
+        events = list(run_human_eye_stream(instance, report))
 
     types = [e["type"] for e in events]
     assert types[0] == "layer3_trigger", f"First event must be layer3_trigger, got: {types[0]}"
@@ -227,6 +196,41 @@ def test_additive_union():
         return _canned_pass2_response()
 
     with patch("src.llm_layer3.call_llm", side_effect=fake_call_llm):
-        run_human_eye(instance, report, force=True)
+        run_human_eye(instance, report)
 
     assert report["checklist"] == original_checklist
+
+
+def _severe_instance():
+    instance = _minimal_instance()
+    instance["experiments"][0]["severity_level_1_to_5"] = 3
+    return instance
+
+
+def test_the_last_fenced_block_is_the_answer():
+    """Models often echo the answer shape before answering; the verdict is the block they end on."""
+    from src.llm_agent import parse_llm_json
+    shape = '```json\n{"overall_verdict": "approve | revise_minor | revise_major | reject"}\n```'
+    text = f"The shape I must use:\n{shape}\nMy review:\n```json\n{_canned_pass2_response()}\n```"
+    assert parse_llm_json(text)["overall_verdict"] == "revise_minor"
+    instance = _severe_instance()
+    with patch("src.llm_layer3.call_llm", side_effect=[_canned_pass1_response(), text]):
+        assert run_human_eye(instance, lint(instance, profile="default"))["overall_verdict"] == "revise_minor"
+
+
+def test_layer3_without_an_answer_is_unavailable_not_revise_major():
+    """A provider that never answers used to read as 'revise_major, risk high'."""
+    instance = _severe_instance()
+    report = lint(instance, profile="default")
+
+    def down(*a, **k):
+        raise RuntimeError("provider down")
+    with patch("src.llm_layer3.call_llm", side_effect=down):
+        result = run_human_eye(instance, report)
+    assert (result["overall_verdict"], result["risk_profile"]) == ("unavailable", "")
+    HumanEyeResult.model_validate(result)
+    with patch("src.llm_layer3.call_llm_stream", side_effect=down):
+        assert list(run_human_eye_stream(instance, report))[-1]["result"]["overall_verdict"] == "unavailable"
+    with patch("src.llm_layer3.call_llm", side_effect=[_canned_pass1_response(), '{"summary": "no verdict fields"}']):
+        result = run_human_eye(instance, report)
+    assert (result["overall_verdict"], result["risk_profile"]) == ("unavailable", "")

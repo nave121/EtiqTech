@@ -19,7 +19,6 @@ from src.llm_agent import (
     run_verification_stream,
 )
 from src.llm_clients import LLMError
-from src.llm_layer3 import _theme_score_at_most
 
 SPEC = next(iter(THEME_SPECS.values()))
 
@@ -42,11 +41,6 @@ def test_normalize_keeps_the_unavailable_flag_and_reason():
 def test_real_answer_is_not_unavailable():
     t = _normalize_theme_payload(SPEC, {"score": 3, "rationale": "fine", "sub_questions": []}, fallback_rationale="x")
     assert "unavailable" not in t and t["score"] == 3
-
-
-def test_layer3_does_not_treat_a_failed_theme_as_weak():
-    assert _theme_score_at_most(_build_fallback_theme(SPEC, "LLM error"), 1) is False
-    assert _theme_score_at_most({"score": 1}, 1) is True
 
 
 def test_stream_reports_every_failed_theme_and_summarises():
