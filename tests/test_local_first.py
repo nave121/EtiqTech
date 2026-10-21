@@ -115,3 +115,44 @@ def test_redirect_response_is_refused_not_parsed(monkeypatch):
     monkeypatch.setattr(app_module.http_requests, "get", lambda *a, **k: _Redirect())
     with app.test_client() as c:
         assert c.get("/api/ollama-models").get_json()["success"] is False
+
+
+@pytest.mark.parametrize("model", ["gpt-oss:120b-cloud", "gemma4:31b-cloud", "kimi-k2:cloud"])
+def test_ollama_cloud_models_refused_without_flag(monkeypatch, model):
+    """`*-cloud` models run on ollama.com through the local daemon: the URL gate never sees that."""
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    monkeypatch.delenv("ETIQTECH_ALLOW_REMOTE_LLM", raising=False)
+    monkeypatch.setattr(requests, "post", lambda *a, **k: pytest.fail("must not send"))
+    for call in (lambda: llm_clients.call_llm("p", provider="ollama", model=model),
+                 lambda: list(llm_clients.call_llm_stream("p", provider="ollama", model=model)),
+                 lambda: llm_clients.call_llm_two_step("p", provider="ollama", model=model)):
+        with pytest.raises(LLMError, match="ETIQTECH_ALLOW_REMOTE_LLM"):
+            call()
+
+
+def test_ollama_cloud_models_allowed_with_flag(monkeypatch):
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    monkeypatch.setenv("ETIQTECH_ALLOW_REMOTE_LLM", "1")
+
+    class _Resp:
+        status_code = 200
+        def json(self):
+            return {"response": "ok"}
+    monkeypatch.setattr(requests, "post", lambda *a, **k: _Resp())
+    assert llm_clients.call_llm("p", provider="ollama", model="gemma4:31b-cloud") == "ok"
+
+
+def test_model_list_hides_cloud_models_without_flag(monkeypatch):
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    monkeypatch.delenv("ETIQTECH_ALLOW_REMOTE_LLM", raising=False)
+    import server.app as app_module
+
+    class _Tags:
+        status_code = 200
+        def json(self):
+            return {"models": [{"name": "gemma4:e4b"}, {"name": "gemma4:31b-cloud"}, {"name": "kimi-k2:cloud"}]}
+    monkeypatch.setattr(app_module.http_requests, "get", lambda *a, **k: _Tags())
+    with app.test_client() as c:
+        assert c.get("/api/ollama-models").get_json()["models"] == ["gemma4:e4b"]
+        monkeypatch.setenv("ETIQTECH_ALLOW_REMOTE_LLM", "1")
+        assert c.get("/api/ollama-models").get_json()["models"] == ["gemma4:31b-cloud", "gemma4:e4b", "kimi-k2:cloud"]

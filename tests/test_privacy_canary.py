@@ -285,3 +285,55 @@ def test_provider_error_bodies_never_reach_logs(marker, monkeypatch, caplog, cap
         llm_clients.call_llm("p", provider="anthropic")
     assert marker not in str(ei.value)
     _assert_clean(marker, caplog, capfd)
+
+
+def _bad_count_html(marker):
+    """The fixture with its first animal count replaced by free text, as a hand-edited export would have."""
+    html = FIXTURE.read_text(encoding="utf-8")
+    m = re.search(r'כמות\s*</td><td style="width:25%">(\d+)', html)
+    return html[:m.start(1)] + f"420 בערך {marker}" + html[m.end(1):]
+
+
+def test_unparseable_cell_is_a_400_and_never_logged(marker, monkeypatch, caplog, capfd):
+    """A non-numeric animal count was a 500, and its traceback logged the cell text."""
+    caplog.set_level(logging.DEBUG)
+    import server.app as app_module
+    monkeypatch.setattr(app_module.limiter, "enabled", False)
+    bad = _bad_count_html(marker)
+    with app.test_client() as client:
+        for route in ("/api/analyze", "/api/analyze-with-session"):
+            r = client.post(route, json={"html_content": bad})
+            assert r.status_code == 400, route
+            assert marker not in r.get_data(as_text=True)
+            assert client.post(route, json={"html_content": 123}).status_code == 400, route
+    _analysis_cache.clear()
+    _assert_clean(marker, caplog, capfd)
+
+
+def test_layer3_prompts_carry_no_personal_identifiers():
+    """Layer 2 has sent only allowlisted fields since #37; Layer 3 sent the whole instance."""
+    instance = parse_html(FIXTURE.read_text(encoding="utf-8"))
+    report = lint(instance, profile="default")
+    pi = instance["pi"]
+    identifiers = [pi["id_number"], pi["email"], pi["phone_primary"], pi["phone_secondary"],
+                   instance["participants"][0]["national_id_or_passport"], instance["pi_declaration"]["name"]]
+    prompts = (llm_layer3._build_pass1_prompt(instance, report),
+               llm_layer3._build_pass2_prompt(instance, report, {"sections": []}, None))
+    for prompt in prompts:
+        for value in identifiers:
+            assert value not in prompt
+    assert all("experiments" in p and pi["training"][0]["animal_scope"] in p for p in prompts)  # the protocol itself still goes
+
+
+def test_uploads_never_touch_disk(monkeypatch):
+    """Werkzeug spools multipart files over 500 KB to a temp file; protocol text stays in memory."""
+    import io
+    import tempfile
+    import server.app as app_module
+    monkeypatch.setattr(app_module.limiter, "enabled", False)
+    monkeypatch.setattr(tempfile, "TemporaryFile", lambda *a, **k: pytest.fail("upload spooled to a temp file"))
+    html = FIXTURE.read_text(encoding="utf-8").replace("</body>", "<!--" + "x" * 600_000 + "--></body>")
+    with app.test_client() as client:
+        r = client.post("/api/analyze", data={"file": (io.BytesIO(html.encode()), "p.html")},
+                        content_type="multipart/form-data")
+    assert r.status_code == 200

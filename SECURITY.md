@@ -43,11 +43,14 @@ auth layer (e.g., reverse proxy with basic auth or OAuth).
   Known limit: the check is syntactic (hostname shape), not a DNS or socket
   check, and HTTP redirects are never followed. In Kubernetes the NetworkPolicy
   is the real backstop; a bare-VM or Docker deployment has none beyond this gate.
+  Ollama cloud models (`*-cloud`, `*:cloud`) reach ollama.com through a local
+  daemon, so the model name is gated by the same flag.
 - **No persistence**: protocols live in process memory (~1 h TTL), never on disk
   or in logs. See [PRIVACY.md](PRIVACY.md).
 - **No authentication**: By design for local use. See `server/app.py` header comment.
 - **Rate limiting**: 10 requests/minute on analysis endpoints, 60/minute global.
-- **Session expiry**: In-memory sessions expire after 1 hour.
+- **Session expiry**: In-memory sessions are swept on every request and never
+  served after 1 hour.
 - **CSP headers**: Content Security Policy (per-request script nonces, no
   `unsafe-inline` for scripts), X-Frame-Options, X-Content-Type-Options are set
   on all responses.

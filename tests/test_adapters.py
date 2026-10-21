@@ -121,3 +121,35 @@ def test_deeply_nested_json_is_a_400_not_a_500():
     for depth in (20000, 250000):
         with pytest.raises(IngestError):
             parse_canonical_json("[" * depth + "]" * depth)
+
+
+def test_parser_failures_are_ingest_errors_without_the_cell_text():
+    """parse_html raises ValueError/TypeError with the offending cell in the message; the user gets a plain 400."""
+    import re
+    m = re.search(r'כמות\s*</td><td style="width:25%">(\d+)', GOOD_HTML)
+    bad = GOOD_HTML[:m.end(1)] + " בערך SECRET-CELL" + GOOD_HTML[m.end(1):]
+    with pytest.raises(IngestError, match="unmodified export") as ei:
+        ingest(bad, "x.html")
+    assert "SECRET" not in str(ei.value) and ei.value.__cause__ is None and ei.value.__suppress_context__
+    with pytest.raises(IngestError):
+        ingest(123, "x.html")
+
+
+def test_bom_prefixed_upload_is_accepted():
+    canon = json.dumps(schema_skeleton()).encode()
+    assert ingest(b"\xef\xbb\xbf" + canon, "p.json")[1] == "canonical-json"
+    assert ingest(b"\xef\xbb\xbf" + GOOD_HTML.encode())[1] == "il-council-html"  # detection, no filename
+
+
+def test_huge_invalid_array_is_a_fast_400(monkeypatch):
+    """jsonschema yields one error per bad item; sorting them all took 361 MB for 100k items."""
+    import time
+    import server.app as app_module
+    monkeypatch.setattr(app_module.limiter, "enabled", False)
+    body = json.dumps({"instance": {"experiments": [1] * 200_000}})
+    with app.test_client() as c:
+        t0 = time.perf_counter()
+        r = c.post("/api/analyze", data=body, content_type="application/json")
+        elapsed = time.perf_counter() - t0
+    assert r.status_code == 400
+    assert elapsed < 1.0, elapsed

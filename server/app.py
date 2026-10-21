@@ -1,3 +1,4 @@
+import io
 import os
 import sys
 import json
@@ -10,7 +11,7 @@ from datetime import datetime, timedelta
 # Add the parent directory to the path so we can import src modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flask import Flask, g, render_template, request, jsonify, Response, stream_with_context
+from flask import Flask, Request, g, render_template, request, jsonify, Response, stream_with_context
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import requests as http_requests
@@ -21,7 +22,8 @@ from src import feedback
 from src.llm_agent import THEME_SPECS, law_loaded, run_verification_stream
 from src.rules import RULES
 from src.llm_clients import (
-    LLMError, PROVIDERS, call_llm, local_first_status, ollama_base_url, provider_configured, provider_default_model,
+    LLMError, PROVIDERS, call_llm, is_ollama_cloud_model, local_first_status, ollama_base_url, provider_configured,
+    provider_default_model, remote_llm_allowed,
 )
 from src.llm_layer3 import run_human_eye_stream
 
@@ -60,9 +62,18 @@ if not law_loaded():
         "LLM review will run without law grounding. /api/health reports law_loaded=false."
     )
 
+
+class _InMemoryRequest(Request):
+    """Werkzeug spools uploads over 500 KB to /tmp; protocol files stay in memory (bounded by MAX_CONTENT_LENGTH)."""
+
+    def _get_file_stream(self, total_content_length, content_type, filename=None, content_length=None):
+        return io.BytesIO()
+
+
 app = Flask(__name__,
             template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
             static_folder=os.path.join(os.path.dirname(__file__), 'static'))
+app.request_class = _InMemoryRequest
 
 # Configure upload settings
 ALLOWED_EXTENSIONS = {ext for a in ADAPTERS.values() for ext in a.extensions}  # html, htm, json
@@ -189,6 +200,27 @@ def analyzer():
     return render_template('app.html', advisory_notice=ADVISORY_NOTICE)
 
 
+def _ingest_request():
+    """(instance, adapter) from a file upload, a canonical instance or raw HTML in a JSON body.
+    Every refusal is an IngestError, whose message is safe to show (the routes answer 400)."""
+    if 'file' in request.files:  # HTML export or canonical JSON, see src/adapters.py
+        file = request.files['file']
+        if file.filename == '':
+            raise IngestError('No file selected')
+        if not allowed_file(file.filename):
+            raise IngestError('Invalid file type. Please upload an HTML export or a canonical JSON instance.')
+        return ingest(file.read(), file.filename)
+    if request.is_json:
+        data = request.get_json(silent=True)  # malformed JSON is a 400 below, not a 500
+        if isinstance(data, dict) and isinstance(data.get('instance'), dict):
+            return ingest(json.dumps(data['instance']), 'instance.json')
+        html_content = data.get('html_content') if isinstance(data, dict) else None
+        if not html_content:
+            raise IngestError('Missing html_content in request body')
+        return ingest(html_content, 'upload.html')
+    raise IngestError('Please upload an HTML file or provide html_content in JSON body')
+
+
 @app.route('/api/analyze', methods=['POST'])
 @limiter.limit("10 per minute")
 def analyze():
@@ -208,42 +240,7 @@ def analyze():
     }
     """
     try:
-        # Handle file upload (HTML export or canonical JSON — see src/adapters.py)
-        if 'file' in request.files:
-            file = request.files['file']
-            if file.filename == '':
-                return jsonify({
-                    'success': False,
-                    'error': 'No file selected'
-                }), 400
-
-            if not allowed_file(file.filename):
-                return jsonify({
-                    'success': False,
-                    'error': 'Invalid file type. Please upload an HTML export or a canonical JSON instance.'
-                }), 400
-
-            instance, adapter = ingest(file.read(), file.filename)
-
-        # Handle JSON body with raw HTML, or a canonical instance
-        elif request.is_json:
-            data = request.get_json()
-            if isinstance(data, dict) and isinstance(data.get('instance'), dict):
-                instance, adapter = ingest(json.dumps(data['instance']), 'instance.json')
-            else:
-                html_content = data.get('html_content') if isinstance(data, dict) else None
-                if not html_content:
-                    return jsonify({
-                        'success': False,
-                        'error': 'Missing html_content in request body'
-                    }), 400
-                instance, adapter = ingest(html_content, 'upload.html')
-
-        else:
-            return jsonify({
-                'success': False,
-                'error': 'Please upload an HTML file or provide html_content in JSON body'
-            }), 400
+        instance, adapter = _ingest_request()
 
         # Run linter
         lint_report = lint(instance, profile='default')
@@ -260,11 +257,6 @@ def analyze():
 
     except IngestError as e:
         return jsonify({'success': False, 'error': str(e)}), 400
-    except UnicodeDecodeError:
-        return jsonify({
-            'success': False,
-            'error': 'Could not decode file. Please ensure the file is UTF-8 encoded.'
-        }), 400
     except Exception as e:
         logger.error("Analysis failed", exc_info=True)
         return jsonify({
@@ -320,6 +312,13 @@ def _cleanup_expired_sessions(max_age_hours=1):
         del _analysis_cache[key]
 
 
+@app.before_request
+def expire_sessions():
+    """Sweep on every request, not only on a new upload (the container health check fires every 30 s)."""
+    with _cache_lock:
+        _cleanup_expired_sessions()
+
+
 def _store_session(entry):
     session_id = str(uuid.uuid4())
     with _cache_lock:
@@ -333,6 +332,7 @@ def _store_session(entry):
 
 def _get_session(session_id):
     with _cache_lock:
+        _cleanup_expired_sessions()
         return _analysis_cache.get(session_id)
 
 
@@ -403,7 +403,8 @@ def ollama_models():
             raise LLMError(f"Ollama /api/tags returned HTTP {resp.status_code}")
         data = resp.json()
         models = sorted(
-            [m["name"] for m in data.get("models", [])],
+            # cloud models are refused at call time without the opt-in, so the picker does not offer them
+            [m["name"] for m in data.get("models", []) if remote_llm_allowed() or not is_ollama_cloud_model(m["name"])],
             key=str.lower,
         )
         return jsonify({"success": True, "models": models})
@@ -424,24 +425,7 @@ def analyze_with_session():
     Returns a session_id to use with /api/llm-verify-stream.
     """
     try:
-        if 'file' in request.files:
-            file = request.files['file']
-            if file.filename == '':
-                return jsonify({'success': False, 'error': 'No file selected'}), 400
-            if not allowed_file(file.filename):
-                return jsonify({'success': False, 'error': 'Invalid file type'}), 400
-            instance, adapter = ingest(file.read(), file.filename)
-        elif request.is_json:
-            data = request.get_json()
-            if isinstance(data, dict) and isinstance(data.get('instance'), dict):
-                instance, adapter = ingest(json.dumps(data['instance']), 'instance.json')
-            else:
-                html_content = data.get('html_content') if isinstance(data, dict) else None
-                if not html_content:
-                    return jsonify({'success': False, 'error': 'Missing html_content'}), 400
-                instance, adapter = ingest(html_content, 'upload.html')
-        else:
-            return jsonify({'success': False, 'error': 'Please upload an HTML file'}), 400
+        instance, adapter = _ingest_request()
         lint_report = lint(instance, profile='default')
         rendered_html = render_html_with_refs(instance)
 

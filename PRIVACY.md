@@ -11,11 +11,15 @@ the source.
 1. **Protocols are never written to disk.** An upload is parsed in memory,
    linted in memory, and (optionally) sent to the LLM from memory. There is no
    database, no upload folder, no cache file. The container's only writable
-   paths are `/tmp` and `/app/output`, and the server writes to neither.
+   paths are `/tmp` and `/app/output`, and the server writes to neither:
+   Werkzeug would spool an upload over 500 KB to `/tmp`, so the app keeps every
+   upload in a memory buffer instead (bounded by the 16 MB request cap).
 2. **Protocols live in process memory for about one hour, at most.** A review
    session is a UUID4 key in a dict (`server/app.py: _analysis_cache`).
-   Entries older than one hour are evicted on the next upload; the dict is
-   capped at 100 sessions. Restarting the process erases everything.
+   Entries older than one hour are swept on every request (the container
+   health check sends one every 30 seconds) and are never served after that
+   hour; the dict is capped at 100 sessions. Restarting the process erases
+   everything.
 3. **No protocol text ever appears in logs, at any log level.** Logs carry
    session UUIDs, timings, token counts, prompt *sizes* and fixed error
    strings. Exceptions are logged with tracebacks, which contain source lines
@@ -24,6 +28,9 @@ the source.
    `127.0.0.1`. The app refuses to send anything to a host that is not
    loopback, private-network or cluster-internal unless the operator sets
    `ETIQTECH_ALLOW_REMOTE_LLM=1`, and logs a startup warning when they do.
+   Ollama models named `*-cloud` or `*:cloud` run on ollama.com through the
+   local daemon, so they need the same opt-in and are hidden from the model
+   picker without it.
    `/api/health` reports `llm_local`. The reference Kubernetes manifests
    target an in-cluster Ollama and their NetworkPolicy blocks other egress.
 5. **No user accounts, no tracking.** The app has no authentication layer and
@@ -45,9 +52,9 @@ the source.
 
 | Guarantee | Enforcement |
 |-----------|-------------|
-| 1, 2 | The only persistence path is the metadata-only feedback store (below), covered by the canary; `tests/test_privacy_canary.py` runs the full pipeline and the HTTP API on a protocol carrying a unique marker string and fails if the marker reaches any log, stdout or stderr. Adding persistence would have to add code that this test then has to be taught to ignore — a deliberate act, not an accident. |
+| 1, 2 | Uploads use an in-memory stream (`server/app.py: _InMemoryRequest`); sessions are swept in a `before_request` hook and in `_get_session` (`tests/test_flask_e2e.py`). The only persistence path is the metadata-only feedback store (below), covered by the canary; `tests/test_privacy_canary.py` runs the full pipeline and the HTTP API on a protocol carrying a unique marker string and fails if the marker reaches any log, stdout or stderr. Adding persistence would have to add code that this test then has to be taught to ignore — a deliberate act, not an accident. |
 | 3 | Logging is configured once in `server/app.py` (default INFO); the canary runs at DEBUG. |
-| 4 | `src/llm_clients.ollama_base_url()` gate + `tests/test_local_first.py`; k8s NetworkPolicy. |
+| 4 | `src/llm_clients.ollama_base_url()` gate and the cloud-model name check (`_check_ollama_model`) + `tests/test_local_first.py`; k8s NetworkPolicy. |
 | 5 | Documented design decision; see SECURITY.md. |
 
 ## The one thing that is stored: finding feedback (metadata only)
