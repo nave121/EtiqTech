@@ -32,6 +32,7 @@
       "euthanasia:CO2",
       "euthanasia:displacement-rate",
       "euthanasia:secondary-method",
+      "severity:monitoring",
       "vet:consultation"
     ],
     "target_l2_themes": [

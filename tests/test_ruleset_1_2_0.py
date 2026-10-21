@@ -5,7 +5,7 @@ import copy
 from src.adapters import schema_errors
 from src.html_to_json import _parse_pain_category_structured, has_pilot_marker, parse_html
 from src.linter_renderer import lint, render_html_with_refs
-from src.rules import KNOWN_RULESET_VERSIONS, RULESET_VERSION
+from src.rules import KNOWN_RULESET_VERSIONS
 
 _EXP = {
     "label": "Experiment 1",
@@ -32,8 +32,8 @@ def _fails(rule_id, profile="default", **exp_fields):
     return [c for c in report["checklist"] if c.get("status") == "fail" and c.get("rule_id") == rule_id]
 
 
-def test_version_is_1_2_0():
-    assert RULESET_VERSION == "1.2.0" and "1.2.0" in KNOWN_RULESET_VERSIONS
+def test_version_1_2_0_stays_known():
+    assert "1.2.0" in KNOWN_RULESET_VERSIONS  # the current version is pinned in test_ruleset_1_3_0.py
 
 
 def test_monitoring_documentation_is_read():

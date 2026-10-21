@@ -315,7 +315,7 @@ Top-level required blocks: `header`, `research`, `pi`, `participants`, `summarie
 - `is_colony`: If true, invasive experiments must not be present.
 - `colony_block`: Required when is_colony=true or request_type='colony'.
 - `experiments`: If surgery or invasive procedures are present, analgesia/anesthesia must be described.
-- `experiments`: Severity >=4 requires daily monitoring in the first 72h and at least weekly afterward.
+- `experiments`: Severity >=4 monitoring must state how often animals are checked, more often than once a week; committees expect daily or every 12-48 h checks early on.
 - `experiments`: CO2 euthanasia requires flow rate (30–70% chamber volume/min) and a confirmation step.
 - `experiments`: If text mentions tumor/graft → oncology sub-block required (tumor_burden_cap, ulceration_policy).
 - `experiments`: If diabetes model → diabetes block required (fasted/non_fasted, BG threshold).
