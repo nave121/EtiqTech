@@ -1602,8 +1602,10 @@
         printBlock.id = 'layer3-print-block';
         printBlock.className = 'print-only-details';
 
-        let printHtml = `<div class="print-llm-box ${isOk ? 'ok' : 'needs-fixes'}">`;
-        printHtml += `<strong>Human Eye Review (Layer 3) — Verdict: ${escapeHtml(verdict.toUpperCase())}`;
+        let printHtml = `<div class="print-llm-box ${unavailable ? 'unavailable' : isOk ? 'ok' : 'needs-fixes'}">`;
+        printHtml += unavailable
+            ? `<strong>Human Eye Review (Layer 3): ${escapeHtml(LAYER3_UNAVAILABLE)}`
+            : `<strong>Human Eye Review (Layer 3) — Verdict: ${escapeHtml(verdict.toUpperCase())}`;
         if (risk) printHtml += ` | Risk: ${escapeHtml(risk)}`;
         printHtml += `</strong><br>`;
         if (summary) printHtml += `${escapeHtml(summary)}<br>`;
