@@ -14,6 +14,8 @@ the decision for all three.
 - `changes/deps-hypothesis/plan.md`: new (this file).
 - `changes/deps-hypothesis/spec.md`: modified. Status line `draft` -> `accepted`, in the plan
   commit, per sdlc-artifacts "flip the line in the next stage's first commit".
+- `changes/deps-hypothesis/intent.md`: unchanged by this stage, but present in
+  `git diff main --stat` because the intent and spec commits ride on this same branch.
 
 Not touched: `pyproject.toml` (floor `hypothesis>=6.120` at line 38 stays, R2), `tests/`
 (R5), every other pin in `requirements.txt` (R1), `.github/workflows/` (protected).
@@ -76,11 +78,13 @@ the only difference from `main` is `changes/deps-hypothesis/`: `891 passed, 5 sk
 - `make check PYTHON=.venv/bin/python` -> flake8 exits 0, then `891 passed, 5 skipped`
   (R3; N equals the baseline, so equals `main`'s N).
 - `.venv/bin/python -m pytest tests/test_linter_properties.py -q` -> all passed, 0 failed (R6).
-- `git log -2 --format='%h %an%n%(trailers:key=Change)'` -> top commit authored by
-  `dependabot[bot]` with `Change: deps-hypothesis`; the one below by Razy or Claude with the
-  same trailer.
-- `git log main..HEAD --format=%s` -> four subjects: intent, spec, plan, and
-  `build(deps): bump hypothesis from 6.168.3 to 6.170.1`.
+- `git log main..HEAD --format='%h %an%n%(trailers:key=Change)'` -> every commit carries
+  `Change: deps-hypothesis`; exactly one is authored by `dependabot[bot]` (the pin commit);
+  the rest show the committer identity of this env, `root` (git identity is not configured
+  in the proot; Razy's call whether to set it).
+- `git log main..HEAD --format=%s` -> five subjects: intent, spec, plan,
+  `build(deps): bump hypothesis from 6.168.3 to 6.170.1`, and the plan deviations commit(s).
+  Any further deviations commit adds one more; the pin commit stays the only code commit.
 
 Checked on the PR, not here: CI jobs `test`, `security`, `audit`, `docker` green (R4);
 PR #47 state `closed` with this comment, paste-ready for Razy (spec C4, R7):
@@ -106,3 +110,13 @@ PR #47 state `closed` with this comment, paste-ready for Razy (spec C4, R7):
   `test_parallel_calls_overlap` assert overlap by counting concurrent in-flight calls, not
   wall-clock seconds. Probe files left under the gitignored `output/dev_runs/` (`probe.py`,
   `probe_test.py`); Razy deletes.
+- **The gate is not reliably green on this machine; the proof's `891 passed` is met on 1 of
+  6 full runs.** The verifier's two independent `make check` runs were both red on the same
+  test (1.91 s, 1.90 s), and its full run without `-x` gave `1 failed, 890 passed, 5 skipped`,
+  that test the only failure. The pin commit is not the cause (evidence above), but done-when
+  item 1 (`make check` green) is met only by the one passing run quoted here and not on
+  demand. Resolution is outside this slug: the follow-up intent on the wall-clock test, or
+  a green CI `test` job on the PR (ci.yml:23, a Linux runner, not a phone) as the gate record.
+- Each Deviations update is its own commit above the pin commit (the code commit itself
+  departed from nothing), so the branch carries more than the four commits first planned;
+  the Proof lines were rewritten to say so.
