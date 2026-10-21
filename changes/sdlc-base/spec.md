@@ -49,6 +49,13 @@ Each is traceable to intent.md by line number (intent.md @ dcd4957).
 - **C5. Security-baseline rule 6 reads "version bumps are their own change with their own slug", while the intent treats "dependabot bumps #46 and #47" as one next change** (intent.md:22). The two readings conflict. Owner: Razy (policy owner and maintainer). Recommendation: one slug per dependabot PR, because each is merged on its own. Carried to the next change's intent; does not block this one.
 - Security-baseline rules 2 (authentication), 3 (input validation), 4 (PII) and 5 (audit) are not touched: this change adds no endpoint, input, log line or state-changing code. Rule 1: no secret is written; `CLAUDE.md` must carry none (R2, R7). Rule 6: no dependency added (R11).
 
+## Decisions (Razy, 2026-10-21)
+- C1: ignore `.claude/` entirely in `.gitignore`. R7's `git ls-files .claude` check stays.
+- C2: add one `run: make lint` step to the existing `test` job in `.github/workflows/ci.yml`. No new workflow.
+- C3: accepted as written; `make check` runs the full suite.
+- C4: checked through the API on 2026-10-21: `main` has no branch protection and no rulesets. Razy sets it in Settings > Branches (PR required, status check `test` required). Not part of this change's files.
+- C5: one slug per dependabot PR (`deps-hypothesis`, `deps-pydantic`), per security-baseline rule 6.
+
 ## Open questions carried from intent.md
 
 - **Dvir Mintz's view on the `changes/` folder** (intent.md:46). Carried. Owner: Razy, who asked. Due: before the sdlc-base PR merges. If unanswered, the merge proceeds, because the folder is additive and leaves external contributors untouched (R8, R9); an objection becomes a new intent.
