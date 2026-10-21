@@ -90,3 +90,19 @@ PR #47 state `closed` with this comment, paste-ready for Razy (spec C4, R7):
 ## Deviations
 - Plan mode was not entered: this was a headless run and Razy pre-approved the plan in the
   invocation, conditional on it naming files, order, risks and proof.
+- **The gate was red twice before it was green.** After the cherry-pick, `make check` failed
+  on `tests/test_l2_parallel.py::test_parallel_calls_overlap` (line 82, a wall-clock assert
+  `< 1.5 s`) with 2.5 s, then 3.1 s on a re-run alone; the file by itself failed twice more
+  (3.56 s, 1.97 s). The third full `make check` passed: `891 passed, 5 skipped in 26.21s`.
+  Evidence the pin is not the cause: the test imports no hypothesis; the venv held
+  `hypothesis-6.170.1.dist-info` before the pin moved, so the pin edit changed no runtime
+  bytes; the same test passed in the baseline run on the same venv 15 minutes earlier; a
+  `ThreadPoolExecutor(12)` probe of 22 x `sleep(0.2)` ran at 0.41 s (ideal 0.40 s), so the
+  thread primitive is fine; `nproc` is 4 and load average was 0.12 with nothing else running.
+  Cause: inference, unverified: the parallel Layer 2 path (`src/llm_agent.py:1377`, pool of
+  12 threads doing CPU-bound prompt building under the GIL on a phone) runs near the 1.5 s
+  bound, and the bound is a timing claim the test machine must meet. Not touched here
+  (CLAUDE.md: never edit a test to make a fix pass). Separate intent proposed: make
+  `test_parallel_calls_overlap` assert overlap by counting concurrent in-flight calls, not
+  wall-clock seconds. Probe files left under the gitignored `output/dev_runs/` (`probe.py`,
+  `probe_test.py`); Razy deletes.
