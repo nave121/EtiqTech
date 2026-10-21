@@ -10,13 +10,10 @@ Usage examples:
     python scripts/eval_cases.py --profile strict_law
 
     # Include LLM verification (requires running Ollama/OpenAI provider)
-    python scripts/eval_cases.py --with-llm --llm-mode multi
+    python scripts/eval_cases.py --with-llm
 
     # Limit number of files per set for quicker runs
     python scripts/eval_cases.py --limit-good 5 --limit-bad 5
-
-    # Run the LLM in the softer committee stance
-    python scripts/eval_cases.py --with-llm --llm-stance committee
 """
 
 import argparse
@@ -45,8 +42,6 @@ def _analyze_dir(
     profile: str,
     limit: Optional[int],
     with_llm: bool,
-    llm_mode: str,
-    llm_stance: str,
 ) -> Dict[str, Any]:
     files = sorted(path.glob("*.html"))
     if limit is not None:
@@ -72,12 +67,7 @@ def _analyze_dir(
             llm_verdict = None
             if with_llm:
                 try:
-                    llm_verdict = run_verification(
-                        instance,
-                        report,
-                        mode=llm_mode,
-                        stance=llm_stance,
-                    )
+                    llm_verdict = run_verification(instance, report)
                 except Exception as exc:  # noqa: BLE001
                     llm_verdict = {"error": str(exc)}
 
@@ -123,18 +113,6 @@ def main() -> None:
     parser.add_argument("--limit-good", type=int, default=None, help="Limit number of good files")
     parser.add_argument("--limit-bad", type=int, default=None, help="Limit number of bad files")
     parser.add_argument("--with-llm", action="store_true", help="Run LLM verification (requires provider)")
-    parser.add_argument(
-        "--llm-mode",
-        choices=["multi", "single"],
-        default="multi",
-        help="LLM verification mode (multi = per-theme prompts, single = legacy mega prompt)",
-    )
-    parser.add_argument(
-        "--llm-stance",
-        choices=["law", "committee"],
-        default="law",
-        help="LLM stance: strict law vs. softer committee-approved weighting.",
-    )
     parser.add_argument("--output", type=Path, default=None, help="Optional path to write JSON report")
 
     args = parser.parse_args()
@@ -144,16 +122,12 @@ def main() -> None:
         args.profile,
         args.limit_good,
         args.with_llm,
-        args.llm_mode,
-        args.llm_stance,
     )
     bad_report = _analyze_dir(
         args.bad_dir,
         args.profile,
         args.limit_bad,
         args.with_llm,
-        args.llm_mode,
-        args.llm_stance,
     )
 
     out = {"good": good_report, "bad": bad_report}

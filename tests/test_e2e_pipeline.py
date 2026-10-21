@@ -28,6 +28,14 @@ BAD_HTML = (
 FALLBACK_LAYER3_SUMMARY = "The second read did not complete: the AI did not answer."
 
 
+def _streamed(answers):
+    """call_llm-style answers (a list, or a function of the prompt) as call_llm_stream side effects:
+    the batch Layer 3 entry point runs through the stream."""
+    if callable(answers):
+        return lambda prompt, **kwargs: iter([answers(prompt, **kwargs)])
+    return [iter([a]) for a in answers]
+
+
 def _load_report(html_path: Path):
     html_content = html_path.read_text(encoding="utf-8")
     instance = parse_html(html_content)
@@ -134,7 +142,7 @@ def test_e2e_clean_protocol_still_gets_layer3():
         "src.llm_agent.call_llm",
         side_effect=_all_ok_theme_side_effect,
     ):
-        layer2 = run_verification(instance, report, stance="committee")
+        layer2 = run_verification(instance, report)
 
     assert set(layer2["themes"]) == set(THEME_SPECS)
     assert all(
@@ -142,7 +150,7 @@ def test_e2e_clean_protocol_still_gets_layer3():
         for theme in layer2["themes"].values()
     )
 
-    with patch("src.llm_layer3.call_llm", side_effect=[_layer3_pass1(), _layer3_pass2()]) as mock_layer3:
+    with patch("src.llm_layer3.call_llm_stream", side_effect=_streamed([_layer3_pass1(), _layer3_pass2()])) as mock_layer3:
         layer3 = run_human_eye(instance, report, layer2)
 
     assert mock_layer3.call_count == 2
@@ -178,10 +186,10 @@ def test_e2e_known_bad_protocol_gets_layer3_verdict():
         )
 
     with patch("src.llm_agent.call_llm", side_effect=layer2_side_effect):
-        layer2 = run_verification(instance, report, stance="committee")
+        layer2 = run_verification(instance, report)
 
     llm_responses = [_layer3_pass1(), _layer3_pass2()]
-    with patch("src.llm_layer3.call_llm", side_effect=llm_responses):
+    with patch("src.llm_layer3.call_llm_stream", side_effect=_streamed(llm_responses)):
         layer3 = run_human_eye(instance, report, layer2)
 
     assert layer2["themes"]["scientific_coherence"]["label"] == "inadequate"
@@ -225,7 +233,7 @@ def test_e2e_layer_findings_propagate_through_layer2_and_layer3():
         )
 
     with patch("src.llm_agent.call_llm", side_effect=layer2_side_effect):
-        layer2 = run_verification(instance, report, stance="committee")
+        layer2 = run_verification(instance, report)
 
     scientific_prompts = [
         prompt for prompt in layer2_prompts
@@ -256,7 +264,7 @@ def test_e2e_layer_findings_propagate_through_layer2_and_layer3():
         layer3_prompts.append(prompt)
         return layer3_responses[len(layer3_prompts) - 1]
 
-    with patch("src.llm_layer3.call_llm", side_effect=layer3_side_effect):
+    with patch("src.llm_layer3.call_llm_stream", side_effect=_streamed(layer3_side_effect)):
         run_human_eye(instance, report, layer2)
 
     assert "animals:totals-vs-exps" not in layer3_prompts[0]
@@ -287,7 +295,7 @@ def test_live_llm_e2e_smoke():
 
     instance, report = _load_report(GOOD_HTML)
 
-    layer2 = run_verification(instance, report, stance="committee")
+    layer2 = run_verification(instance, report)
     assert set(layer2["themes"]) == set(THEME_SPECS)
     assert any(
         isinstance(theme.get("score"), int)

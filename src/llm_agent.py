@@ -11,8 +11,6 @@ from typing import Any, Dict, Generator, List, Optional
 from .llm_clients import LLMError, call_llm, call_llm_stream, call_llm_two_step, context_budget_warning, provider_name
 from .retrieval import format_grounding_block, get_retriever, grounding_enabled, grounding_refs
 from .rules import PACKS, active_pack
-from .schema import IACUC_SCHEMA_V2
-from .xmeta_catalog import load_high_leverage_catalog
 
 PROMPTS_DIR = Path(__file__).parent.parent / "llm"
 # The statute itself (1994 law + 2001 rules, English translation). Until 2026-09-06 this pointed at the
@@ -367,19 +365,6 @@ def active_theme_specs() -> Dict[str, Dict[str, Any]]:
     return {k: v for k, v in THEME_SPECS.items() if k not in excluded}
 
 
-_ALLOWED_PROMPTS = frozenset({
-    "llm_verifier_prompt.md",
-    "llm_autofix_prompt.md",
-    "llm_human_eye_prompt.md",
-})
-
-
-def load_prompt(filename: str) -> str:
-    if filename not in _ALLOWED_PROMPTS:
-        raise ValueError(f"Unknown prompt: {filename}")
-    return (PROMPTS_DIR / filename).read_text(encoding="utf-8")
-
-
 _law_missing_warned = False
 
 
@@ -395,22 +380,12 @@ def _load_law_text(max_chars: int = 1200) -> str:
 
 
 def _load_case_reports(max_chars: int = 2000) -> str:
-    """
-    Load a trimmed global ethics report + CASE_REPORTs to ground thematic reasoning.
-    """
-    texts: List[str] = []
+    """The head of the global ethics report, to ground thematic reasoning. The per-case CASE_REPORTs
+    (committee-letter notes) are not read: the cut always dropped them after the global report."""
     global_report = HEAD_TO_HEAD_DIR / "GLOBAL_ETHICS_REPORT.md"
-    if global_report.exists():
-        texts.append("# GLOBAL_ETHICS_REPORT\n" + global_report.read_text(encoding="utf-8"))
-
-    if HEAD_TO_HEAD_DIR.exists():
-        for p in HEAD_TO_HEAD_DIR.rglob("CASE_REPORT.md"):
-            try:
-                texts.append(f"# CASE_REPORT: {p.parent.name}\n" + p.read_text(encoding="utf-8"))
-            except OSError:
-                continue
-    joined = "\n\n---\n\n".join(texts)
-    return joined[:max_chars]
+    if not global_report.exists():
+        return ""
+    return ("# GLOBAL_ETHICS_REPORT\n" + global_report.read_text(encoding="utf-8"))[:max_chars]
 
 
 def _filter_checks(lint_report: Dict[str, Any], prefixes: List[str]) -> List[Dict[str, Any]]:
@@ -876,106 +851,6 @@ def _build_theme_metadata(
     }
 
 
-def prepare_verification_prompt(instance: Dict[str, Any], lint_report: Dict[str, Any]) -> str:
-    """
-    Compose the full prompt for the 'Human Verify' step (legacy single-call).
-    """
-    base_prompt = load_prompt("llm_verifier_prompt.md")
-    reference_catalog = json.dumps(load_high_leverage_catalog(), indent=2, ensure_ascii=False)
-    law_text = _load_law_text()
-    case_reports = _load_case_reports()
-
-    schema_str = json.dumps(IACUC_SCHEMA_V2, indent=2, ensure_ascii=False)
-    instance_str = json.dumps(instance, indent=2, ensure_ascii=False)
-    report_str = json.dumps(lint_report, indent=2, ensure_ascii=False)
-    analysis_str = json.dumps(lint_report.get("analysis") or {}, indent=2, ensure_ascii=False)
-
-    return f"""{base_prompt}
-
----
-### 0. Law and official guidance (English translation)
-{law_text}
-
-### 0b. Head-to-head committee reasoning (GLOBAL_ETHICS_REPORT + CASE_REPORTs)
-{case_reports}
-
-### 1. High-leverage x_meta reference catalog (N, 3Rs, severity, monitoring, analgesia, endpoints, euthanasia)
-```json
-{reference_catalog}
-```
-
-### 2. Schema (with x_meta rules)
-```json
-{schema_str}
-```
-
-### 3. JSON Instance
-```json
-{instance_str}
-```
-
-### 4. Linter Report
-```json
-{report_str}
-```
-
-### 5. Extracted analysis signals (summary, alternatives, per-experiment features)
-```json
-{analysis_str}
-```
-"""
-
-
-def prepare_autofix_prompt(instance: Dict[str, Any], lint_report: Dict[str, Any]) -> str:
-    """
-    Compose the full prompt for the 'Autofix' step.
-    """
-    base_prompt = load_prompt("llm_autofix_prompt.md")
-    reference_catalog = json.dumps(load_high_leverage_catalog(), indent=2, ensure_ascii=False)
-    law_text = _load_law_text()
-    case_reports = _load_case_reports()
-
-    schema_str = json.dumps(IACUC_SCHEMA_V2, indent=2, ensure_ascii=False)
-    instance_str = json.dumps(instance, indent=2, ensure_ascii=False)
-    report_str = json.dumps(lint_report, indent=2, ensure_ascii=False)
-    analysis_str = json.dumps(lint_report.get("analysis") or {}, indent=2, ensure_ascii=False)
-
-    return f"""{base_prompt}
-
----
-### 0. Law and official guidance (English translation)
-{law_text}
-
-### 0b. Head-to-head committee reasoning (GLOBAL_ETHICS_REPORT + CASE_REPORTs)
-{case_reports}
-
-### 1. High-leverage x_meta reference catalog (N, 3Rs, severity, monitoring, analgesia, endpoints, euthanasia)
-```json
-{reference_catalog}
-```
-
-### 2. Schema
-```json
-{schema_str}
-```
-
-### 3. Input Instance
-```json
-{instance_str}
-```
-
-### 4. Linter Report
-```json
-{report_str}
-```
-
-### 5. Extracted analysis signals (summary, alternatives, per-experiment features)
-```json
-{analysis_str}
-```
-"""
-
-
 def _strip_code_fence(payload: str) -> str:
     """Strip markdown code fences from payload, handling various positions."""
     payload = payload.strip()
@@ -1065,7 +940,6 @@ def parse_llm_json(response_text: str) -> Dict[str, Any]:
         except json.JSONDecodeError:
             pass
 
-    preview = cleaned[:300].replace("\n", " ")
     raise ValueError("LLM response was not valid JSON")
 
 
@@ -1076,160 +950,11 @@ def run_verification(
     provider: Optional[str] = None,
     model: Optional[str] = None,
     temperature: float = 0.2,
-    mode: str = "multi",  # "multi" (per-theme small prompts) or "single" (legacy mega prompt)
-    stance: str = "law",  # "law" (strict) or "committee" (legacy/approved softness)
 ) -> Dict[str, Any]:
-    """
-    Execute the verification prompt against the configured LLM provider
-    and return the parsed JSON verdict.
-    """
-    if mode == "single":
-        prompt = prepare_verification_prompt(instance, lint_report)
-        try:
-            raw_response = call_llm(prompt, provider=provider, model=model, temperature=temperature)
-        except LLMError as exc:
-            raise RuntimeError(f"LLM verification call failed: {type(exc).__name__}") from exc  # no provider text
-        return parse_llm_json(raw_response)
-
-    # Default: multi-theme, smaller prompts to reduce model load.
-    themes: Dict[str, Any] = {}
-    pass1_themes: Dict[str, Any] = {}
-    theme_metadata: Dict[str, Any] = {}
-    questions: List[Dict[str, Any]] = []
-    disagreement_theme_keys: List[str] = []
-
-    use_two_step = os.getenv("OLLAMA_TWO_STEP", "").lower() in ("1", "true")
-    grounding_notice: Optional[str] = None
-    grounded = grounding_enabled()  # read once: a whole review is grounded or it is not
-    total_themes = len(active_theme_specs())
-
-    for theme_key, theme_spec in active_theme_specs().items():
-        hits, notice = _retrieve_grounding(theme_key, instance) if grounded else ([], None)
-        grounding_notice = grounding_notice or notice
-        blind_prompt = _build_theme_prompt(
-            theme_key,
-            theme_spec,
-            instance,
-            lint_report,
-            pass_name="blind",
-            grounding_hits=hits,
-        )
-        fallback_rationale = (
-            "No AI verdict: the model did not return a usable graded result."
-        )
-        try:
-            if use_two_step:
-                raw = call_llm_two_step(blind_prompt, provider=provider, model=model, temperature=temperature)
-            else:
-                raw = call_llm(
-                    blind_prompt,
-                    provider=provider,
-                    model=model,
-                    temperature=temperature,
-                )
-            blind_parsed = parse_llm_json(raw)
-        except Exception:
-            blind_parsed = {
-                theme_key: _build_fallback_theme(theme_spec, fallback_rationale),
-                "questions": [],
-            }
-
-        blind_theme_payload = (
-            blind_parsed.get(theme_key) if isinstance(blind_parsed, dict) else None
-        )
-        pass1_themes[theme_key] = _normalize_theme_payload(
-            theme_spec,
-            blind_theme_payload,
-            fallback_rationale="LLM did not return the expected graded structure.",
-        )
-        pass1_questions = (
-            _normalize_questions(blind_parsed.get("questions"))
-            if isinstance(blind_parsed, dict)
-            else []
-        )
-
-        reconcile_prompt = _build_theme_prompt(
-            theme_key,
-            theme_spec,
-            instance,
-            lint_report,
-            pass_name="reconcile",
-            pass1_theme=pass1_themes[theme_key],
-            pass1_questions=pass1_questions,
-            grounding_hits=hits,
-        )
-        reconcile_fallback = (
-            "No AI verdict: the model did not return a usable reconciled result."
-        )
-        try:
-            if use_two_step:
-                raw = call_llm_two_step(
-                    reconcile_prompt,
-                    provider=provider,
-                    model=model,
-                    temperature=temperature,
-                )
-            else:
-                raw = call_llm(
-                    reconcile_prompt,
-                    provider=provider,
-                    model=model,
-                    temperature=temperature,
-                )
-            reconcile_parsed = parse_llm_json(raw)
-        except Exception as e:
-            reconcile_parsed = {
-                theme_key: _pass1_or_fallback(theme_spec, pass1_themes[theme_key], type(e).__name__),
-                "questions": [],
-            }
-
-        theme_payload = (
-            reconcile_parsed.get(theme_key)
-            if isinstance(reconcile_parsed, dict)
-            else None
-        )
-        if not isinstance(theme_payload, dict):  # pass 2 answered but not about this theme: keep pass 1
-            theme_payload = _pass1_or_fallback(theme_spec, pass1_themes[theme_key], "pass 2 returned no verdict for this theme")
-        themes[theme_key] = _normalize_theme_payload(
-            theme_spec,
-            theme_payload,
-            fallback_rationale=(
-                "LLM did not return the expected reconciled graded structure."
-            ),
-        )
-        pass2_questions = (
-            _normalize_questions(reconcile_parsed.get("questions"))
-            if isinstance(reconcile_parsed, dict)
-            else []
-        )
-
-        themes[theme_key]["grounding"] = grounding_refs(hits)
-        metadata = _build_theme_metadata(
-            pass1_themes[theme_key],
-            themes[theme_key],
-            pass1_questions,
-            pass2_questions,
-        )
-        theme_metadata[theme_key] = metadata
-        if metadata["pass1_changed"]:
-            disagreement_theme_keys.append(theme_key)
-
-        questions = _merge_questions(questions, _final_questions(themes[theme_key], pass1_questions, pass2_questions))
-
-    return {
-        "themes": themes,
-        "pass1_themes": pass1_themes,
-        "theme_metadata": theme_metadata,
-        "disagreement_summary": {
-            "themes_with_disagreement": len(disagreement_theme_keys),
-            "total_themes": total_themes,
-            "theme_keys": disagreement_theme_keys,
-        },
-        "checklist_items": [],  # keep empty; this flow focuses on thematic verdicts
-        "questions": questions,
-        "grounding_notice": grounding_notice,
-        "llm_failures": llm_failures(themes),
-    }
+    """The Layer 2 review without the event stream (scripts, tests): run_verification_stream's final result."""
+    events = run_verification_stream(instance, lint_report, provider=provider, model=model,
+                                     temperature=temperature, stream_tokens=False)
+    return next(e["result"] for e in events if e["type"] == "complete")
 
 
 def _parallel_themes(provider: Optional[str]) -> int:
@@ -1344,7 +1069,7 @@ def run_verification_stream(
     provider: Optional[str] = None,
     model: Optional[str] = None,
     temperature: float = 0.2,
-    stance: str = "committee",
+    stream_tokens: bool = True,
 ) -> Generator[Dict[str, Any], None, None]:
     """
     Execute verification with streaming updates.
@@ -1352,7 +1077,8 @@ def run_verification_stream(
     Themes run on a pool of _parallel_themes(provider) threads. With one thread they run in
     order and stream tokens, as before; with more, themes finish in any order, no tokens are
     streamed, and `progress` on theme_start/theme_done counts finished themes. The final
-    result is always assembled in THEME_SPECS order.
+    result is always assembled in THEME_SPECS order. stream_tokens=False (run_verification)
+    calls the provider without streaming, so no token events either.
 
     Yields events:
     - {"type": "theme_start", "theme": "theme_key", "label": "Theme Label", "progress": n, "total": N}
@@ -1387,7 +1113,7 @@ def run_verification_stream(
             gen = _review_theme(
                 theme_key, theme_spec, instance, lint_report, progress=i, total=total_themes,
                 provider=provider, model=model, temperature=temperature,
-                stream_tokens=workers == 1, grounded=grounded, cancelled=cancelled,
+                stream_tokens=stream_tokens and workers == 1, grounded=grounded, cancelled=cancelled,
             )
             pool.submit(drive, gen, theme_key)
         while len(results) < total_themes:

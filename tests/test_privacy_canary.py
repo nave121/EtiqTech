@@ -54,7 +54,6 @@ def quiet_llm(monkeypatch, marker):
     monkeypatch.setattr(llm_agent, "call_llm", lambda *a, **k: resp)
     monkeypatch.setattr(llm_agent, "call_llm_two_step", lambda *a, **k: resp)
     monkeypatch.setattr(llm_layer3, "call_llm_stream", lambda *a, **k: iter([resp]))
-    monkeypatch.setattr(llm_layer3, "call_llm", lambda *a, **k: resp)
 
 
 @pytest.fixture(params=["1", "12"], ids=["serial", "parallel"])
@@ -157,7 +156,6 @@ def test_invalid_llm_json_path_never_logs_response(marker, monkeypatch, caplog, 
     monkeypatch.setattr(llm_agent, "call_llm_stream", lambda *a, **k: iter([garbage]))
     monkeypatch.setattr(llm_agent, "call_llm", lambda *a, **k: garbage)
     monkeypatch.setattr(llm_layer3, "call_llm_stream", lambda *a, **k: iter([garbage]))
-    monkeypatch.setattr(llm_layer3, "call_llm", lambda *a, **k: garbage)
     events = list(llm_agent.run_verification_stream(instance, report))
     assert events[-1]["type"] == "complete"
     l3 = list(llm_layer3.run_human_eye_stream(instance, report, events[-1]["result"]))

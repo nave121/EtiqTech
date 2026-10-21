@@ -95,3 +95,40 @@ def test_layer3_uses_its_own_wider_context_window(monkeypatch):
     from src import llm_agent
     list(llm_agent.run_verification_stream({"animals_total": []}, {"checklist": []}))
     assert seen and all(n == 32768 for n in seen), seen
+
+
+def _boot(env_overrides):
+    """Import the app in a fresh interpreter with a production-like environment; return (exit code, stderr)."""
+    import os
+    import subprocess
+    import sys
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    env = {k: v for k, v in os.environ.items() if k not in ("SECRET_KEY", "RATELIMIT_ENABLED", "FLASK_ENV")}
+    env.update(PYTHONPATH=root, **env_overrides)
+    r = subprocess.run([sys.executable, "-c", "import server.app"], cwd=root, env=env, capture_output=True, text=True, timeout=60)
+    return r.returncode, r.stderr
+
+
+def test_production_image_boots_without_secret_key_and_refuses_disabled_limits():
+    """SECRET_KEY was unused (no Flask session, CSRF is the Origin check) yet mandatory in production,
+    so the image never set FLASK_ENV and the RATELIMIT_ENABLED=false refusal never applied."""
+    import pathlib
+    dockerfile = (pathlib.Path(__file__).resolve().parents[1] / "Dockerfile").read_text()
+    assert "ENV FLASK_ENV=production" in dockerfile
+    assert _boot({"FLASK_ENV": "production"})[0] == 0
+    code, err = _boot({"FLASK_ENV": "production", "RATELIMIT_ENABLED": "false"})
+    assert code != 0 and "RATELIMIT_ENABLED=false is not allowed in production" in err
+
+
+def test_runtime_does_not_need_pydantic():
+    """pydantic only validates contracts in tests; the image installs requirements.txt, the package metadata lists runtime needs."""
+    import pathlib
+    import subprocess
+    import sys
+    import tomllib
+    root = pathlib.Path(__file__).resolve().parents[1]
+    meta = tomllib.loads((root / "pyproject.toml").read_text())["project"]
+    assert not any(d.startswith("pydantic") for d in meta["dependencies"])
+    assert any(d.startswith("pydantic") for d in meta["optional-dependencies"]["dev"])
+    blocked = "import sys; sys.modules['pydantic'] = None; import server.app"
+    assert subprocess.run([sys.executable, "-c", blocked], cwd=root, capture_output=True, timeout=60).returncode == 0

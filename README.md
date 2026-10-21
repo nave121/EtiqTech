@@ -165,7 +165,6 @@ EtiqTech reviews protocols in three layers:
 | `OLLAMA_TIMEOUT_SECONDS` | `300` | Request timeout, every provider |
 | `OLLAMA_TWO_STEP` | `false` | Enable think-then-structure mode |
 | `FLASK_DEBUG` | `false` | Enable Flask debug mode |
-| `SECRET_KEY` | (random) | Required in production |
 | `PORT` | `4242` | Listen port (gunicorn.conf.py) |
 | `LOG_LEVEL` | `INFO` | Server log level; DEBUG is opt-in |
 | `GUNICORN_THREADS` | `64` | Thread pool = max concurrent LLM streams |

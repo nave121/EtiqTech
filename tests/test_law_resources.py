@@ -29,3 +29,14 @@ def test_missing_law_warns_and_health_goes_false(monkeypatch, tmp_path, caplog):
     assert sum("Law text missing" in r.message for r in caplog.records) == 1
     with app.test_client() as client:
         assert client.get("/api/health").get_json()["law_loaded"] is False
+
+
+def test_layer2_grounding_is_the_global_report_only(monkeypatch, tmp_path):
+    """CASE_REPORTs are committee-letter notes; the 2,000-char cut always dropped them, so Layer 2 no longer reads them."""
+    real = llm_agent.HEAD_TO_HEAD_DIR / "GLOBAL_ETHICS_REPORT.md"
+    assert llm_agent._load_case_reports() == ("# GLOBAL_ETHICS_REPORT\n" + real.read_text(encoding="utf-8"))[:2000]  # prompts unchanged
+    (tmp_path / "GLOBAL_ETHICS_REPORT.md").write_text("short global report", encoding="utf-8")
+    (tmp_path / "7").mkdir()
+    (tmp_path / "7" / "CASE_REPORT.md").write_text("COMMITTEE-LETTER-NOTE", encoding="utf-8")
+    monkeypatch.setattr(llm_agent, "HEAD_TO_HEAD_DIR", tmp_path)
+    assert llm_agent._load_case_reports() == "# GLOBAL_ETHICS_REPORT\nshort global report"

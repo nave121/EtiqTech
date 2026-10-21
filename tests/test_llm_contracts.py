@@ -185,7 +185,7 @@ def test_verification_result_conforms_to_contract():
         "src.llm_agent.call_llm",
         side_effect=(lambda prompt, **kwargs: _theme_response_for_prompt(prompt)),
     ):
-        result = run_verification(instance, report, stance="law")
+        result = run_verification(instance, report)
 
     try:
         VerifierResult.model_validate(result)
@@ -201,7 +201,7 @@ def test_verification_all_eleven_themes_present():
         "src.llm_agent.call_llm",
         side_effect=(lambda prompt, **kwargs: _theme_response_for_prompt(prompt)),
     ):
-        result = run_verification(instance, report, stance="law")
+        result = run_verification(instance, report)
 
     assert len(result["themes"]) == 12
     assert len(result["pass1_themes"]) == 12
@@ -231,7 +231,7 @@ def test_committee_mode_calls_llm_for_all_themes():
         return _theme_response_for_prompt(prompt)
 
     with patch("src.llm_agent.call_llm", side_effect=counting_call_llm):
-        result = run_verification(instance, report, stance="committee")
+        result = run_verification(instance, report)
 
     for key in ALL_THEME_KEYS:
         assert key in result["themes"], f"Theme {key!r} missing from committee result"
@@ -253,7 +253,7 @@ def test_stream_yields_correct_event_sequence():
             yield ch
 
     with patch("src.llm_agent.call_llm_stream", side_effect=fake_stream):
-        events = list(run_verification_stream(instance, report, stance="law"))
+        events = list(run_verification_stream(instance, report))
 
     event_types = [e["type"] for e in events]
     assert event_types[-1] == "complete", (
@@ -297,3 +297,21 @@ def test_stream_yields_correct_event_sequence():
         assert key in complete_event["result"].get("themes", {}), (
             f"Theme {key!r} missing from complete event result"
         )
+
+
+def test_batch_and_stream_are_one_review():
+    """run_verification was a second copy of the Layer 2 loop that had drifted (other fallback text);
+    it is now the stream's final result, with the same calls."""
+    instance = _minimal_instance()
+    report = lint(instance, profile="default")
+
+    def flaky(prompt, **kwargs):
+        if "Pass 1 (blind review)" in prompt:
+            raise RuntimeError("provider down")
+        return _theme_response_for_prompt(prompt, score=2)
+    with patch("src.llm_agent.call_llm", side_effect=flaky), patch("src.llm_agent.call_llm_stream", side_effect=lambda p, **k: iter([flaky(p)])):
+        batch = run_verification(instance, report)
+        stream = list(run_verification_stream(instance, report))[-1]["result"]
+        assert batch == stream
+        with pytest.raises(TypeError):
+            run_verification(instance, report, mode="single")

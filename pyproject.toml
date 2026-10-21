@@ -25,7 +25,6 @@ dependencies = [
     "requests>=2.32",
     "flask>=3.1",
     "werkzeug>=3.1",
-    "pydantic>=2.10",
     "gunicorn>=23",
     "flask-limiter>=3.12",
 ]
@@ -34,6 +33,7 @@ dependencies = [
 anthropic = ["anthropic>=1.0"]  # LLM_PROVIDER=anthropic (remote; needs ETIQTECH_ALLOW_REMOTE_LLM=1)
 dev = [
     "pytest>=8",
+    "pydantic>=2.10",  # contract models in src/contracts.py; only the tests validate against them
     "pytest-mock>=3.14",
     "hypothesis>=6.120",
     "flake8>=7",

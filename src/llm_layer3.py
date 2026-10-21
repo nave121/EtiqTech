@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
 from .llm_agent import LAW_PATH, _slice_instance, parse_llm_json
-from .llm_clients import _env_int, call_llm, call_llm_stream, context_budget_warning
+from .llm_clients import _env_int, call_llm_stream, context_budget_warning
 from .xmeta_catalog import load_high_leverage_catalog
 
 PROMPTS_DIR = Path(__file__).parent.parent / "llm"
@@ -224,34 +224,9 @@ def run_human_eye(
     model: Optional[str] = None,
     temperature: float = 0.2,
 ) -> Dict[str, Any]:
-    """
-    Execute the 2-pass Layer 3 review and return a HumanEyeResult-shaped dict.
-
-    Parameters
-    ----------
-    instance : parsed protocol JSON
-    lint_report : Layer 1 linter output
-    layer2_result : Layer 2 VerifierResult (optional, used in Pass 2 synthesis)
-    """
-    # Pass 1 — section-by-section
-    p1_prompt = _build_pass1_prompt(instance, lint_report)
-    context_budget_warning(p1_prompt, label="Layer 3 / pass 1", num_ctx=layer3_num_ctx())  # logs; no stream to notify
-    try:
-        raw1 = call_llm(p1_prompt, provider=provider, model=model, temperature=temperature, num_ctx=layer3_num_ctx())
-        pass1 = parse_llm_json(raw1)
-    except Exception:
-        pass1 = _fallback_pass1()
-
-    # Pass 2 — cross-reference + synthesis
-    p2_prompt = _build_pass2_prompt(instance, lint_report, pass1, layer2_result)
-    context_budget_warning(p2_prompt, label="Layer 3 / pass 2", num_ctx=layer3_num_ctx())
-    try:
-        raw2 = call_llm(p2_prompt, provider=provider, model=model, temperature=temperature, num_ctx=layer3_num_ctx())
-        pass2 = parse_llm_json(raw2)
-    except Exception:
-        pass2 = _fallback_pass2()
-
-    return _build_final_result(pass1, pass2)
+    """The 2-pass Layer 3 review without the event stream (tests, scripts): run_human_eye_stream's final result."""
+    events = run_human_eye_stream(instance, lint_report, layer2_result, provider=provider, model=model, temperature=temperature)
+    return next(e["result"] for e in events if e["type"] == "complete")
 
 
 # ---------------------------------------------------------------------------
