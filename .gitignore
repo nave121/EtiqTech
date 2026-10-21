@@ -53,6 +53,7 @@ nohup.out
 output/
 
 ### Claude Code local config (machine-specific, not project code)
+.claude/
 .claude/settings.local.json
 .claude/worktrees/
 .hypothesis/

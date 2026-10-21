@@ -9,6 +9,7 @@ Thanks for your interest in contributing!
 3. **Keep changes focused** — one PR per feature/fix.
 4. **Run tests** — `PYTHONPATH=. pytest tests/ -q` must pass before submitting.
 5. **Follow existing style** — match the patterns you see in the codebase.
+6. **Skip `changes/`** — it holds maintainer change records (intent, spec, plan per change); contributors need not touch it.
 
 ## Reporting bugs
 

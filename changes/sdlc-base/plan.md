@@ -54,3 +54,49 @@ Run from the repo root on `change/sdlc-base`.
 - `git diff main -- .github/workflows/ci.yml` -> two `+` lines, no `-` lines, no new file under `.github/workflows/` (R10).
 
 ## Deviations
+
+**D1. `REVIEW.md` and `.github/workflows/ci.yml` were not written (2026-10-21).** Both are protected paths and the headless session was denied on write. Razy writes them with the exact content below; the diff for each is then re-checked against the Proof section.
+
+`REVIEW.md` (new file, full content):
+
+````markdown
+# REVIEW.md: what a reviewer checks on every PR
+
+For humans and review agents alike. Read it in full before approving; a review agent
+reads it in a fresh context, so the invariants are quoted here, not linked.
+
+## 1. The invariants still hold
+Source: `docs/dev-log/STATUS.md`, section "Invariants (never break)". Quoted verbatim:
+
+> All tests green (824 now, 440 original untouched) · no protocol text persisted or logged at any
+> level · local-first LLM by default · LLM never gates/filters/rewrites Layer 1 · advisory framing
+> permanent · auth stays at the reverse proxy.
+
+As five checks on the diff:
+1. **All tests green.** No test was deleted, skipped or weakened to make the change pass. The count only goes up.
+2. **No protocol text persisted or logged at any level.** No new write of protocol content to disk, database, log line, error message or external service.
+3. **Local-first LLM by default.** No new default that sends protocol text to a remote provider; remote stays opt-in behind `ETIQTECH_ALLOW_REMOTE_LLM`.
+4. **LLM never gates, filters or rewrites Layer 1.** Linter findings reach the report unchanged by any model output.
+5. **Advisory framing permanent; auth stays at the reverse proxy.** No wording that presents the tool as an approval, and no authentication added inside the app.
+
+## 2. CI is green
+The `test`, `security`, `audit` and `docker` jobs pass on the PR head. A red job is a stop, not a note.
+
+## 3. The PR template is filled
+All three sections carry real content: **Testing** (what ran and what it printed), **Risk** (what could break and who notices), **How to revert** (the concrete undo).
+
+## 4. Nothing sensitive in the diff
+No protocol text, no fixture derived from a real protocol, no secret, token, key or credential, in code, tests, docs or examples.
+
+## Verdict
+PASS only when all four sections hold. Any failed item is named with the file and line.
+````
+
+`.github/workflows/ci.yml` (insert in the `test` job, between the "Install dependencies" step and the "Run tests" step, same indentation as its neighbours):
+
+````yaml
+      - name: Lint
+        run: make lint
+````
+
+**D2. `make lint`, `make check` and `make test` could not run green in this session (2026-10-21).** In the Bash tool's shell, `python` resolves to `/data/data/com.termux/files/usr/bin/python`, which has neither flake8 nor pytest; the Ubuntu `/usr/bin/python3` is second on PATH. The untouched `make test` on this branch fails with the identical "No module named pytest", so the cause is the shell's PATH, not the new targets. The allow list for this run covers only the plain `make <target>` forms, so `make check PYTHON=python3` and an `env PATH=...` prefix were both denied. The spec's own measurement (0 flake8 findings with this selection, 879 passed / 5 skipped, 2026-10-21) was taken on the same tree with the Ubuntu interpreter; no `.py` file changed since. What is proven here: `make help` lists both targets, the Makefile diff is additive only, and the recipes invoke the exact command lines R4 and R5 specify. The green run is Razy's: `make check` from a shell where `python` is the project interpreter (or `make check PYTHON=python3`), and the CI `test` job once D1 lands. If `python` on Razy's shell also resolves to the Termux interpreter, the fix is outside this change (a `python-is-python3` package or PATH order), because changing the Makefile's `PYTHON ?= python` default would alter the behaviour of every existing target (R6).
