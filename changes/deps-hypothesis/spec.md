@@ -1,6 +1,6 @@
 # Spec: bump hypothesis to 6.170.1
 
-Slug: deps-hypothesis. From: intent.md @ c94e571. Date: 2026-10-21. Status: draft.
+Slug: deps-hypothesis. From: intent.md @ c94e571. Date: 2026-10-21. Status: accepted (by Razy in chat, 2026-10-21; see plan.md).
 Policies applied: sdlc-artifacts, security-baseline, as of 2026-10-21. No `policy-*` skill exists in this repo (`.claude/skills/` is empty).
 
 ## Summary
