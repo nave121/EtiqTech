@@ -1,6 +1,6 @@
 # Makefile for Ethics Request Pipeline
 
-.PHONY: help install dirs test e2e demo known-good known-bad head-to-head golden-dataset-report export-review-sheet run render batch clean
+.PHONY: help install dirs lint check test e2e demo known-good known-bad head-to-head golden-dataset-report export-review-sheet run render batch clean
 
 .DEFAULT_GOAL := help
 PYTHON ?= python
@@ -14,6 +14,8 @@ HEAD_TO_HEAD_DIR := examples/head-to-head
 help:
 	@echo "Available targets:"
 	@echo "  make install        # Install Python dependencies"
+	@echo "  make lint           # flake8: syntax errors and undefined names"
+	@echo "  make check          # lint + full pytest suite (the done-when gate)"
 	@echo "  make test           # Run full pytest suite"
 	@echo "  make e2e            # Run deterministic end-to-end pipeline tests"
 	@echo "  make demo           # Parse + lint demo HTML"
@@ -37,6 +39,12 @@ dirs:
 	@mkdir -p $(DEV_RUNS_DIR) $(BATCH_DIR)
 
 ### Core workflows ###
+
+lint:
+	$(PYTHON) -m flake8 --select=E9,F63,F7,F82 src/ server/ scripts/ tests/
+
+check: lint
+	$(PYTHON) -m pytest tests/ -x -q
 
 test:
 	$(PYTHON) -m pytest tests/
