@@ -1,6 +1,6 @@
 # Intent: bump hypothesis to 6.170.1
 
-Slug: deps-hypothesis. Author: Razy (maintainer). Date: 2026-10-21. Status: draft.
+Slug: deps-hypothesis. Author: Razy (maintainer). Date: 2026-10-21. Status: accepted (by Razy in chat, 2026-10-21; see spec.md C2).
 Source: ticket PR #47 (dependabot, "build(deps): bump hypothesis from 6.168.3 to 6.170.1").
 
 ## Problem
