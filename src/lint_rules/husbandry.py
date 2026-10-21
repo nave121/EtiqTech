@@ -15,6 +15,7 @@ from .helpers import (
     _coerce_float,
     _coerce_int,
     _flatten_text,
+    _monitoring_text,
     _nonempty,
 )
 
@@ -62,22 +63,25 @@ def run_surgery(ctx: RuleContext) -> None:
     # and vet consultation criteria for survival surgeries.
     survival_surgery_keywords = ["surgery", "operation", "incision", "laparotomy", "craniotomy",
                                   "implant", "flap", "laminectomy", "thoracotomy"]
+    recovery_keywords = ["recover", "post-op", "postop", "post op", "wound", "התאוששות"]
     for idx, e in enumerate(exps, start=1):
         fate = (e.get("fate") or "").lower()
-        if "euthanized" in fate or "euthanasia" in fate:
-            continue  # Non-survival procedure — post-op monitoring requirement doesn't apply
         label = (e.get("label") or "") + " " + (e.get("question") or "")
         timeline_txt = " ".join(
             (step.get("step") or "") for step in e.get("procedure_timeline") or []
         )
         joined = (label + " " + timeline_txt).lower()
+        # A survival surgery is one the animal recovers from; euthanasia at the end of the study
+        # does not make it terminal (maintainer decision, ruleset 1.2.0).
+        terminal = ("euthanized" in fate or "euthanasia" in fate) and not any(kw in joined for kw in recovery_keywords)
+        if terminal:
+            continue
         has_surgery = any(kw in joined for kw in survival_surgery_keywords)
         if not has_surgery:
             continue
-        mon = e.get("monitoring") or {}
-        mon_text = (mon.get("plan") or "") + " ".join(mon.get("parameters") or [])
+        mon_text = _monitoring_text(e.get("monitoring") or {})
         has_postop = any(
-            kw in mon_text.lower()
+            kw in mon_text
             for kw in ["post", "recover", "daily", "hour", "analges", "pain", "wound"]
         )
         if not has_postop:

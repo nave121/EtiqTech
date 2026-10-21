@@ -44,7 +44,7 @@
     "anesthesia": [{"agent": "Isoflurane", "rationale": "Surgery", "dose": "2%", "route": "inhaled"}],
     "severity_level_1_to_5": 5,
     "monitoring": {
-      "plan": "Veterinary consultation obtained for the analgesic plan.",
+      "documentation": "Veterinary consultation obtained for the analgesic plan.",
       "initial_72h_daily": true,
       "parameters": ["Daily during the first 72h, then at least weekly thereafter with weight, posture, grooming, and pain-score review."]
     },

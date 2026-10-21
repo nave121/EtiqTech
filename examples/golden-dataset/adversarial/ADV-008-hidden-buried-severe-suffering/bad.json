@@ -50,7 +50,7 @@
     "analgesia": [],
     "anesthesia": [],
     "severity_level_1_to_5": 3,
-    "monitoring": {"plan": "Twice-daily observation.", "parameters": ["Record posture, intake, and mentation."]},
+    "monitoring": {"documentation": "Twice-daily observation.", "parameters": ["Record posture, intake, and mentation."]},
     "humane_endpoints": {"general": ["Scheduled collection on day 5 or earlier if an emergency occurs."], "specific": []},
     "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirmed by absent heartbeat."},
     "fate": "survival"

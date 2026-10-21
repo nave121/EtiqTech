@@ -78,7 +78,7 @@ _BASE_INSTANCE = {
             "analgesia": [],
             "anesthesia": [],
             "severity_level_1_to_5": 1,
-            "monitoring": {"plan": "Daily observation."},
+            "monitoring": {"documentation": "Daily observation."},
             "humane_endpoints": {"general": ["Severe weight loss >20%."], "specific": []},
             "euthanasia": {"primary": "cervical dislocation", "parameters": "", "confirmation": ""},
             "fate": "euthanized",
@@ -653,7 +653,7 @@ def test_postop_monitoring(fate, timeline, monitoring_plan, profile, should_fire
     experiments = [copy.deepcopy(_BASE_INSTANCE["experiments"][0])]
     experiments[0]["fate"] = fate
     experiments[0]["procedure_timeline"] = timeline
-    experiments[0]["monitoring"] = {"plan": monitoring_plan}
+    experiments[0]["monitoring"] = {"documentation": monitoring_plan}
     inst = _make(experiments=experiments)
     report = lint(inst, profile=profile)
     items = _failed_checks(report, "postop:monitoring")
@@ -778,7 +778,7 @@ def test_special_neonatal_CO2(timeline_text, confirmation, profile, should_fire,
 def test_vet_consultation(severity, monitoring_plan, should_fire):
     experiments = [copy.deepcopy(_BASE_INSTANCE["experiments"][0])]
     experiments[0]["severity_level_1_to_5"] = severity
-    experiments[0]["monitoring"] = {"plan": monitoring_plan}
+    experiments[0]["monitoring"] = {"documentation": monitoring_plan}
     inst = _make(experiments=experiments)
     report = lint(inst, profile="default")
     items = _failed_checks(report, "vet:consultation")
@@ -808,7 +808,7 @@ def test_vet_consultation(severity, monitoring_plan, should_fire):
 def test_deprivation_protocol(timeline_steps, monitoring_plan, should_fire):
     experiments = [copy.deepcopy(_BASE_INSTANCE["experiments"][0])]
     experiments[0]["procedure_timeline"] = [{"step": s} for s in timeline_steps]
-    experiments[0]["monitoring"] = {"plan": monitoring_plan}
+    experiments[0]["monitoring"] = {"documentation": monitoring_plan}
     inst = _make(experiments=experiments)
     report = lint(inst, profile="default")
     items = _failed_checks(report, "deprivation:protocol")

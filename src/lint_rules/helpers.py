@@ -1,7 +1,26 @@
 """Pure text/number helpers shared by lint rule modules. Verbatim move from linter_renderer (P3.1 batch 3)."""
-from typing import Any, Dict, List
+import re
+from typing import Any, Dict, Iterable, List
 
 from ..avma_matrix import normalize_species, normalize_method
+
+
+def _mentions(text: str, terms: Iterable[str]) -> bool:
+    """True if any term occurs in text. Terms under 5 characters must be whole words (plus
+    s/ed/ing), so 'burn' does not match 'Burnett' and 'ko' does not match 'kosher'; longer
+    terms keep substring matching, so 'craniotomy' still matches 'hemicraniotomy'."""
+    for term in terms:
+        if len(term) < 5:
+            if re.search(rf"(?<!\w){re.escape(term)}(?:s|ed|ing)?(?!\w)", text):
+                return True
+        elif term in text:
+            return True
+    return False
+
+
+def _monitoring_text(monitoring: Dict[str, Any]) -> str:
+    """The monitoring plan as free text: the schema's `documentation` plus the parameter list."""
+    return ((monitoring.get("documentation") or "") + " " + " ".join(monitoring.get("parameters") or [])).lower()
 
 
 def _flatten_text(value: Any) -> str:
@@ -26,20 +45,16 @@ def _canonical_species_key(animals: Dict[str, Any]) -> str:
 
 
 def _canonical_method_key(euthanasia: Dict[str, Any]) -> str:
-    """Prefer explicit structured euthanasia method and fall back to primary text."""
+    """Prefer explicit structured euthanasia method and fall back to primary text. An
+    unrecognised value gives "" (no AVMA verdict), never a key the matrix would call unacceptable."""
     structured = (euthanasia.get("method_standard") or "").strip()
-    if structured:
-        return normalize_method(structured) or structured
-    return normalize_method((euthanasia.get("primary") or "").strip()) or ""
+    return normalize_method(structured) or normalize_method((euthanasia.get("primary") or "").strip()) or ""
 
 
 def _euthanasia_conditions_text(euthanasia: Dict[str, Any]) -> str:
-    """Prefer explicit structured conditions text but preserve legacy parameters fallback."""
-    return (
-        euthanasia.get("conditions_text")
-        or euthanasia.get("parameters")
-        or ""
-    )
+    """Structured conditions text and the legacy parameters field, both (once each when equal)."""
+    parts = [euthanasia.get("conditions_text") or "", euthanasia.get("parameters") or ""]
+    return " ".join(dict.fromkeys(p for p in parts if p))
 
 
 def _anesthesia_rows(exp: Dict[str, Any]) -> List[Dict[str, Any]]:

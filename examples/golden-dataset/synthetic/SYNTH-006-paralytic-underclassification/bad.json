@@ -43,7 +43,7 @@
     "analgesia": [],
     "anesthesia": [],
     "severity_level_1_to_5": 2,
-    "monitoring": {"plan": "Observe after imaging.", "parameters": ["Daily check."]},
+    "monitoring": {"documentation": "Observe after imaging.", "parameters": ["Daily check."]},
     "humane_endpoints": {"general": ["Unexpected respiratory distress."], "specific": []},
     "euthanasia": {"primary": "cervical dislocation", "parameters": "", "confirmation": ""},
     "fate": "survival"

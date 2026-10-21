@@ -52,7 +52,7 @@
     "analgesia": [],
     "anesthesia": [{"agent": "Isoflurane", "rationale": "Imaging", "dose": "2%", "route": "inhaled"}],
     "severity_level_1_to_5": 2,
-    "monitoring": {"plan": "Daily husbandry observation.", "parameters": ["Daily cage-side observation."]},
+    "monitoring": {"documentation": "Daily husbandry observation.", "parameters": ["Daily cage-side observation."]},
     "humane_endpoints": {"general": ["Scheduled harvest or earlier euthanasia for distress."], "specific": ["Persistent lethargy or 15% weight loss triggers euthanasia."]},
     "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirmed by absent heartbeat."},
     "fate": "euthanized"

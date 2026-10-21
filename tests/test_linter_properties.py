@@ -84,7 +84,7 @@ _BASE_INSTANCE = {
             "analgesia": [],
             "anesthesia": [],
             "severity_level_1_to_5": 1,
-            "monitoring": {"plan": "Daily observation."},
+            "monitoring": {"documentation": "Daily observation."},
             "humane_endpoints": {"general": ["Severe weight loss >20%."], "specific": []},
             "euthanasia": {"primary": "cervical dislocation", "parameters": "", "confirmation": ""},
             "fate": "euthanized",
@@ -111,7 +111,7 @@ def test_linter_never_crashes(monitoring_plan, timeline_step, severity):
     monitoring.plan and procedure_timeline entries.
     """
     instance = copy.deepcopy(_BASE_INSTANCE)
-    instance["experiments"][0]["monitoring"]["plan"] = monitoring_plan
+    instance["experiments"][0]["monitoring"]["documentation"] = monitoring_plan
     instance["experiments"][0]["procedure_timeline"] = [{"step": timeline_step}]
     instance["experiments"][0]["severity_level_1_to_5"] = severity
 

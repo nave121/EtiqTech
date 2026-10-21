@@ -43,7 +43,7 @@
     "analgesia": [],
     "anesthesia": [],
     "severity_level_1_to_5": 4,
-    "monitoring": {"plan": "Observe with predefined intervention criteria.", "parameters": ["Daily during the first 72h with respiratory, posture, and pain assessment."]},
+    "monitoring": {"documentation": "Observe with predefined intervention criteria.", "parameters": ["Daily during the first 72h with respiratory, posture, and pain assessment."]},
     "humane_endpoints": {"general": ["Respiratory distress, persistent convulsions, or inability to stand trigger immediate euthanasia."], "specific": []},
     "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "No heartbeat."},
     "fate": "survival"

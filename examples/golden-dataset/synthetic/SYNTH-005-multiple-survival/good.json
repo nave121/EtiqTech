@@ -44,7 +44,7 @@
       "analgesia": [{"agent": "Buprenorphine", "rationale": "Pain", "dose": "0.03 mg/kg", "route": "SC"}],
       "anesthesia": [{"agent": "Isoflurane", "rationale": "Surgery", "dose": "2%", "route": "inhaled"}],
       "severity_level_1_to_5": 3,
-      "monitoring": {"plan": "Daily checks.", "parameters": ["Daily wound check."]},
+      "monitoring": {"documentation": "Daily checks.", "parameters": ["Daily wound check."]},
       "humane_endpoints": {"general": ["Weight loss or wound dehiscence."], "specific": []},
       "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "No heartbeat."},
       "fate": "survival"
@@ -58,7 +58,7 @@
       "analgesia": [],
       "anesthesia": [{"agent": "Isoflurane", "rationale": "Terminal procedure", "dose": "2%", "route": "inhaled"}],
       "severity_level_1_to_5": 2,
-      "monitoring": {"plan": "Terminal procedure.", "parameters": ["No survival follow-up needed."]},
+      "monitoring": {"documentation": "Terminal procedure.", "parameters": ["No survival follow-up needed."]},
       "humane_endpoints": {"general": ["Terminal collection."], "specific": []},
       "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "No heartbeat."},
       "fate": "euthanized"

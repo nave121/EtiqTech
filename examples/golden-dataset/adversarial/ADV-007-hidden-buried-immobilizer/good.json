@@ -50,7 +50,7 @@
     "analgesia": [],
     "anesthesia": [{"agent": "Isoflurane", "rationale": "General anesthesia for imaging", "dose": "1.5-2%", "route": "inhaled"}],
     "severity_level_1_to_5": 2,
-    "monitoring": {"plan": "Observe animals after imaging until ambulatory.", "parameters": ["Respiratory rate and temperature are recorded during acquisition."]},
+    "monitoring": {"documentation": "Observe animals after imaging until ambulatory.", "parameters": ["Respiratory rate and temperature are recorded during acquisition."]},
     "humane_endpoints": {"general": ["Abort imaging if unexpected distress occurs."], "specific": []},
     "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirmed by absent heartbeat."},
     "fate": "survival"

@@ -754,7 +754,7 @@ def render_html(instance: Dict[str, Any], out_html_path: str = None, with_refs: 
         if weight or supplier:
             parts = []
             if weight:
-                parts.append(f'משקל: {weight.get("value", "")} {weight.get("unit", "")}')
+                parts.append(f'משקל: {_e(weight.get("value", ""))} {_e(weight.get("unit", ""))}')
             if supplier:
                 parts.append(f'ספק: {_e(supplier)}')
             H.append(f'<div class="table"><div>{" | ".join(parts)}</div></div>')
@@ -962,7 +962,7 @@ def render_html(instance: Dict[str, Any], out_html_path: str = None, with_refs: 
             _row(
                 [
                     e.get("severity_level_1_to_5", ""),
-                    "כן" if mon.get("initial_72h_daily") else "לא",
+                    {True: "כן", False: "לא"}.get(mon.get("initial_72h_daily"), ""),  # missing = not stated
                     mon.get("ongoing_per_week", ""),
                     ", ".join(mon.get("parameters") or []),
                     e.get("pain_category", ""),

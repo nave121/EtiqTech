@@ -67,7 +67,7 @@
     "analgesia": [],
     "anesthesia": [],
     "severity_level_1_to_5": 2,
-    "monitoring": {"plan": "Daily observation during the behavioral phase.", "parameters": ["Daily appetite and posture check."]},
+    "monitoring": {"documentation": "Daily observation during the behavioral phase.", "parameters": ["Daily appetite and posture check."]},
     "humane_endpoints": {"general": ["Persistent recumbency or self-injury."], "specific": []},
     "euthanasia": {"primary": "cervical dislocation", "parameters": "", "confirmation": ""},
     "fate": "euthanized"

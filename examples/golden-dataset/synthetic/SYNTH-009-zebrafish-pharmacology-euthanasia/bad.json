@@ -65,7 +65,7 @@
     "analgesia": [],
     "anesthesia": [],
     "severity_level_1_to_5": 2,
-    "monitoring": {"plan": "Observe swimming behavior after exposure.", "parameters": ["Daily tank welfare check."]},
+    "monitoring": {"documentation": "Observe swimming behavior after exposure.", "parameters": ["Daily tank welfare check."]},
     "humane_endpoints": {"general": ["Loss of equilibrium or persistent recumbency."], "specific": []},
     "euthanasia": {
       "primary": "CO2",

@@ -6,9 +6,9 @@ from typing import Any, Dict, List, Optional
 from bs4 import BeautifulSoup, Tag
 
 try:
-    from .avma_matrix import normalize_method, normalize_species
+    from .avma_matrix import age_in_days, normalize_method, normalize_species
 except ImportError:
-    from avma_matrix import normalize_method, normalize_species
+    from avma_matrix import age_in_days, normalize_method, normalize_species
 
 # Import the schema to ensure we match structure (optional, but good practice)
 # from .schema import IACUC_SCHEMA_V2
@@ -20,21 +20,25 @@ def _clean_text(text: str) -> str:
     return " ".join(text.strip().split())
 
 
-_USDA_PAIN_CATEGORY_RE = re.compile(
-    r"\b(?:USDA\s*)?(?:category|cat\.?)?\s*([BCDE])\b",
-    re.IGNORECASE,
-)
+def _section_table(header: Optional[Tag]) -> Optional[Tag]:
+    """The table a section header owns: its next element sibling, if that is a div.table. An empty
+    section then reads as empty instead of taking the next section's text."""
+    nxt = header.find_next_sibling() if header else None
+    return nxt if nxt is not None and nxt.name == "div" and "table" in (nxt.get("class") or []) else None
+
+
+PILOT_MARKERS = ("פיילוט", "פילוט", "pilot")  # both Hebrew spellings; shared with lint rule title:track
+
+
+def has_pilot_marker(*titles: str) -> bool:
+    return any(m in (t or "").lower() for t in titles for m in PILOT_MARKERS)
 
 
 def _parse_pain_category_structured(raw_text: str) -> Dict[str, Optional[str]]:
-    """Preserve raw text and normalize explicit USDA B/C/D/E categories when present."""
+    """Preserve raw text and normalize explicit USDA B/C/D/E categories when present
+    (one rule: _extract_pain_category, so a stray "e.g." is never category E)."""
     raw = _clean_text(raw_text)
-    parsed = None
-    if raw:
-        match = _USDA_PAIN_CATEGORY_RE.search(raw)
-        if match:
-            parsed = match.group(1).upper()
-    return {"raw": raw, "parsed": parsed}
+    return {"raw": raw, "parsed": _extract_pain_category(raw) or None}
 
 
 def _structured_species(raw: str) -> str:
@@ -344,7 +348,7 @@ def parse_html(html_content: str) -> Dict[str, Any]:
     
     # Request type logic (inference)
     research["request_type"] = "regular"
-    if "פיילוט" in research["title_he"] or "Pilot" in research["title_en"]:
+    if has_pilot_marker(research["title_he"], research["title_en"]):
         research["request_type"] = "pilot"
     elif research.get("is_continuation"):
         # Could be continuation, but request_type field is enum regular|pilot|etc.
@@ -485,7 +489,8 @@ def parse_html(html_content: str) -> Dict[str, Any]:
     n_just = {"method": "literature", "details": "", "attachments": []}
     nj_header = soup.find("div", class_="sub-header", string=re.compile("נימוק למספר בעלי החיים"))
     if nj_header:
-        div = nj_header.find_next("div", class_="table").find("div")
+        nj_table = _section_table(nj_header)
+        div = nj_table.find("div") if nj_table else None
         if div:
             txt = _clean_text(div.get_text())
             if ":" in txt:
@@ -539,8 +544,10 @@ def parse_html(html_content: str) -> Dict[str, Any]:
     
     # Lay Summary
     lay_header = soup.find("div", class_="sub-header", string=re.compile("תקציר לקהל הרחב"))
-    if lay_header:
-        summaries["lay_he_≤150w"] = _clean_text(lay_header.find_next("div", class_="table").find("div").get_text())
+    lay_table = _section_table(lay_header)
+    lay_div = lay_table.find("div") if lay_table else None
+    if lay_div:
+        summaries["lay_he_≤150w"] = _clean_text(lay_div.get_text())
     else:
         summaries["lay_he_≤150w"] = ""  # required by the schema; summaries:lay-length treats "" as absent
     
@@ -688,13 +695,16 @@ def parse_html(html_content: str) -> Dict[str, Any]:
                                  group["weight"] = {"value": float(a_data["משקל"]), "unit": _norm(_WEIGHT_UNIT, a_data.get("מידת משקל"))}
                              animal_groups.append(group)
 
+                         # Youngest row's age: if any of the animals are neonates, the experiment's age must say so.
+                         stated = [g["age"] for g in animal_groups if age_in_days(g["age"]) is not None]
+                         age = min(stated, key=age_in_days) if stated else {"value": aggregated["age_val"], "unit": _norm(_AGE_UNIT, aggregated["age_unit"])}
                          exp["animals"] = {
                             "species": ", ".join(sorted(aggregated["species"])),
                             "species_standard": _structured_species(", ".join(sorted(aggregated["species"]))),
                             "strain": ", ".join(sorted(aggregated["strain"])),
                             "sex": _norm_sex(", ".join(sorted(aggregated["sex"]))),
                             "n": aggregated["n"],
-                            "age": {"value": aggregated["age_val"], "unit": _norm(_AGE_UNIT, aggregated["age_unit"])},
+                            "age": age,
                             "source": ", ".join(sorted(aggregated["source"])),
                             "supplier": ", ".join(sorted(aggregated["supplier"])),
                             "genetic_status": ", ".join(sorted(aggregated["genetic_status"]))
@@ -890,12 +900,8 @@ def parse_html(html_content: str) -> Dict[str, Any]:
                              if pain_category:
                                  exp["pain_category"] = pain_category
                         if "פירוט המעקב" in k:
-                             exp["monitoring"] = {
-                                 "initial_72h_daily": False,
-                                 "ongoing_per_week": 1,
-                                 "parameters": [v],
-                                 "documentation": ""
-                             }
+                             # Free text only: the 72h / weekly fields are not stated, so they are omitted, never defaulted.
+                             exp["monitoring"] = {"parameters": [v], "documentation": ""}
                         if "שיטת המתה" in k:
                              exp["euthanasia"] = {
                                  "primary": v,
@@ -953,12 +959,16 @@ def parse_html(html_content: str) -> Dict[str, Any]:
                      )
                      if pain_category:
                          exp["pain_category"] = pain_category
-                     exp["monitoring"] = {
-                         "initial_72h_daily": (r.get("ניטור 72ש ראשונות") == "כן"),
-                         "ongoing_per_week": int(r.get("ניטור שבועי", 0)),
+                     mon = {
                          "parameters": [p.strip() for p in r.get("פרמטרים", "").split(",") if p.strip()],
-                         "documentation": "Paper or electronic score sheets retained for audit."
+                         "documentation": "",
                      }
+                     # A missing or empty column is not stated: omit the field, never default it.
+                     if r.get("ניטור 72ש ראשונות"):
+                         mon["initial_72h_daily"] = r["ניטור 72ש ראשונות"] == "כן"
+                     if r.get("ניטור שבועי"):
+                         mon["ongoing_per_week"] = int(r["ניטור שבועי"])
+                     exp["monitoring"] = mon
 
             # Demo Euthanasia
             if "שיטת המתה" in txt:

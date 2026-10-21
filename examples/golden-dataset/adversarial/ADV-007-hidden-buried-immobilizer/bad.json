@@ -50,7 +50,7 @@
     "analgesia": [],
     "anesthesia": [],
     "severity_level_1_to_5": 2,
-    "monitoring": {"plan": "Observe animals after imaging until ambulatory.", "parameters": ["Return to home cage after imaging."]},
+    "monitoring": {"documentation": "Observe animals after imaging until ambulatory.", "parameters": ["Return to home cage after imaging."]},
     "humane_endpoints": {"general": ["Abort imaging if unexpected distress occurs."], "specific": []},
     "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirmed by absent heartbeat."},
     "fate": "survival"

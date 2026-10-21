@@ -44,7 +44,7 @@
     "anesthesia": [],
     "severity_level_1_to_5": 4,
     "monitoring": {
-      "plan": "Veterinary consultation obtained for this high-severity monitoring plan.",
+      "documentation": "Veterinary consultation obtained for this high-severity monitoring plan.",
       "initial_72h_daily": true,
       "parameters": ["Daily during the first 72h with respiratory effort, buoyancy, posture, and feeding review; then weekly thereafter."]
     },

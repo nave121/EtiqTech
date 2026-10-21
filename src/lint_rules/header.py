@@ -9,6 +9,7 @@ whenever it bumps a counter (flag = ok_term and ideal_term) and title:pilot-labe
 carries severity="warning" to match its counter. Both were quirks preserved
 through the module split (linter-split-plan.md section 5).
 """
+from ..html_to_json import has_pilot_marker
 from .context import RuleContext, _rule
 
 
@@ -46,7 +47,7 @@ def run(ctx: RuleContext) -> None:
 
         # Title vs track
         if rt == "regular":
-            bad = any(w in title_he for w in ["פיילוט", "פילוט"]) or "Pilot" in title_en
+            bad = has_pilot_marker(title_he, title_en)
             ctx.checks.append(
                 _rule(
                     not bad,
@@ -59,7 +60,7 @@ def run(ctx: RuleContext) -> None:
             if bad:
                 ctx.errors += 1
         if rt == "pilot":
-            has_pilot = ("פיילוט" in title_he) or ("Pilot" in title_en)
+            has_pilot = has_pilot_marker(title_he, title_en)
             ctx.checks.append(
                 _rule(
                     has_pilot,

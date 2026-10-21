@@ -17,8 +17,8 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-KNOWN_RULESET_VERSIONS = ("1.0.0", "1.1.0")  # feedback rows may carry any of these
-RULESET_VERSION = "1.1.0"  # bump when a rule is added, removed, or its trigger/severity changes (1.1.0: four counting fixes, 2026-09-06)
+KNOWN_RULESET_VERSIONS = ("1.0.0", "1.1.0", "1.2.0")  # feedback rows may carry any of these
+RULESET_VERSION = "1.2.0"  # bump when a rule is added, removed, or its trigger/severity changes (1.2.0: audit trigger fixes, 2026-10-21)
 
 _INSTANCE_SUFFIX = re.compile(r":exp-\d+$")
 
