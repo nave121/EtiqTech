@@ -43,7 +43,7 @@
     "analgesia": [],
     "anesthesia": [],
     "severity_level_1_to_5": 4,
-    "monitoring": {"plan": "Observe after challenge.", "parameters": ["Weekly check."]},
+    "monitoring": {"documentation": "Observe after challenge.", "parameters": ["Weekly check."]},
     "humane_endpoints": {"general": ["20% weight loss."], "specific": []},
     "euthanasia": {"primary": "MS-222 overdose", "parameters": "", "confirmation": "No opercular movement."},
     "fate": "survival"

@@ -22,11 +22,15 @@
   },
   "ground_truth": {
     "bad_expected_l1_refs": [
+      "euthanasia:overdose-confirm",
+      "euthanasia:secondary-method",
       "special:biosafety",
       "special:stereotaxic",
       "term:track"
     ],
     "good_expected_l1_refs": [
+      "euthanasia:overdose-confirm",
+      "euthanasia:secondary-method",
       "special:biosafety",
       "special:stereotaxic"
     ],

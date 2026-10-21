@@ -48,7 +48,7 @@
     "analgesia": [{"agent": "Buprenorphine", "rationale": "Pain control", "dose": "0.03 mg/kg", "route": "SC"}],
     "anesthesia": [{"agent": "Isoflurane", "rationale": "Wound creation", "dose": "2%", "route": "inhaled"}],
     "severity_level_1_to_5": 3,
-    "monitoring": {"plan": "Daily wound checks after the procedure.", "parameters": ["Daily wound score.", "Record appetite and mobility."]},
+    "monitoring": {"documentation": "Daily wound checks after the procedure.", "parameters": ["Daily wound score.", "Record appetite and mobility."]},
     "humane_endpoints": {"general": ["Infection, dehiscence, or 15% weight loss."], "specific": ["Purulent wound discharge triggers euthanasia."]},
     "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirmed by absent heartbeat."},
     "fate": "survival"

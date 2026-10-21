@@ -129,6 +129,7 @@ METHOD_ALIASES: Dict[str, str] = {
     "inhalant overdose": "inhalant_overdose",
     "isoflurane overdose": "inhalant_overdose",
     "isoflurane": "inhalant_overdose",
+    "חומר הרדמה בשאיפה": "inhalant_overdose",  # Council form option: inhaled anesthetic
     "sevoflurane": "inhalant_overdose",
     "sevoflurane overdose": "inhalant_overdose",
 
@@ -144,6 +145,7 @@ METHOD_ALIASES: Dict[str, str] = {
     "injectable overdose": "injectable_overdose",
     "ketamine overdose": "injectable_overdose",
     "ketamine/xylazine overdose": "injectable_overdose",
+    "חומר הרדמה בהזרקה": "injectable_overdose",  # Council form option: injected anesthetic
 
     # Cervical dislocation
     "cervical_dislocation": "cervical_dislocation",
@@ -600,6 +602,19 @@ def check_method_for_species(species_key: str, method_key: str) -> Dict[str, Any
             "requires_secondary_method": False}
 
 
+_DAYS_PER_UNIT = {"days": 1, "weeks": 7, "months": 30, "years": 365}
+
+
+def age_in_days(age: Any) -> Optional[float]:
+    """{"value": n, "unit": "days|weeks|months|years"} -> days; None when value or unit is not stated."""
+    if not isinstance(age, dict) or age.get("unit") not in _DAYS_PER_UNIT:
+        return None
+    value = age.get("value")
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return value * _DAYS_PER_UNIT[age["unit"]]
+
+
 def is_neonatal(species_key: str, age_days: Optional[float]) -> bool:
     """Check if an animal qualifies as neonatal for AVMA euthanasia purposes.
 
@@ -636,14 +651,6 @@ def get_displacement_rate_range(species_key: str) -> Optional[Tuple[int, int]]:
     if lo is not None and hi is not None:
         return (lo, hi)
     return None
-
-
-def get_neonatal_info(species_key: str) -> Optional[Dict[str, Any]]:
-    """Return neonatal handling info for a species, or None."""
-    entry = AVMA_EUTHANASIA_MATRIX.get(species_key)
-    if entry is None:
-        return None
-    return entry.get("neonatal")
 
 
 def format_avma_summary_for_species(species_key: str) -> str:

@@ -747,7 +747,8 @@ IACUC_SCHEMA_V2 = {
                     },
                     "monitoring": {
                         "type": "object",
-                        "required": ["initial_72h_daily", "ongoing_per_week", "parameters", "documentation"],
+                        # 72h / weekly are omitted when the export does not state them (never defaulted)
+                        "required": ["parameters", "documentation"],
                         "properties": {
                             "initial_72h_daily": {"type": "boolean"},
                             "ongoing_per_week": {"type": "integer", "minimum": 0},

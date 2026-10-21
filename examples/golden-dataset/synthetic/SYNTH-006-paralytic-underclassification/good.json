@@ -43,7 +43,7 @@
     "analgesia": [],
     "anesthesia": [{"agent": "Isoflurane", "rationale": "Imaging", "dose": "2%", "route": "inhaled"}],
     "severity_level_1_to_5": 3,
-    "monitoring": {"plan": "Observe after imaging.", "parameters": ["Daily check and recovery scoring."]},
+    "monitoring": {"documentation": "Observe after imaging.", "parameters": ["Daily check and recovery scoring."]},
     "humane_endpoints": {"general": ["Unexpected respiratory distress."], "specific": []},
     "euthanasia": {"primary": "cervical dislocation", "parameters": "", "confirmation": ""},
     "fate": "survival"

@@ -9,8 +9,10 @@ would reorder checklist rows. invasive_keywords is published to
 ctx.invasive_keywords where it is defined and read back from ctx at the
 pain:category-consistency site.
 """
+import re
+
 from .context import RuleContext, _rule
-from .helpers import _anesthesia_text, _flatten_text, _pain_category
+from .helpers import _anesthesia_text, _flatten_text, _mentions, _pain_category
 
 
 def run(ctx: RuleContext) -> None:
@@ -182,7 +184,6 @@ def run(ctx: RuleContext) -> None:
         "sepsis",
         "stroke",
         "neuropathic pain",
-        "tumor burden",
         "ulceration",
         "death endpoint",
     ]
@@ -195,8 +196,8 @@ def run(ctx: RuleContext) -> None:
                 " ".join((step.get("step") or "") for step in e.get("procedure_timeline") or []).lower(),
             ]
         )
-        has_moderate_burden = any(kw in joined for kw in moderate_burden_keywords)
-        has_severe_burden = any(kw in joined for kw in severe_burden_keywords)
+        has_moderate_burden = _mentions(joined, moderate_burden_keywords)
+        has_severe_burden = _mentions(joined, severe_burden_keywords)
         pain_category = _pain_category(e)
         if pain_category:
             underclassified = (
@@ -267,6 +268,8 @@ def run_cosmetics_endpoints(ctx: RuleContext) -> None:
             _flatten_text(instance.get("experiments")),
         ]
     ).lower()
+    # The ban is on testing cosmetic products; a patient's cosmetic surgery is not one.
+    protocol_text = re.sub(r"cosmetic\s+surg\w*|ניתוח\w*\s+קוסמט\w*", " ", protocol_text)
     if any(kw in protocol_text for kw in cosmetics_keywords):
         ctx.checks.append(
             _rule(
@@ -323,7 +326,8 @@ def run_cosmetics_endpoints(ctx: RuleContext) -> None:
         has_20 = "20%" in text or "20 percent" in text
         has_10 = "10%" in text or "10 percent" in text
         only_20 = has_20 and not has_10 and not any(
-            kw in text for kw in ["tumor", "ulcer", "necros", "score", "scale"]
+            kw in text for kw in ["tumor", "ulcer", "necros", "score", "scale", "hunch", "letharg",
+                                  "posture", "moribund", "body condition", "piloerect", "dehydrat"]
         )
         if 1 <= idx <= len(exp_signals):
             exp_signals[idx - 1]["humane_endpoints_20_percent_only"] = bool(only_20)

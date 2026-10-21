@@ -49,7 +49,7 @@
     "anesthesia": [],
     "severity_level_1_to_5": 4,
     "monitoring": {
-      "plan": "Daily monitoring during the first 72 hours and weekly thereafter, with veterinary consultation on the monitoring plan.",
+      "documentation": "Daily monitoring during the first 72 hours and weekly thereafter, with veterinary consultation on the monitoring plan.",
       "parameters": ["Daily clinical scoring during the first 72 hours.", "Weekly review after stabilization.", "Consulting veterinarian reviews intervention thresholds."]
     },
     "humane_endpoints": {

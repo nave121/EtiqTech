@@ -1,6 +1,8 @@
 """special:* rules (one loop: stereotaxic, oncology, diabetes, biosafety, nanomaterials, ocular).
 Verbatim move from linter_renderer.lint() (P3.1 batch 2). Flag writes stay on the always-path.
 """
+import re
+
 from .context import RuleContext, _rule
 
 
@@ -18,7 +20,7 @@ def run(ctx: RuleContext) -> None:
         # DBS / stereotaxic
         has_stereotaxic = any(
             k in joined
-            for k in ["dbs", "stereotax", "stereotactic", "craniotomy", "headcap", "implant"]
+            for k in ["dbs", "stereotax", "stereotactic", "craniotomy", "headcap"]
         )
         if 1 <= idx <= len(exp_signals):
             exp_signals[idx - 1]["specialty_flags"]["stereotaxic_context"] = bool(
@@ -43,10 +45,12 @@ def run(ctx: RuleContext) -> None:
             )
 
         # Oncology / tumor
+        onc_text = joined.replace("tumor necrosis factor", " ")  # a cytokine, not tumour work
         has_onc = any(
-            k in joined
+            k in onc_text
             for k in [
                 "tumor",
+                "tumour",
                 "melanoma",
                 "xenograft",
                 "metastasis",
@@ -107,8 +111,10 @@ def run(ctx: RuleContext) -> None:
             )
 
         # Biosafety / viruses
+        # "Moloney murine leukemia virus reverse transcriptase" is a lab reagent, not viral work
+        bio_text = re.sub(r"(?:\w+\s+){0,3}virus\s+reverse\s+transcriptase", " ", joined)
         has_bio = any(
-            k in joined
+            k in bio_text
             for k in [
                 "virus",
                 "viral",

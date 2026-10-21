@@ -44,7 +44,7 @@
     "anesthesia": [],
     "severity_level_1_to_5": 4,
     "monitoring": {
-      "plan": "Veterinary consultation obtained for this neonatal terminal plan.",
+      "documentation": "Veterinary consultation obtained for this neonatal terminal plan.",
       "initial_72h_daily": true,
       "parameters": ["Daily during the first 72h is not applicable because this is terminal, but the neonatal handling and euthanasia sequence were reviewed by veterinary staff."]
     },

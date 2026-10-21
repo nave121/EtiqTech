@@ -24,6 +24,7 @@
     "bad_expected_l1_refs": [
       "euthanasia:displacement-rate",
       "euthanasia:secondary-method",
+      "gma:ibc",
       "special:biosafety",
       "special:oncology",
       "vet:consultation"
@@ -31,6 +32,7 @@
     "good_expected_l1_refs": [
       "euthanasia:displacement-rate",
       "euthanasia:secondary-method",
+      "gma:ibc",
       "special:biosafety",
       "special:oncology",
       "vet:consultation"

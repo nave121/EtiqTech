@@ -22,12 +22,12 @@
   },
   "ground_truth": {
     "bad_expected_l1_refs": [
-      "endpoints:20%-only",
+      "gma:ibc",
       "special:nanomaterials",
       "term:track"
     ],
     "good_expected_l1_refs": [
-      "endpoints:20%-only",
+      "gma:ibc",
       "special:nanomaterials",
       "term:track"
     ],

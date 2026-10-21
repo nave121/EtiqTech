@@ -188,8 +188,8 @@ Top-level required blocks: `header`, `research`, `pi`, `participants`, `summarie
 | `experiments[].pain_category_structured.raw` | string | yes |  |  |  |
 | `experiments[].pain_category_structured.parsed` | string/null | yes |  | `B` · `C` · `D` · `E` · `None` |  |
 | `experiments[].monitoring` | object | yes | Monitoring — Clinical monitoring schedule and what is documented. |  |  |
-| `experiments[].monitoring.initial_72h_daily` | boolean | yes |  |  |  |
-| `experiments[].monitoring.ongoing_per_week` | integer | yes |  |  |  |
+| `experiments[].monitoring.initial_72h_daily` | boolean |  |  |  |  |
+| `experiments[].monitoring.ongoing_per_week` | integer |  |  |  |  |
 | `experiments[].monitoring.parameters` | array | yes |  |  |  |
 | `experiments[].monitoring.parameters[]` | string |  |  |  |  |
 | `experiments[].monitoring.documentation` | string | yes |  |  |  |

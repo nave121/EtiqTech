@@ -48,7 +48,7 @@
     "analgesia": [],
     "anesthesia": [],
     "severity_level_1_to_5": 2,
-    "monitoring": {"plan": "Terminal collection only.", "parameters": ["One terminal observation before necropsy."]},
+    "monitoring": {"documentation": "Terminal collection only.", "parameters": ["One terminal observation before necropsy."]},
     "humane_endpoints": {"general": ["Terminal collection only."], "specific": []},
     "euthanasia": {"primary": "CO2", "parameters": "", "confirmation": ""},
     "fate": "euthanized"

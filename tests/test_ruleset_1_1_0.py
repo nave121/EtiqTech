@@ -70,7 +70,7 @@ def test_counters_reconcile_with_rows_on_every_fixture():
 
 
 def test_ruleset_version_bumped_and_history_known():
-    assert RULESET_VERSION == "1.1.0" and "1.0.0" in KNOWN_RULESET_VERSIONS
+    assert {"1.0.0", "1.1.0"} <= set(KNOWN_RULESET_VERSIONS)  # history stays known; the current version is pinned in test_ruleset_1_2_0.py
 
 
 def test_generic_pack_recomputation_reconciles_too(monkeypatch):

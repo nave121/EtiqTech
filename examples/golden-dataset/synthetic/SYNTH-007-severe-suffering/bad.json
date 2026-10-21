@@ -43,7 +43,7 @@
     "analgesia": [],
     "anesthesia": [],
     "severity_level_1_to_5": 5,
-    "monitoring": {"plan": "Observe through the full severe course.", "parameters": ["Record convulsions."]},
+    "monitoring": {"documentation": "Observe through the full severe course.", "parameters": ["Record convulsions."]},
     "humane_endpoints": {"general": ["Death or irreversible collapse."], "specific": []},
     "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "No heartbeat."},
     "fate": "survival"

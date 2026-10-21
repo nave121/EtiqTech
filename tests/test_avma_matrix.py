@@ -16,7 +16,6 @@ from src.avma_matrix import (
     check_method_for_species,
     is_neonatal,
     get_displacement_rate_range,
-    get_neonatal_info,
     format_avma_summary_for_species,
 )
 
@@ -322,22 +321,14 @@ def test_get_displacement_rate_range(species, expected):
 
 
 # ---------------------------------------------------------------------------
-# get_neonatal_info
+# neonatal data (read by is_neonatal, which special:neonatal-CO2 now uses)
 # ---------------------------------------------------------------------------
 
-def test_get_neonatal_info_mouse():
-    info = get_neonatal_info("mouse")
-    assert info is not None
+def test_neonatal_data_mouse_and_rabbit():
+    info = AVMA_EUTHANASIA_MATRIX["mouse"]["neonatal"]
     assert info["age_cutoff_days"] == 10
     assert info["CO2_requires_extended_exposure"] is True
-
-
-def test_get_neonatal_info_none_for_rabbit():
-    assert get_neonatal_info("rabbit") is None
-
-
-def test_get_neonatal_info_none_for_unknown():
-    assert get_neonatal_info("unknown") is None
+    assert AVMA_EUTHANASIA_MATRIX["rabbit"].get("neonatal") is None
 
 
 # ---------------------------------------------------------------------------

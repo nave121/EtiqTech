@@ -4,7 +4,10 @@ Verbatim move from linter_renderer.lint() (P3.1 batch 2).
 Two entry points because husbandry blocks (batch 3) sit between vet:consultation and the
 other three in source order; a single run() would reorder checklist rows.
 """
+import re
+
 from .context import RuleContext, _rule
+from .helpers import _mentions, _monitoring_text
 
 
 def run_vet_consultation(ctx: RuleContext) -> None:
@@ -12,14 +15,13 @@ def run_vet_consultation(ctx: RuleContext) -> None:
     # --- vet consultation for high-severity experiments (law-critical advisory) ---
     # Israeli Law §12(2): veterinary consultation required for severe procedures.
     # NRC Guide Ch. 4: anesthetic/analgesic plan requires veterinary input at severity ≥4.
-    vet_keywords = ["vet", "veterinar", "dvm", "consultation"]
+    vet_keywords = ["vet", "veterinar", "dvm", "consultation", "וטרינר", "התייעצות"]
     for idx, e in enumerate(exps, start=1):
         sev = e.get("severity_level_1_to_5")
         if not isinstance(sev, int) or sev < 4:
             continue
-        mon = e.get("monitoring") or {}
-        mon_text = (mon.get("plan") or "") + " ".join(mon.get("parameters") or [])
-        has_vet_consult = any(kw in mon_text.lower() for kw in vet_keywords)
+        mon_text = _monitoring_text(e.get("monitoring") or {})
+        has_vet_consult = any(kw in mon_text for kw in vet_keywords)
         if not has_vet_consult:
             ctx.checks.append(
                 _rule(
@@ -28,7 +30,7 @@ def run_vet_consultation(ctx: RuleContext) -> None:
                     f"Experiment {idx}: severity {sev} procedures require documented veterinary "
                     "consultation on anesthetic/analgesic plan (Israeli Law §12(2); NRC Guide Ch. 4).",
                     fix=(
-                        "Document veterinary consultation in monitoring.plan — include the consulting "
+                        "Document veterinary consultation in monitoring.documentation — include the consulting "
                         "veterinarian's role in reviewing the anesthetic/analgesic protocol."
                     ),
                     severity="warning",
@@ -54,8 +56,7 @@ def run(ctx: RuleContext) -> None:
         has_deprivation = any(kw in timeline_txt for kw in deprivation_keywords)
         if not has_deprivation:
             continue
-        mon = e.get("monitoring") or {}
-        mon_text = ((mon.get("plan") or "") + " " + " ".join(mon.get("parameters") or [])).lower()
+        mon_text = _monitoring_text(e.get("monitoring") or {})
         has_weight_criterion = any(kw in mon_text for kw in weight_keywords)
         if not has_weight_criterion:
             ctx.checks.append(
@@ -84,7 +85,10 @@ def run(ctx: RuleContext) -> None:
     ]
     for idx, e in enumerate(exps, start=1):
         genetic_status = ((e.get("animals") or {}).get("genetic_status") or "").lower()
-        is_gm = any(kw in genetic_status for kw in gm_keywords)
+        # Council form: כן (yes) or "כן, לא" (mixed lines) is GM; "not/non ..." is never GM.
+        is_gm = bool(re.search(r"(?<!\w)כן(?!\w)", genetic_status)) or (
+            not re.search(r"(?<!\w)(?:not|non)[\s-]", genetic_status) and _mentions(genetic_status, gm_keywords)
+        )
         if is_gm:
             ctx.checks.append(
                 _rule(

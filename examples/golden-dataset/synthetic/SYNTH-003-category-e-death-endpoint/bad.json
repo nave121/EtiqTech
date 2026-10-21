@@ -43,7 +43,7 @@
     "analgesia": [],
     "anesthesia": [{"agent": "Isoflurane", "rationale": "Surgery", "dose": "2%", "route": "inhaled"}],
     "severity_level_1_to_5": 5,
-    "monitoring": {"plan": "Observe after surgery.", "parameters": ["Check if moribund."]},
+    "monitoring": {"documentation": "Observe after surgery.", "parameters": ["Check if moribund."]},
     "humane_endpoints": {"general": ["Death or moribundity."], "specific": []},
     "euthanasia": {"primary": "pentobarbital overdose", "parameters": "", "confirmation": "Confirm lack of heartbeat."},
     "fate": "survival"

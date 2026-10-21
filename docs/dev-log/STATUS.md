@@ -67,6 +67,25 @@ Decided memos (kept for the record): `statute-sources.md` (statute imported), `l
 6. On the 27B test model the blind pass barely separates good from bad protocols (see docs/benchmarks.md).
 7. ~~`the_law.txt`~~ deleted 2026-09-06 on Razy's OK.
 
+## Ruleset 1.2.0 (2026-10-21, from the 2026-10-19 audit; every rule change approved card by card by Razy)
+Trigger fixes, with the before/after firing table on all real exports in the PR body. Known-good protocols failing
+the default gate: 0 of 35 before and after.
+- Field and parser bugs: three rules read `monitoring.plan`, which no schema or parser has, so they now read
+  `monitoring.documentation`. 36 golden fixtures carried the same key and were renamed. Other fixes: a stray "e.g."
+  was parsed as pain category E; "פילוט" was not a pilot marker in the parser; an empty section took the next
+  section's text; weight was unescaped in the render; experiment age was the last animal row's age, now the youngest.
+- Parser stops inventing monitoring values: `initial_72h_daily` / `ongoing_per_week` are omitted when the export does
+  not state them (schema: no longer required).
+- Rule calls (Razy): Hebrew euthanasia options mapped (inhaled, injected; perfusion left unmapped);
+  `overdose-confirm` warns by default, like CO2 (the export rarely has a confirmation cell); Hebrew confirmation and
+  vet words; GM status (`כן` / `כן, לא`); stereotaxic drops bare "implant"; neonatal by declared age;
+  pre-charged chamber only for CO2; reagent and cytokine exclusions; clinical signs count beside 20%; short burden
+  keywords are whole words, "tumor burden" dropped; "cosmetic surgery" is not cosmetics testing; an unknown
+  method gives no verdict; CO2 rate reads both fields and "100%" is not a rate; post-op: recovery means survival.
+- **Open (Razy, decided 2026-10-21 to revisit):** `severity:monitoring` passes all 79 severity ≥4 experiments on
+  weak evidence (any "24"/"72", or 50 characters of text). Revisit now that the parser no longer invents the 72h /
+  weekly values: measure what real exports state, then tighten.
+
 ## Running jobs (as of step 25, resumed after the 21:00 limit reset)
 - Nothing running. Done: split, coverage, eval, research memos, design 1–9 (8 English-only), the four maintainer decisions (statute import, Layer 3 window, ruleset 1.1.0, landing English-only), reviews.
 

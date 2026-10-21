@@ -48,7 +48,7 @@
     "analgesia": [{"agent": "Buprenorphine", "rationale": "Post-operative pain control", "dose": "0.05 mg/kg", "route": "SC"}],
     "anesthesia": [{"agent": "Isoflurane", "rationale": "Surgery", "dose": "2%", "route": "inhaled"}],
     "severity_level_1_to_5": 3,
-    "monitoring": {"plan": "Daily wound and recovery checks after surgery.", "parameters": ["Daily wound check.", "Observe recovery from anesthesia."]},
+    "monitoring": {"documentation": "Daily wound and recovery checks after surgery.", "parameters": ["Daily wound check.", "Observe recovery from anesthesia."]},
     "humane_endpoints": {"general": ["Wound dehiscence or 15% weight loss."], "specific": []},
     "euthanasia": {"primary": "cervical dislocation", "parameters": "Performed by trained personnel under anesthesia.", "confirmation": ""},
     "fate": "survival"

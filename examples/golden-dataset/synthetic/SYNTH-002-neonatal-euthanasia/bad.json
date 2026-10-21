@@ -43,7 +43,7 @@
     "analgesia": [],
     "anesthesia": [],
     "severity_level_1_to_5": 4,
-    "monitoring": {"plan": "Immediate terminal collection.", "parameters": ["One terminal observation."]},
+    "monitoring": {"documentation": "Immediate terminal collection.", "parameters": ["One terminal observation."]},
     "humane_endpoints": {"general": ["Terminal collection only."], "specific": []},
     "euthanasia": {"primary": "CO2", "parameters": "", "confirmation": ""},
     "fate": "euthanized"

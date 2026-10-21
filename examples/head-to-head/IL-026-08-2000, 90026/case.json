@@ -22,18 +22,19 @@
   },
   "ground_truth": {
     "bad_expected_l1_refs": [
+      "euthanasia:overdose-confirm",
+      "euthanasia:secondary-method",
       "sex:rationale",
       "sex:sabv",
-      "special:oncology",
-      "vet:consultation"
+      "special:oncology"
     ],
     "good_expected_l1_refs": [
+      "euthanasia:overdose-confirm",
+      "euthanasia:secondary-method",
       "severity:analgesia",
       "sex:rationale",
       "sex:sabv",
-      "special:oncology",
-      "special:stereotaxic",
-      "vet:consultation"
+      "special:oncology"
     ],
     "target_l2_themes": [
       "N_and_justification",
