@@ -25,10 +25,7 @@ BAD_HTML = (
     / "known-bad"
     / "bad_IL-019-07-2000.html"
 )
-FALLBACK_LAYER3_SUMMARY = (
-    "Layer 3 could not complete review due to an LLM error; "
-    "defaulting to revise_major."
-)
+FALLBACK_LAYER3_SUMMARY = "The second read did not complete: the AI did not answer."
 
 
 def _load_report(html_path: Path):
@@ -121,7 +118,7 @@ def _all_ok_theme_side_effect(prompt: str, **kwargs) -> str:
     )
 
 
-def test_e2e_clean_protocol_skips_layer3_when_all_layers_are_clean():
+def test_e2e_clean_protocol_still_gets_layer3():
     instance, report = _load_report(GOOD_HTML)
 
     assert report["status"] == "pass"
@@ -145,15 +142,14 @@ def test_e2e_clean_protocol_skips_layer3_when_all_layers_are_clean():
         for theme in layer2["themes"].values()
     )
 
-    with patch("src.llm_layer3.call_llm") as mock_layer3:
-        layer3 = run_human_eye(instance, report, layer2, force=False)
+    with patch("src.llm_layer3.call_llm", side_effect=[_layer3_pass1(), _layer3_pass2()]) as mock_layer3:
+        layer3 = run_human_eye(instance, report, layer2)
 
-    assert layer3["skipped"] is True
-    assert layer3["overall_verdict"] == "approve"
-    mock_layer3.assert_not_called()
+    assert mock_layer3.call_count == 2
+    assert layer3["triggered_by"] == "always"
 
 
-def test_e2e_known_bad_protocol_triggers_layer3_on_layer1_errors():
+def test_e2e_known_bad_protocol_gets_layer3_verdict():
     instance, report = _load_report(BAD_HTML)
 
     assert report["status"] == "fail"
@@ -186,11 +182,10 @@ def test_e2e_known_bad_protocol_triggers_layer3_on_layer1_errors():
 
     llm_responses = [_layer3_pass1(), _layer3_pass2()]
     with patch("src.llm_layer3.call_llm", side_effect=llm_responses):
-        layer3 = run_human_eye(instance, report, layer2, force=False)
+        layer3 = run_human_eye(instance, report, layer2)
 
     assert layer2["themes"]["scientific_coherence"]["label"] == "inadequate"
-    assert layer3["skipped"] is False
-    assert layer3["triggered_by"] == "layer1_errors"
+    assert layer3["triggered_by"] == "always"
     assert layer3["overall_verdict"] == "revise_major"
     assert layer3["cross_reference_issues"]
 
@@ -262,7 +257,7 @@ def test_e2e_layer_findings_propagate_through_layer2_and_layer3():
         return layer3_responses[len(layer3_prompts) - 1]
 
     with patch("src.llm_layer3.call_llm", side_effect=layer3_side_effect):
-        run_human_eye(instance, report, layer2, force=False)
+        run_human_eye(instance, report, layer2)
 
     assert "animals:totals-vs-exps" not in layer3_prompts[0]
     assert '"scientific_coherence"' in layer3_prompts[1]
@@ -302,6 +297,5 @@ def test_live_llm_e2e_smoke():
         for theme in layer2["themes"].values()
     )
 
-    layer3 = run_human_eye(instance, report, layer2, force=True)
-    assert layer3["skipped"] is False
+    layer3 = run_human_eye(instance, report, layer2)
     assert layer3["summary"] != FALLBACK_LAYER3_SUMMARY

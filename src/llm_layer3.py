@@ -14,17 +14,17 @@ Architecture
 - Context: full law text + all CASE_REPORTs + high-leverage x_meta catalog
   (no truncation — relies on OLLAMA_NUM_CTX=32768)
 - Additive: Layer 3 adds findings; it never removes Layer 1/2 items
-- Conditional trigger: run when Layer 1 has errors, Layer 2 grades indicate
-  material deficiencies, severity ≥ 3, or random 10 % sampling
+- Runs on every protocol (maintainer decision 2026-10-21): a clean Layer 1/2 is
+  exactly where a second, independent read earns its cost
+- No answer is "unavailable", never a verdict: a down provider must not read as
+  "revise_major"
 """
 
-import hashlib
 import json
-import re
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
-from .llm_agent import LAW_PATH, _slice_instance
+from .llm_agent import LAW_PATH, _slice_instance, parse_llm_json
 from .llm_clients import _env_int, call_llm, call_llm_stream, context_budget_warning
 from .xmeta_catalog import load_high_leverage_catalog
 
@@ -149,136 +149,6 @@ def _build_pass2_prompt(
 
 
 # ---------------------------------------------------------------------------
-# JSON parsing (reuse same approach as llm_agent.py)
-# ---------------------------------------------------------------------------
-
-def _parse_layer3_json(text: str) -> Dict[str, Any]:
-    cleaned = text.strip()
-    cleaned = re.sub(r'<think(?:ing)?>.*?</think(?:ing)?>', '', cleaned, flags=re.DOTALL | re.IGNORECASE)
-    cleaned = cleaned.strip()
-
-    # Strip code fence
-    code_block = re.search(r'```(?:json)?\s*\n?(.*?)\n?```', cleaned, flags=re.DOTALL)
-    if code_block:
-        cleaned = code_block.group(1).strip()
-
-    try:
-        return json.loads(cleaned)
-    except json.JSONDecodeError:
-        pass
-
-    start = cleaned.find("{")
-    if start == -1:
-        raise ValueError("No JSON object found in LLM response")
-
-    depth = 0
-    end = -1
-    in_string = False
-    escape_next = False
-    for i, char in enumerate(cleaned[start:], start):
-        if escape_next:
-            escape_next = False
-            continue
-        if char == '\\' and in_string:
-            escape_next = True
-            continue
-        if char == '"' and not escape_next:
-            in_string = not in_string
-            continue
-        if in_string:
-            continue
-        if char == '{':
-            depth += 1
-        elif char == '}':
-            depth -= 1
-            if depth == 0:
-                end = i
-                break
-
-    if end != -1:
-        try:
-            return json.loads(cleaned[start:end + 1])
-        except json.JSONDecodeError:
-            pass
-
-    end = cleaned.rfind("}")
-    if start != -1 and end > start:
-        try:
-            return json.loads(cleaned[start:end + 1])
-        except json.JSONDecodeError:
-            pass
-
-    raise ValueError("Layer 3 response was not valid JSON.")
-
-
-# ---------------------------------------------------------------------------
-# Trigger logic
-# ---------------------------------------------------------------------------
-
-def should_trigger_layer3(
-    lint_report: Dict[str, Any],
-    layer2_result: Optional[Dict[str, Any]],
-    instance: Optional[Dict[str, Any]] = None,
-    *,
-    sampling_rate: float = 0.10,
-) -> Tuple[bool, str]:
-    """
-    Returns (True, reason_string) if Layer 3 should run.
-
-    Conditions (first match wins):
-    1. Layer 1 has any error-severity checklist item
-    2. Layer 2 has any theme with legacy low confidence or graded score <= 1
-    3. Layer 2 has >= 2 themes with legacy needs_fixes or graded score <= 2
-    4. Any experiment has severity_level_1_to_5 >= 3
-    5. Random 10 % sampling (seeded by protocol_id hash for reproducibility)
-    """
-    # Condition 1 — Layer 1 errors
-    checklist = lint_report.get("checklist") or []
-    if any(c.get("status") == "fail" and c.get("severity") == "error" for c in checklist):
-        return True, "layer1_errors"
-
-    # Condition 2 and 3 — Layer 2 thresholds
-    if layer2_result:
-        themes = layer2_result.get("themes") or {}
-        if any(
-            isinstance(v, dict) and v.get("confidence") == "low"
-            for v in themes.values()
-        ):
-            return True, "layer2_low_confidence"
-        if any(_theme_score_at_most(v, 1) for v in themes.values()):
-            return True, "layer2_low_score"
-        legacy_needs_fixes_count = sum(
-            1 for v in themes.values()
-            if isinstance(v, dict) and v.get("verdict") == "needs_fixes"
-        )
-        if legacy_needs_fixes_count >= 2:
-            return True, "layer2_multiple_needs_fixes"
-        low_or_partial_count = sum(
-            1 for v in themes.values()
-            if _theme_score_at_most(v, 2)
-        )
-        if low_or_partial_count >= 2:
-            return True, "layer2_multiple_low_scores"
-
-    # Condition 4 — high severity experiments
-    if instance:
-        for exp in (instance.get("experiments") or []):
-            if isinstance(exp.get("severity_level_1_to_5"), int) and exp["severity_level_1_to_5"] >= 3:
-                return True, "high_severity_experiment"
-
-    # Condition 5 — random sampling (seeded by protocol_id for reproducibility)
-    if sampling_rate > 0:
-        protocol_id = ""
-        if instance:
-            protocol_id = str((instance.get("header") or {}).get("protocol_id", ""))
-        seed = int(hashlib.md5(protocol_id.encode(), usedforsecurity=False).hexdigest(), 16) % 1000
-        if seed < int(sampling_rate * 1000):
-            return True, "random_sampling"
-
-    return False, "trigger_conditions_not_met"
-
-
-# ---------------------------------------------------------------------------
 # Fallback results
 # ---------------------------------------------------------------------------
 
@@ -289,9 +159,9 @@ def _fallback_pass1() -> Dict[str, Any]:
 def _fallback_pass2() -> Dict[str, Any]:
     return {
         "cross_reference_issues": [],
-        "overall_verdict": "revise_major",
-        "risk_profile": "high",
-        "summary": "Layer 3 could not complete review due to an LLM error; defaulting to revise_major.",
+        "overall_verdict": "unavailable",
+        "risk_profile": "",
+        "summary": "The second read did not complete: the AI did not answer.",
     }
 
 
@@ -317,8 +187,8 @@ def _build_layer3_disagreement_summary(
     pass2: Dict[str, Any],
 ) -> Dict[str, Any]:
     pass1_verdict, pass1_risk = _derive_pass1_assessment(pass1)
-    final_verdict = pass2.get("overall_verdict") or "revise_major"
-    final_risk = pass2.get("risk_profile") or "high"
+    final_verdict = pass2.get("overall_verdict") or "unavailable"
+    final_risk = pass2.get("risk_profile") or ""
     cross_reference_issues = pass2.get("cross_reference_issues") or []
     return {
         "verdict_changed": pass1_verdict != final_verdict,
@@ -327,47 +197,17 @@ def _build_layer3_disagreement_summary(
     }
 
 
-def _build_final_result(
-    pass1: Dict[str, Any],
-    pass2: Dict[str, Any],
-    reason: str,
-) -> Dict[str, Any]:
+def _build_final_result(pass1: Dict[str, Any], pass2: Dict[str, Any]) -> Dict[str, Any]:
     pass1_sections = pass1.get("sections") or []
     return {
         "sections": pass1_sections,
         "pass1_sections": pass1_sections,
         "cross_reference_issues": pass2.get("cross_reference_issues") or [],
-        "overall_verdict": pass2.get("overall_verdict") or "revise_major",
-        "risk_profile": pass2.get("risk_profile") or "high",
+        "overall_verdict": pass2.get("overall_verdict") or "unavailable",
+        "risk_profile": pass2.get("risk_profile") or "",
         "summary": pass2.get("summary") or "",
         "disagreement_summary": _build_layer3_disagreement_summary(pass1, pass2),
-        "triggered_by": reason,
-        "skipped": False,
-    }
-
-
-def _theme_score_at_most(theme_value: Any, threshold: int) -> bool:
-    if not isinstance(theme_value, dict) or theme_value.get("unavailable"):
-        return False  # no verdict at all is not a low verdict
-    score = theme_value.get("score")
-    return isinstance(score, int) and score <= threshold
-
-
-def _skipped_result() -> Dict[str, Any]:
-    return {
-        "sections": [],
-        "pass1_sections": [],
-        "cross_reference_issues": [],
-        "overall_verdict": "approve",
-        "risk_profile": "low",
-        "summary": "Layer 3 was not triggered for this protocol.",
-        "disagreement_summary": {
-            "verdict_changed": False,
-            "risk_changed": False,
-            "new_cross_reference_issues": 0,
-        },
-        "triggered_by": "",
-        "skipped": True,
+        "triggered_by": "always",
     }
 
 
@@ -383,7 +223,6 @@ def run_human_eye(
     provider: Optional[str] = None,
     model: Optional[str] = None,
     temperature: float = 0.2,
-    force: bool = False,
 ) -> Dict[str, Any]:
     """
     Execute the 2-pass Layer 3 review and return a HumanEyeResult-shaped dict.
@@ -393,18 +232,13 @@ def run_human_eye(
     instance : parsed protocol JSON
     lint_report : Layer 1 linter output
     layer2_result : Layer 2 VerifierResult (optional, used in Pass 2 synthesis)
-    force : bypass trigger check and always run
     """
-    triggered, reason = should_trigger_layer3(lint_report, layer2_result, instance)
-    if not force and not triggered:
-        return _skipped_result()
-
     # Pass 1 — section-by-section
     p1_prompt = _build_pass1_prompt(instance, lint_report)
     context_budget_warning(p1_prompt, label="Layer 3 / pass 1", num_ctx=layer3_num_ctx())  # logs; no stream to notify
     try:
         raw1 = call_llm(p1_prompt, provider=provider, model=model, temperature=temperature, num_ctx=layer3_num_ctx())
-        pass1 = _parse_layer3_json(raw1)
+        pass1 = parse_llm_json(raw1)
     except Exception:
         pass1 = _fallback_pass1()
 
@@ -413,11 +247,11 @@ def run_human_eye(
     context_budget_warning(p2_prompt, label="Layer 3 / pass 2", num_ctx=layer3_num_ctx())
     try:
         raw2 = call_llm(p2_prompt, provider=provider, model=model, temperature=temperature, num_ctx=layer3_num_ctx())
-        pass2 = _parse_layer3_json(raw2)
+        pass2 = parse_llm_json(raw2)
     except Exception:
         pass2 = _fallback_pass2()
 
-    return _build_final_result(pass1, pass2, reason)
+    return _build_final_result(pass1, pass2)
 
 
 # ---------------------------------------------------------------------------
@@ -432,14 +266,12 @@ def run_human_eye_stream(
     provider: Optional[str] = None,
     model: Optional[str] = None,
     temperature: float = 0.2,
-    force: bool = False,
 ) -> Generator[Dict[str, Any], None, None]:
     """
     Execute Layer 3 review with streaming updates.
 
     Yields events:
-    - {"type": "layer3_trigger", "reason": "..."}
-    - {"type": "layer3_skip",    "reason": "..."}
+    - {"type": "layer3_trigger", "reason": "always"}
     - {"type": "pass_start",     "pass": 1, "label": "..."}
     - {"type": "token",          "pass": 1, "token": "..."}
     - {"type": "pass_done",      "pass": 1, "result": {...}}
@@ -448,14 +280,7 @@ def run_human_eye_stream(
     - {"type": "pass_done",      "pass": 2, "result": {...}}
     - {"type": "complete",       "result": HumanEyeResult-shaped dict}
     """
-    triggered, reason = should_trigger_layer3(lint_report, layer2_result, instance)
-
-    if not force and not triggered:
-        yield {"type": "layer3_skip", "reason": reason}
-        yield {"type": "complete", "result": _skipped_result()}
-        return
-
-    yield {"type": "layer3_trigger", "reason": reason}
+    yield {"type": "layer3_trigger", "reason": "always"}
 
     # --- Pass 1 ---
     yield {"type": "pass_start", "pass": 1, "label": "Section-by-section review"}
@@ -469,7 +294,7 @@ def run_human_eye_stream(
         for token in call_llm_stream(p1_prompt, provider=provider, model=model, temperature=temperature, num_ctx=layer3_num_ctx()):
             full_response1 += token
             yield {"type": "token", "pass": 1, "token": token}
-        pass1 = _parse_layer3_json(full_response1)
+        pass1 = parse_llm_json(full_response1)
     except Exception as e:
         pass1 = _fallback_pass1()
         yield {"type": "token", "pass": 1, "token": f"\n[Layer 3 Pass 1 error: {type(e).__name__}]"}
@@ -488,12 +313,12 @@ def run_human_eye_stream(
         for token in call_llm_stream(p2_prompt, provider=provider, model=model, temperature=temperature, num_ctx=layer3_num_ctx()):
             full_response2 += token
             yield {"type": "token", "pass": 2, "token": token}
-        pass2 = _parse_layer3_json(full_response2)
+        pass2 = parse_llm_json(full_response2)
     except Exception as e:
         pass2 = _fallback_pass2()
         yield {"type": "token", "pass": 2, "token": f"\n[Layer 3 Pass 2 error: {type(e).__name__}]"}
 
     yield {"type": "pass_done", "pass": 2, "result": pass2}
 
-    final = _build_final_result(pass1, pass2, reason)
+    final = _build_final_result(pass1, pass2)
     yield {"type": "complete", "result": final}

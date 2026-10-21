@@ -278,7 +278,7 @@ def _call_ollama(
     _check_ollama_model(model)
     base_url = ollama_base_url()
     endpoint = f"{base_url}/api/generate"
-    timeout = _env_float("OLLAMA_TIMEOUT_SECONDS", 120)
+    timeout = _env_float("OLLAMA_TIMEOUT_SECONDS", 300)
 
     if max_tokens is None:
         max_tokens = _env_int("LLM_MAX_TOKENS", 8192)
@@ -495,6 +495,10 @@ def _call_ollama_stream(
         if line:
             try:
                 data = json.loads(line)
+                if isinstance(data, dict) and data.get("error"):
+                    # a mid-stream failure (out of memory, model unloaded); its text may echo the prompt: never pass it on
+                    logger.warning("ollama/stream error event")
+                    raise LLMError("Ollama stream reported an error")
                 token = data.get("response", "")
                 if token:
                     if first_token:

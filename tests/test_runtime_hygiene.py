@@ -88,8 +88,7 @@ def test_layer3_uses_its_own_wider_context_window(monkeypatch):
         def iter_lines(self):
             return iter([b'{"response": "{}", "done": true}'])
     monkeypatch.setattr(requests, "post", lambda url, json=None, **k: seen.append(json["options"]["num_ctx"]) or _Resp())
-    monkeypatch.setenv("LAYER3_SAMPLING_RATE", "0")
-    list(llm_layer3.run_human_eye_stream({"header": {}, "experiments": [], "animals_total": []}, {"checklist": []}, None, force=True))
+    list(llm_layer3.run_human_eye_stream({"header": {}, "experiments": [], "animals_total": []}, {"checklist": []}, None))
     assert seen and all(n == 65536 for n in seen), seen
     # Layer 2 keeps the default window
     seen.clear()

@@ -55,7 +55,6 @@ def quiet_llm(monkeypatch, marker):
     monkeypatch.setattr(llm_agent, "call_llm_two_step", lambda *a, **k: resp)
     monkeypatch.setattr(llm_layer3, "call_llm_stream", lambda *a, **k: iter([resp]))
     monkeypatch.setattr(llm_layer3, "call_llm", lambda *a, **k: resp)
-    monkeypatch.setenv("LAYER3_SAMPLING_RATE", "0")
 
 
 @pytest.fixture(params=["1", "12"], ids=["serial", "parallel"])
@@ -83,9 +82,9 @@ def test_pipeline_functions_never_log_protocol_text(marker, quiet_llm, caplog, c
     events = list(llm_agent.run_verification_stream(instance, report))
     assert events[-1]["type"] == "complete"
     llm_agent.run_verification(instance, report)
-    l3 = list(llm_layer3.run_human_eye_stream(instance, report, events[-1]["result"], force=True))
+    l3 = list(llm_layer3.run_human_eye_stream(instance, report, events[-1]["result"]))
     assert l3[-1]["type"] == "complete"
-    llm_layer3.run_human_eye(instance, report, events[-1]["result"], force=True)
+    llm_layer3.run_human_eye(instance, report, events[-1]["result"])
 
     _assert_clean(marker, caplog, capfd)
 
@@ -103,7 +102,7 @@ def test_http_api_never_logs_protocol_text(marker, quiet_llm, caplog, capfd):
         sid = r.get_json()["session_id"]
         sse = client.get(f"/api/llm-verify-stream/{sid}").get_data(as_text=True)
         assert '"type": "complete"' in sse
-        sse3 = client.get(f"/api/human-eye-stream/{sid}?force=1").get_data(as_text=True)
+        sse3 = client.get(f"/api/human-eye-stream/{sid}").get_data(as_text=True)
         assert '"type": "complete"' in sse3
         # error paths log too: a malformed upload must not echo the body
         r = client.post("/api/analyze", json={"html_content": f"<html><body>{marker}</body></html>"})
@@ -161,7 +160,7 @@ def test_invalid_llm_json_path_never_logs_response(marker, monkeypatch, caplog, 
     monkeypatch.setattr(llm_layer3, "call_llm", lambda *a, **k: garbage)
     events = list(llm_agent.run_verification_stream(instance, report))
     assert events[-1]["type"] == "complete"
-    l3 = list(llm_layer3.run_human_eye_stream(instance, report, events[-1]["result"], force=True))
+    l3 = list(llm_layer3.run_human_eye_stream(instance, report, events[-1]["result"]))
     assert l3[-1]["type"] == "complete"
     # the raw model text must not be replayed into fallback rationales or streamed as Layer 3 tokens
     # (findings are findings, not a dump of whatever the model said); only the error type may appear

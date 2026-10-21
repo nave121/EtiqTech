@@ -150,10 +150,10 @@ Layer 2 floating card (`setLLMStatus`, `handleThemeStart`, `handleComplete`):
 
 Layer 3 card and panel (`startLayer3Review`, `handleLayer3Event`, `showLayer3Results`):
 
-- start: "Step 3 of 3: a second, deeper read of the whole protocol. Runs only when something
-  needs it." [HE]
-- `layer3_trigger`: `Second read, because: ${reason}` [HE]
-- `layer3_skip`: "Second read not needed. Nothing serious came up." [HE]
+- start: "Step 3 of 3: a second, deeper read of the whole protocol." Layer 3 runs on every
+  protocol (2026-10-21); `layer3_trigger` (reason "always") only moves the progress bar.
+- no answer (`overall_verdict: "unavailable"`): "Second read unavailable (the AI did not
+  answer)" in the card, the panel badge, the print summary and the report summary.
 - `pass_start`: `Second read, part ${pass}: ${label}` [HE]
 - done, ok: "Second read: nothing serious." [HE]; done, issues: "Second read: found things to
   fix. They are in the panel below." [HE]
@@ -294,8 +294,8 @@ map drops are counted and listed).
 4. AI section, present only when `Object.keys(llmResults).length > 0`, appended by JS:
    - "AI review (advisory): {k} of {n} topics look adequate." then the list of themes scoring
      below 2 as `theme name (score of 3)`, each a button opening `showLLMDetails`. [HE]
-   - Layer 3 line when `layer3Results && !layer3Results.skipped`: "Second read: {verdict},
-     risk {risk_profile}." [HE]
+   - Layer 3 line when `layer3Results` is set: "Second read: {verdict}, risk {risk_profile}."
+     [HE]
    - `advisoryNotice()` text as a `<p class="advisory-banner">`, inserted by JS the same way
      `showLLMDetails` does today. Not server-rendered, so the `count == 4` test holds.
 5. Provenance line, always: "Checked with EtiqTech · ruleset {ruleset_version} · profile

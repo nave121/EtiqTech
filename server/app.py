@@ -23,7 +23,7 @@ from src.llm_agent import THEME_SPECS, law_loaded, run_verification_stream
 from src.rules import RULES
 from src.llm_clients import (
     LLMError, PROVIDERS, call_llm, is_ollama_cloud_model, local_first_status, ollama_base_url, provider_configured,
-    provider_default_model, remote_llm_allowed,
+    provider_default_model, provider_name, remote_llm_allowed,
 )
 from src.llm_layer3 import run_human_eye_stream
 
@@ -432,6 +432,11 @@ def analyze_with_session():
         # Read optional LLM provider/model from form data
         provider = request.form.get('provider', '').strip() or None
         model = request.form.get('model', '').strip() or None
+        try:
+            if provider_name(provider) != 'ollama':
+                model = None  # the picker lists Ollama models; a paid provider's model is the operator's budget call
+        except LLMError:
+            model = None  # unknown provider: refused when the review starts
 
         session_id = _store_session({
             'instance': instance,
@@ -490,10 +495,10 @@ def llm_verify_stream(session_id):
                 instance, lint_report, stance='committee',
                 provider=provider, model=model,
             ):
-                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
-                # Save the final layer2 result so human-eye-stream can access it
+                # Save before sending: the browser opens human-eye-stream as soon as `complete` arrives
                 if event.get("type") == "complete":
                     _update_session(session_id, layer2_result=event.get("result"))
+                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
         except Exception as e:
             logger.error("LLM verification streaming error", exc_info=True)
             yield f"data: {json.dumps({'type': 'error', 'message': 'Verification failed. Check server logs.'})}\n\n"
@@ -514,11 +519,10 @@ def human_eye_stream(session_id):
     Stream Layer 3 "Human Eye" holistic review using Server-Sent Events.
 
     Must be called after /api/llm-verify-stream has completed (or independently).
-    Layer 2 result is read from the session cache if available.
+    Layer 2 result is read from the session cache if available. Runs on every protocol.
 
     Events:
-    - layer3_trigger: Layer 3 triggered with reason
-    - layer3_skip: trigger conditions not met
+    - layer3_trigger: Layer 3 started (reason "always")
     - pass_start: starting a review pass
     - token: a token from the LLM response
     - pass_done: pass complete with structured result
@@ -539,14 +543,13 @@ def human_eye_stream(session_id):
     lint_report = cached['lint_report']
     layer2_result = cached.get('layer2_result')
 
-    force = request.args.get('force', '').lower() in ('1', 'true', 'yes')
     provider = cached.get('provider')
     model = cached.get('model')
 
     def generate():
         try:
             for event in run_human_eye_stream(
-                instance, lint_report, layer2_result, force=force,
+                instance, lint_report, layer2_result,
                 provider=provider, model=model,
             ):
                 yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"

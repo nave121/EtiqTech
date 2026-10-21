@@ -18,7 +18,7 @@ def test_linter_only_instance(monkeypatch):
         r = c.post("/api/analyze-with-session", json={"html_content": HTML})
         assert r.status_code == 200 and r.get_json()["lint_report"]["checklist"]  # Layer 1 unaffected
         sid = r.get_json()["session_id"]
-        for route in (f"/api/llm-verify-stream/{sid}", f"/api/human-eye-stream/{sid}?force=1"):
+        for route in (f"/api/llm-verify-stream/{sid}", f"/api/human-eye-stream/{sid}"):
             body = c.get(route).get_data(as_text=True)
             evt = json.loads(body.split("data: ", 1)[1].strip())
             assert evt["type"] == "error" and evt["code"] == "llm_disabled"

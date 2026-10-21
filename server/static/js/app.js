@@ -85,6 +85,8 @@
     let lintIssuesMap = {};  // Store lint issues by dataRef for click handling
     let layer3EventSource = null;
     let layer3Results = null;
+    // Layer 3 returns overall_verdict "unavailable" when the AI did not answer: no verdict, never a default one
+    const LAYER3_UNAVAILABLE = 'Second read unavailable (the AI did not answer)';
 
     const TOTAL_LLM_THEMES = 12;
 
@@ -311,7 +313,9 @@
         }
 
         // Layer 3 results
-        if (layer3Results && !layer3Results.skipped) {
+        if (layer3Results && layer3Results.overall_verdict === 'unavailable') {
+            html += `<br><br><strong>Human Eye Review (Layer 3):</strong> ${escapeHtml(LAYER3_UNAVAILABLE)}`;
+        } else if (layer3Results) {
             const verdict = layer3Results.overall_verdict || 'unknown';
             const risk = layer3Results.risk_profile || '';
             const summary = layer3Results.summary || '';
@@ -890,7 +894,9 @@
                     return `<li><button type="button" class="summary-link-btn" data-summary-theme="${escapeAttr(t)}">${escapeHtml(formatThemeName(t))} (${score} of 3)</button></li>`;
                 }).join('') + '</ul>';
             }
-            if (layer3Results && !layer3Results.skipped) {
+            if (layer3Results && layer3Results.overall_verdict === 'unavailable') {
+                html += `<p class="summary-ai-line summary-ai-failed">${escapeHtml(LAYER3_UNAVAILABLE)}.</p>`;
+            } else if (layer3Results) {
                 html += `<p class="summary-ai-line">Second read: ${escapeHtml(layer3Results.overall_verdict || 'unknown')}, risk ${escapeHtml(layer3Results.risk_profile || 'unknown')}.</p>`;
             }
             html += `<p class="advisory-banner">${escapeHtml(advisoryNotice())}</p>`;
@@ -1452,12 +1458,10 @@
     function startLayer3Review() {
         if (!currentSessionId) return;
         layer3Card.hidden = false;
-        layer3StatusText.textContent = 'Step 3 of 3: a second, deeper read of the whole protocol. Runs only when something needs it.';
+        layer3StatusText.textContent = 'Step 3 of 3: a second, deeper read of the whole protocol.';
         layer3ProgressFill.style.width = '10%';
 
-        layer3EventSource = new EventSource(
-            `/api/human-eye-stream/${currentSessionId}?force=1`
-        );
+        layer3EventSource = new EventSource(`/api/human-eye-stream/${currentSessionId}`);
         layer3EventSource.onmessage = (event) => {
             try { handleLayer3Event(JSON.parse(event.data)); }
             catch (e) { console.error('Layer3 SSE parse error:', e); }
@@ -1471,16 +1475,8 @@
 
     function handleLayer3Event(data) {
         switch (data.type) {
-            case 'layer3_trigger':
-                layer3StatusText.textContent = `Second read, because: ${data.reason || ''}`;  // textContent: no HTML escaping needed
+            case 'layer3_trigger':  // always sent first; its reason is "always", nothing to show
                 layer3ProgressFill.style.width = '20%';
-                break;
-            case 'layer3_skip':
-                layer3StatusText.textContent = 'Second read not needed. Nothing serious came up.';
-                layer3ProgressFill.style.width = '100%';
-                renderReportSummary();
-                setExportReady(true);
-                if (layer3EventSource) { layer3EventSource.close(); layer3EventSource = null; }
                 break;
             case 'pass_start':
                 layer3StatusText.textContent = `Second read, part ${data.pass}: ${data.label || ''}`;
@@ -1517,10 +1513,7 @@
     }
 
     function showLayer3Results(result) {
-        if (!result || result.skipped) {
-            layer3StatusText.textContent = 'Second read not needed. Nothing serious came up.';
-            return;
-        }
+        if (!result) return;
         const verdict  = result.overall_verdict || 'unknown';
         const risk     = result.risk_profile || '';
         const summary  = result.summary || '';
@@ -1529,8 +1522,9 @@
 
         // Update floating card status text
         const isOk = verdict === 'approve' || verdict === 'ok';
-        layer3StatusText.textContent = isOk
-            ? 'Second read: nothing serious.'
+        const unavailable = verdict === 'unavailable';
+        layer3StatusText.textContent = unavailable ? `${LAYER3_UNAVAILABLE}.`
+            : isOk ? 'Second read: nothing serious.'
             : 'Second read: found things to fix. They are in the panel below.';
 
         // Hide the floating card after a short delay (results go to full panel)
@@ -1541,8 +1535,8 @@
 
         // Verdict badge
         if (layer3VerdictBadge) {
-            layer3VerdictBadge.textContent = verdict.toUpperCase().replace(/_/g, ' ');
-            layer3VerdictBadge.className = 'layer3-verdict-badge ' + (isOk ? 'ok' : 'issues');
+            layer3VerdictBadge.textContent = unavailable ? LAYER3_UNAVAILABLE : verdict.toUpperCase().replace(/_/g, ' ');
+            layer3VerdictBadge.className = 'layer3-verdict-badge ' + (unavailable ? 'unavailable' : isOk ? 'ok' : 'issues');
         }
         // Risk label
         if (layer3RiskLabel) {
