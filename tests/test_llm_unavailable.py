@@ -51,7 +51,7 @@ def test_stream_reports_every_failed_theme_and_summarises():
         yield  # pragma: no cover — keep it a generator
 
     with patch("src.llm_agent.call_llm_stream", side_effect=boom):
-        events = list(run_verification_stream(inst, report, stance="law"))
+        events = list(run_verification_stream(inst, report))
     done = [e for e in events if e["type"] == "theme_done"]
     warnings = [e for e in events if e["type"] == "warning" and e.get("code") == "llm_unavailable"]
     complete = [e for e in events if e["type"] == "complete"][0]["result"]
@@ -64,7 +64,7 @@ def test_stream_reports_every_failed_theme_and_summarises():
 def test_non_stream_result_carries_failures():
     inst, report = _instance()
     with patch("src.llm_agent.call_llm", side_effect=LLMError("HTTP 400")):
-        result = run_verification(inst, report, stance="law")
+        result = run_verification(inst, report)
     assert result["llm_failures"] and set(result["llm_failures"]) == set(result["themes"])
 
 
@@ -110,7 +110,7 @@ def test_reconcile_failure_keeps_the_blind_verdict_and_says_so():
         yield '{"' + next(k for k in THEME_SPECS if THEME_SPECS[k]["label"] in prompt) + '": {"score": 3, "label": "adequate", "rationale": "fine", "sub_questions": []}, "questions": []}'
 
     with patch("src.llm_agent.call_llm_stream", side_effect=flaky):
-        events = list(run_verification_stream(inst, report, stance="law"))
+        events = list(run_verification_stream(inst, report))
     done = [e["result"] for e in events if e["type"] == "theme_done"]
     assert done and all(not r.get("unavailable") and r.get("reconciled") is False and r["score"] == 3 for r in done)
     assert all("blind-pass verdict" in r["rationale"] for r in done)
@@ -139,6 +139,6 @@ def test_reconcile_output_without_the_theme_keeps_pass1(monkeypatch):
             yield '{"' + next(k for k in THEME_SPECS if THEME_SPECS[k]["label"] in prompt) + '": {"score": 2, "label": "partially_adequate", "rationale": "ok", "sub_questions": []}, "questions": []}'
 
     with patch("src.llm_agent.call_llm_stream", side_effect=partial):
-        events = list(run_verification_stream(inst, report, stance="law"))
+        events = list(run_verification_stream(inst, report))
     done = [e["result"] for e in events if e["type"] == "theme_done"]
     assert done and all(r["score"] == 2 and r.get("reconciled") is False and not r.get("unavailable") for r in done)

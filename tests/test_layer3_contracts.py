@@ -16,6 +16,14 @@ from src.llm_agent import THEME_SPECS
 from src.llm_layer3 import run_human_eye, run_human_eye_stream
 
 
+def _streamed(answers):
+    """call_llm-style answers (a list, or a function of the prompt) as call_llm_stream side effects:
+    the batch Layer 3 entry point runs through the stream."""
+    if callable(answers):
+        return lambda prompt, **kwargs: iter([answers(prompt, **kwargs)])
+    return [iter([a]) for a in answers]
+
+
 def _minimal_instance():
     return {
         "header": {"protocol_id": "99999", "institution": "Test"},
@@ -122,7 +130,7 @@ def test_human_eye_result_contract():
             return _canned_pass1_response()
         return _canned_pass2_response()
 
-    with patch("src.llm_layer3.call_llm", side_effect=fake_call_llm):
+    with patch("src.llm_layer3.call_llm_stream", side_effect=_streamed(fake_call_llm)):
         result = run_human_eye(instance, report)
 
     try:
@@ -136,7 +144,7 @@ def test_layer3_always_runs():
     instance = _minimal_instance()
     report = lint(instance, profile="default")
     layer2 = _good_layer2_result()
-    with patch("src.llm_layer3.call_llm", side_effect=[_canned_pass1_response(), _canned_pass2_response()]) as mock_llm:
+    with patch("src.llm_layer3.call_llm_stream", side_effect=_streamed([_canned_pass1_response(), _canned_pass2_response()])) as mock_llm:
         result = run_human_eye(instance, report, layer2)
     assert mock_llm.call_count == 2
     assert result["triggered_by"] == "always" and result["overall_verdict"] == "revise_minor"
@@ -195,7 +203,7 @@ def test_additive_union():
             return _canned_pass1_response()
         return _canned_pass2_response()
 
-    with patch("src.llm_layer3.call_llm", side_effect=fake_call_llm):
+    with patch("src.llm_layer3.call_llm_stream", side_effect=_streamed(fake_call_llm)):
         run_human_eye(instance, report)
 
     assert report["checklist"] == original_checklist
@@ -214,7 +222,7 @@ def test_the_last_fenced_block_is_the_answer():
     text = f"The shape I must use:\n{shape}\nMy review:\n```json\n{_canned_pass2_response()}\n```"
     assert parse_llm_json(text)["overall_verdict"] == "revise_minor"
     instance = _severe_instance()
-    with patch("src.llm_layer3.call_llm", side_effect=[_canned_pass1_response(), text]):
+    with patch("src.llm_layer3.call_llm_stream", side_effect=_streamed([_canned_pass1_response(), text])):
         assert run_human_eye(instance, lint(instance, profile="default"))["overall_verdict"] == "revise_minor"
 
 
@@ -225,12 +233,22 @@ def test_layer3_without_an_answer_is_unavailable_not_revise_major():
 
     def down(*a, **k):
         raise RuntimeError("provider down")
-    with patch("src.llm_layer3.call_llm", side_effect=down):
+    with patch("src.llm_layer3.call_llm_stream", side_effect=_streamed(down)):
         result = run_human_eye(instance, report)
     assert (result["overall_verdict"], result["risk_profile"]) == ("unavailable", "")
     HumanEyeResult.model_validate(result)
-    with patch("src.llm_layer3.call_llm_stream", side_effect=down):
-        assert list(run_human_eye_stream(instance, report))[-1]["result"]["overall_verdict"] == "unavailable"
-    with patch("src.llm_layer3.call_llm", side_effect=[_canned_pass1_response(), '{"summary": "no verdict fields"}']):
+    with patch("src.llm_layer3.call_llm_stream", side_effect=_streamed([_canned_pass1_response(), '{"summary": "no verdict fields"}'])):
         result = run_human_eye(instance, report)
     assert (result["overall_verdict"], result["risk_profile"]) == ("unavailable", "")
+
+
+def test_layer3_batch_is_the_stream_result():
+    """run_human_eye was a second copy of the two passes; it is now the stream's final result."""
+    instance = _minimal_instance()
+    report = lint(instance, profile="default")
+    answers = [_canned_pass1_response(), _canned_pass2_response()]
+
+    def stream(prompt, **kwargs):
+        return iter([answers[0] if "## Pass 2" not in prompt and "Pass 1 findings" not in prompt else answers[1]])
+    with patch("src.llm_layer3.call_llm_stream", side_effect=stream):  # the only LLM entry point Layer 3 has left
+        assert run_human_eye(instance, report) == list(run_human_eye_stream(instance, report))[-1]["result"]

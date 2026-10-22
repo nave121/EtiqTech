@@ -5,6 +5,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app
 
+# Production: server/app.py refuses RATELIMIT_ENABLED=false, the app's only DoS control
+ENV FLASK_ENV=production
+
 WORKDIR /app
 
 # Install dependencies first (layer caching)

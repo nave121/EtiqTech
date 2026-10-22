@@ -9,11 +9,6 @@ spec:
         - name: etiqtech
           env:
             # --- app ---
-            - name: SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: etiqtech-app
-                  key: SECRET_KEY
             - name: PROXY_FIX              # behind Cloudflare / an ingress: rate limits per client, not per proxy
               value: "1"
             - name: ALLOWED_ORIGINS        # REQUIRED with PROXY_FIX or every upload is refused as cross-site

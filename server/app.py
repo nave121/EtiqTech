@@ -81,15 +81,8 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
 
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
-# SECRET_KEY: required for session cookies and CSRF protection.
-# In production, set SECRET_KEY env var to a stable random value.
-_secret = os.getenv('SECRET_KEY')
-if not _secret and os.getenv('FLASK_ENV') == 'production':
-    raise ValueError("SECRET_KEY environment variable must be set in production")
-app.config['SECRET_KEY'] = _secret or os.urandom(32).hex()
-
 # RATELIMIT_ENABLED=false disables limiting (load tests, tests/test_gunicorn_sessions.py).
-# It is the app's only DoS control, so it is refused in production and loud elsewhere.
+# It is the app's only DoS control, so it is refused in production (the image sets FLASK_ENV) and loud elsewhere.
 app.config['RATELIMIT_ENABLED'] = os.getenv('RATELIMIT_ENABLED', 'true').lower() not in ('0', 'false', 'no')
 if not app.config['RATELIMIT_ENABLED']:
     if os.getenv('FLASK_ENV') == 'production':
@@ -492,7 +485,7 @@ def llm_verify_stream(session_id):
     def generate():
         try:
             for event in run_verification_stream(
-                instance, lint_report, stance='committee',
+                instance, lint_report,
                 provider=provider, model=model,
             ):
                 # Save before sending: the browser opens human-eye-stream as soon as `complete` arrives

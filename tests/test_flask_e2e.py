@@ -82,7 +82,7 @@ def test_flask_e2e_stream_chain_preserves_session_and_event_order(client):
     }
     captured_layer3 = {}
 
-    def fake_layer2_stream(instance, lint_report, stance="committee", **kwargs):
+    def fake_layer2_stream(instance, lint_report, **kwargs):
         yield {
             "type": "theme_start",
             "theme": "three_Rs_alternatives",
