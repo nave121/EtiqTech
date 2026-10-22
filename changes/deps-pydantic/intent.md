@@ -1,6 +1,6 @@
 # Intent: bump pydantic to 2.14.1
 
-Slug: deps-pydantic. Author: Razy (maintainer). Date: 2026-10-22. Status: draft.
+Slug: deps-pydantic. Author: Razy (maintainer). Date: 2026-10-22. Status: accepted (by Razy in chat, 2026-10-22; see spec.md C2).
 Source: ticket PR #46 (dependabot, "build(deps): bump pydantic from 2.13.5 to 2.14.1").
 
 ## Problem
