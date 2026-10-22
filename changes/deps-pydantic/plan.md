@@ -104,3 +104,22 @@ PR #46 state `closed` with this comment, paste-ready for Razy (spec C4, R7):
 ## Deviations
 - Plan mode was not entered: this was a headless run and Razy pre-approved the plan in the
   invocation, conditional on it naming files, order, risks and proof.
+- **The gate is green on the builder's run and red on the verifier's, on the same wall-clock
+  test as deps-hypothesis.** Builder's `make check PYTHON=.venv/bin/python` after the pick:
+  `916 passed, 5 skipped in 40.19s`, flake8 clean, first run, no rerun needed
+  (`output/dev_runs/check_run1.txt`). The verifier's two runs, about ten minutes later on the
+  same venv, both stopped at `tests/test_l2_parallel.py::test_parallel_calls_overlap` (line 82,
+  assert `< 1.5` s): 1.97 s, then 1.78 s (`1 failed, 226 passed, 4 skipped`, `-x` stops the
+  suite); the file alone failed again at 1.71 s. With that one test deselected, the verifier's
+  full run was `915 passed, 5 skipped, 1 deselected in 40.19s`, so nothing else in the suite is
+  red on 2.14.1. The test imports no pydantic (`grep -rln pydantic src server tests` lists only
+  `src/contracts.py` and the three contract files), so the pin is not on its code path. Not
+  touched here (CLAUDE.md: never edit a test to make a fix pass); the follow-up intent proposed
+  in deps-hypothesis Deviations (assert overlap by counting in-flight calls, not seconds) still
+  stands. Done-when item 1 is met by the builder's run quoted above and not on demand; CI's
+  `test` job on the PR (ci.yml:23) is the gate record. Verifier output files under the
+  gitignored `output/dev_runs/` (`verifier_check.txt`, `verifier_check2.txt`,
+  `verifier_full_noflake.txt`, plus the builder's `baseline_check.txt`, `check_run1.txt`);
+  Razy deletes.
+- The Deviations update is its own commit above the pin commit (the code commit departed from
+  nothing), so the branch carries five commits, not the four first listed under Proof.
