@@ -1,6 +1,6 @@
 # Spec: bump pydantic to 2.14.1
 
-Slug: deps-pydantic. From: intent.md @ 85705a0. Date: 2026-10-22. Status: draft.
+Slug: deps-pydantic. From: intent.md @ 85705a0. Date: 2026-10-22. Status: accepted (by Razy in chat, 2026-10-22; see plan.md).
 Policies applied: sdlc-artifacts, security-baseline, as of 2026-10-22. No `policy-*` skill exists in this repo (`.claude/skills/` is absent).
 
 ## Summary
