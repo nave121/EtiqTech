@@ -82,9 +82,19 @@ the default gate: 0 of 35 before and after.
   pre-charged chamber only for CO2; reagent and cytokine exclusions; clinical signs count beside 20%; short burden
   keywords are whole words, "tumor burden" dropped; "cosmetic surgery" is not cosmetics testing; an unknown
   method gives no verdict; CO2 rate reads both fields and "100%" is not a rate; post-op: recovery means survival.
-- **Open (Razy, decided 2026-10-21 to revisit):** `severity:monitoring` passes all 79 severity ≥4 experiments on
-  weak evidence (any "24"/"72", or 50 characters of text). Revisit now that the parser no longer invents the 72h /
-  weekly values: measure what real exports state, then tighten.
+- `severity:monitoring` was left lenient here and revisited in ruleset 1.3.0 (next section).
+
+## Ruleset 1.3.0 (2026-10-21, `severity:monitoring`; both calls Razy's, on cards with the measurement)
+- Measured first on every real export: none of the 78 severity ≥4 experiments states the 72h / weekly cells and
+  `documentation` is always empty, so the free-text monitoring field is the only input. Some approved protocols
+  state the check frequency in the humane endpoints instead, so the rule reads both.
+- Passes when that text states checks more often than once a week (daily, every N hours, every 1-6 days, twice a
+  week; Hebrew and English) or the export's cells say so. The old passes (50 characters of text, any "24"/"72")
+  are gone. Once a week alone is not enough: the committee letters say so for grades 3-5, and SYNTH-004 expects it.
+- Warning by default, error under strict_law; no monitoring text and no schedule cell stays an error in both
+  profiles. The schema's x_meta rule (also fed to the Layer 2 / 3 prompts) now states the same rule.
+- Real exports, default profile: 0 → 21 experiments fire (known-good 12 in 5 files, known-bad 2, head-to-head 7).
+  Known-good protocols failing the default gate: 0 of 35 before and after.
 
 ## Running jobs (as of step 25, resumed after the 21:00 limit reset)
 - Nothing running. Done: split, coverage, eval, research memos, design 1–9 (8 English-only), the four maintainer decisions (statute import, Layer 3 window, ruleset 1.1.0, landing English-only), reviews.

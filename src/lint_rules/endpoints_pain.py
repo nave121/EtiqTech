@@ -12,7 +12,25 @@ pain:category-consistency site.
 import re
 
 from .context import RuleContext, _rule
-from .helpers import _anesthesia_text, _flatten_text, _mentions, _pain_category
+from .helpers import _anesthesia_text, _flatten_text, _mentions, _monitoring_text, _pain_category
+
+# Checks more often than once a week, in English or Hebrew: once a week alone is not enough at severity >=4
+# (committee letters). "יומי" not followed by "ים" is daily ("יומיים" is every two days); hours stop below a week.
+# shortcut: matches frequency words, not what is checked ("daily dose" passes); upgrade if feedback shows false passes.
+_HOURS = r"(?:16[0-7]|1[0-5]\d|[1-9]?\d)(?:\.\d+)?(?!\d)"  # 0-167
+_DAYS = r"[1-6](?!\d)"
+_TO = r"\s*(?:-|–|to|עד)\s*"
+_CHECK_FREQUENCY = re.compile(
+    rf"\b(?:daily|hourly|q(?:[1-9]|1\d|2[0-4])h)\b|\balternate days?\b"
+    rf"|\b(?:every|each) (?:day|morning|evening|night|other day|(?:second|third|2nd|3rd) day|(?:two|three|four|five|six) days)\b"
+    rf"|\b(?:every|each) {_HOURS}(?:{_TO}{_HOURS})?\s*(?:h|hrs?|hours?)\b|\b(?:every|each) {_DAYS}(?:{_TO}{_DAYS})? days?\b"
+    rf"|\b(?:once|one time|1 ?x) ?(?:/ ?|a |per |each )?day\b"
+    rf"|\b(?:twice|thrice|(?:two|three|four|several|multiple) times|(?:[2-9]|[1-9]\d) ?(?:x|times))[ -]?(?:/ ?|a |per |each )?(?:day|week)(?:ly)?\b"
+    rf"|(?<![א-ת])[הובלמשכ]?יומי(?!ים)"
+    rf"|(?:כל|מדי|מידי) (?:יום(?! (?:ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת))|יממה|בוקר|ערב|שעה|שעתיים|{_HOURS}(?:{_TO}{_HOURS})? שעות)"
+    rf"|(?:(?:כל|מדי|מידי) |אחת ל|פעם ב)(?:יומיים|(?:שלושה|ארבעה|חמישה|שישה|{_DAYS}(?:{_TO}{_DAYS})?) ימים)"
+    rf"|(?:פעם|פעמיים|שלוש פעמים|\d+ פעמים) ב(?:יום|יממה)|(?:פעמיים|שלוש פעמים|ארבע פעמים|(?:[2-9]|[1-9]\d) פעמים) בשבוע"
+)
 
 
 def run(ctx: RuleContext) -> None:
@@ -20,34 +38,42 @@ def run(ctx: RuleContext) -> None:
     exp_signals = ctx.exp_signals
     profile = ctx.profile
     # --- severity vs monitoring ---
+    # Ruleset 1.3.0 (maintainer decision): severity >=4 must say how often animals are checked, in the monitoring
+    # or humane-endpoints text or the export's 72h / weekly cells. No monitoring text at all stays an error.
     for idx, e in enumerate(exps, start=1):
         sev = e.get("severity_level_1_to_5")
         mon = e.get("monitoring") or {}
         if isinstance(sev, int) and sev >= 4:
-            # Relaxed: check boolean OR check if text description is substantive
-            daily_flag = bool(mon.get("initial_72h_daily"))
-            param_text = " ".join(mon.get("parameters") or [])
-
-            # Heuristic: if text contains "daily", "every day", "24h", "72h" or is long enough (>50 chars)
-            text_ok = len(param_text) > 50 or any(w in param_text.lower() for w in ["daily", "every day", "24", "72"])
-
-            ok_mon = daily_flag or text_ok
-
-            fix_mon = (
-                "For severity ≥4, monitoring must be daily during the first 72h and at "
-                "least once per week afterwards."
+            mon_text = _monitoring_text(mon)
+            per_week = mon.get("ongoing_per_week")
+            stated = (
+                mon.get("initial_72h_daily") is True
+                or (isinstance(per_week, (int, float)) and per_week >= 2)
+                or bool(_CHECK_FREQUENCY.search(mon_text + " " + _flatten_text(e.get("humane_endpoints")).lower()))
             )
+            # A schedule cell, even once a week, is a plan: "no monitoring plan" means no text and no cell.
+            no_plan = not stated and not mon_text.strip() and per_week is None and mon.get("initial_72h_daily") is None
+            severity = "error" if no_plan or profile == "strict_law" else "warning"
             ctx.checks.append(
                 _rule(
-                    ok_mon,
-                    f"Experiment {idx}: severity≥4 has adequate monitoring.",
-                    f"Experiment {idx}: severity≥4 lacks daily 72h or sufficient weekly monitoring.",
-                    fix=fix_mon,
+                    stated,
+                    f"Experiment {idx}: severity≥4 monitoring states how often animals are checked.",
+                    f"Experiment {idx}: severity≥4 has no monitoring plan." if no_plan
+                    else f"Experiment {idx}: severity≥4 monitoring does not say how often animals are checked "
+                    "(once a week alone is not enough).",
+                    fix=(
+                        "State how often animals are checked. Committees expect frequent early checks (daily or "
+                        "every 12-48 h after the intervention) and a stated schedule afterwards."
+                    ),
+                    severity=severity,
                     ref=f"severity:monitoring:exp-{idx}",
                 )
             )
-            if not ok_mon:
-                ctx.errors += 1
+            if not stated:
+                if severity == "error":
+                    ctx.errors += 1
+                else:
+                    ctx.warnings += 1
 
     # --- analgesia presence for invasive, moderate-severity work (soft) ---
     invasive_keywords = [

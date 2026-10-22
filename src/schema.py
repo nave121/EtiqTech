@@ -961,7 +961,7 @@ IACUC_SCHEMA_V2 = {
                 "description": "Per-experiment definitions, matching the Technion export pages.",
                 "rules": [
                     "If surgery or invasive procedures are present, analgesia/anesthesia must be described.",
-                    "Severity >=4 requires daily monitoring in the first 72h and at least weekly afterward.",
+                    "Severity >=4 monitoring must state how often animals are checked, more often than once a week; committees expect daily or every 12-48 h checks early on.",
                     "CO2 euthanasia requires flow rate (30–70% chamber volume/min) and a confirmation step.",
                     "If text mentions tumor/graft → oncology sub-block required (tumor_burden_cap, ulceration_policy).",
                     "If diabetes model → diabetes block required (fasted/non_fasted, BG threshold).",

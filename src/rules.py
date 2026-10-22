@@ -17,8 +17,8 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-KNOWN_RULESET_VERSIONS = ("1.0.0", "1.1.0", "1.2.0")  # feedback rows may carry any of these
-RULESET_VERSION = "1.2.0"  # bump when a rule is added, removed, or its trigger/severity changes (1.2.0: audit trigger fixes, 2026-10-21)
+KNOWN_RULESET_VERSIONS = ("1.0.0", "1.1.0", "1.2.0", "1.3.0")  # feedback rows may carry any of these
+RULESET_VERSION = "1.3.0"  # bump when a rule is added, removed, or its trigger/severity changes (1.3.0: severity:monitoring frequency, 2026-10-21)
 
 _INSTANCE_SUFFIX = re.compile(r":exp-\d+$")
 
@@ -66,7 +66,7 @@ RULES: Dict[str, Rule] = {r.id: r for r in [
     _r("euthanasia:cervical-weight", "law_critical", "generic", "Cervical dislocation within species weight limit"),
     _r("special:neonatal-CO2", "law_critical", "generic", "CO2 not the sole method for neonates"),
     # --- severity, endpoints, monitoring ---
-    _r("severity:monitoring", "law_critical", "generic", "Monitoring plan present for the declared severity"),
+    _r("severity:monitoring", "law_critical", "generic", "Severity >= 4 monitoring states a check frequency"),
     _r("severity:analgesia", "law_critical", "generic", "Analgesia present for invasive severity >= 3"),
     _r("endpoints:20%-only", "law_critical", "generic", "Humane endpoints beyond 20% weight loss"),
     _r("endpoints:death-only", "law_critical", "generic", "Death/moribundity not the sole endpoint"),

@@ -32,6 +32,7 @@
       "euthanasia:displacement-rate",
       "euthanasia:secondary-method",
       "postop:monitoring",
+      "severity:monitoring",
       "special:ocular",
       "vet:consultation"
     ],
