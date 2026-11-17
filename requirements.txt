@@ -10,5 +10,5 @@ werkzeug==3.1.9
 pydantic==2.14.1
 pytest-mock==3.16.0
 hypothesis==6.170.1
-gunicorn==26.2.0
+gunicorn==27.0.1
 flask-limiter==4.1.1
